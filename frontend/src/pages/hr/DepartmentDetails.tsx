@@ -5,7 +5,7 @@ import { Navbar } from '../../components/common/Navbar';
 import { 
   Building2, Users, UserCheck, Briefcase, Calendar, TrendingUp,
   Clock, ArrowLeft, Check, X, FileText, BarChart3, Loader2, AlertCircle,
-  FileCheck, ShieldAlert
+  FileCheck, ShieldAlert, Crown
 } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';

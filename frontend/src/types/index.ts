@@ -10,6 +10,7 @@ export interface User {
 
 export interface Intern {
   id: string;
+  userId?: string;
   name: string;
   email: string;
   college: string;
@@ -46,6 +47,7 @@ export interface Intern {
 
 export interface Mentor {
   id: string;
+  userId?: string;
   name: string;
   email: string;
   dept: string;
@@ -57,6 +59,8 @@ export interface Mentor {
 export interface Department {
   id: string;
   name: string;
+  code: string;
+  description?: string;
   internCount: number;
   mentorCount: number;
   projectsCount: number;
