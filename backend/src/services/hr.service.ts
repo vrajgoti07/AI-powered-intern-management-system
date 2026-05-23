@@ -32,18 +32,18 @@ export const getHRDashboard = async () => {
   // Get department-wise statistics
   const departments = await prisma.department.findMany({
     include: {
-      interns: true,
-      mentors: true,
+      profileInterns: true,
+      profileMentors: true,
     },
   });
 
   const departmentStats = departments.map(dept => ({
     id: dept.id,
     name: dept.name,
-    color: dept.color,
-    totalInterns: dept.interns.length,
-    activeInterns: dept.interns.filter(i => i.status === 'ACTIVE').length,
-    totalMentors: dept.mentors.length,
+    color: dept.colorTheme || 'indigo',
+    totalInterns: dept.profileInterns.length,
+    activeInterns: dept.profileInterns.filter(i => i.status === 'ACTIVE').length,
+    totalMentors: dept.profileMentors.length,
   }));
 
   // Get recent interns
@@ -146,14 +146,14 @@ export const getInternStatistics = async () => {
   // Get interns by department
   const departments = await prisma.department.findMany({
     include: {
-      interns: true,
+      profileInterns: true,
     },
   });
 
   const byDepartment = departments.map(dept => ({
     department: dept.name,
-    count: dept.interns.length,
-    active: dept.interns.filter(i => i.status === 'ACTIVE').length,
+    count: dept.profileInterns.length,
+    active: dept.profileInterns.filter(i => i.status === 'ACTIVE').length,
   }));
 
   // Get top performers

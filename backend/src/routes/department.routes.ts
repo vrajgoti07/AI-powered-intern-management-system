@@ -7,6 +7,9 @@ import {
   createDepartmentSchema,
   updateDepartmentSchema,
   departmentQuerySchema,
+  assignHeadSchema,
+  assignMentorSchema,
+  moveInternSchema,
 } from '../validations/department.validation';
 
 const router = Router();
@@ -15,13 +18,24 @@ const router = Router();
 router.use(authenticate);
 
 /**
+ * @route   GET /api/departments/hierarchy
+ * @desc    Get company organizational hierarchy tree
+ * @access  HR, Department Head, Mentor
+ */
+router.get(
+  '/hierarchy',
+  authorize('HR', 'DEPARTMENT_HEAD', 'MENTOR'),
+  departmentController.getHierarchy
+);
+
+/**
  * @route   GET /api/departments
  * @desc    Get all departments with pagination and filters
- * @access  HR, Mentor
+ * @access  HR, Department Head, Mentor
  */
 router.get(
   '/',
-  authorize('HR', 'MENTOR'),
+  authorize('HR', 'DEPARTMENT_HEAD', 'MENTOR'),
   validate(departmentQuerySchema),
   departmentController.getAllDepartments
 );
@@ -29,34 +43,45 @@ router.get(
 /**
  * @route   GET /api/departments/list
  * @desc    Get all departments list (simple, no pagination)
- * @access  HR, Mentor
+ * @access  HR, Department Head, Mentor
  */
 router.get(
   '/list',
-  authorize('HR', 'MENTOR'),
+  authorize('HR', 'DEPARTMENT_HEAD', 'MENTOR'),
   departmentController.getAllDepartmentsList
 );
 
 /**
  * @route   GET /api/departments/:id
  * @desc    Get department by ID
- * @access  HR, Mentor
+ * @access  HR, Department Head, Mentor
  */
 router.get(
   '/:id',
-  authorize('HR', 'MENTOR'),
+  authorize('HR', 'DEPARTMENT_HEAD', 'MENTOR'),
   departmentController.getDepartmentById
 );
 
 /**
  * @route   GET /api/departments/:id/analytics
  * @desc    Get department analytics
- * @access  HR
+ * @access  HR, Department Head
  */
 router.get(
   '/:id/analytics',
-  authorize('HR'),
+  authorize('HR', 'DEPARTMENT_HEAD'),
   departmentController.getDepartmentAnalytics
+);
+
+/**
+ * @route   GET /api/departments/:id/activity-logs
+ * @desc    Get department activity history logs
+ * @access  HR, Department Head
+ */
+router.get(
+  '/:id/activity-logs',
+  authorize('HR', 'DEPARTMENT_HEAD'),
+  departmentController.getActivityLogs
 );
 
 /**
@@ -73,7 +98,7 @@ router.post(
 
 /**
  * @route   PUT /api/departments/:id
- * @desc    Update department
+ * @desc    Update department core information
  * @access  HR
  */
 router.put(
@@ -92,6 +117,42 @@ router.delete(
   '/:id',
   authorize('HR'),
   departmentController.deleteDepartment
+);
+
+/**
+ * @route   POST /api/departments/:id/assign-head
+ * @desc    Assign user as Department Head
+ * @access  HR
+ */
+router.post(
+  '/:id/assign-head',
+  authorize('HR'),
+  validate(assignHeadSchema),
+  departmentController.assignHead
+);
+
+/**
+ * @route   POST /api/departments/:id/assign-mentor
+ * @desc    Assign mentor user to department
+ * @access  HR
+ */
+router.post(
+  '/:id/assign-mentor',
+  authorize('HR'),
+  validate(assignMentorSchema),
+  departmentController.assignMentor
+);
+
+/**
+ * @route   POST /api/departments/:id/move-intern
+ * @desc    Transfer intern user to department
+ * @access  HR
+ */
+router.post(
+  '/:id/move-intern',
+  authorize('HR'),
+  validate(moveInternSchema),
+  departmentController.moveIntern
 );
 
 export default router;

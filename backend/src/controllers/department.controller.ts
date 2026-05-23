@@ -95,7 +95,7 @@ export const deleteDepartment = async (
 ): Promise<void> => {
   try {
     await departmentService.deleteDepartment(req.params.id as string);
-    successResponse(res, 'Department deleted successfully', null, 204);
+    successResponse(res, 'Department deleted successfully', null, 200);
   } catch (error) {
     next(error);
   }
@@ -112,6 +112,98 @@ export const getDepartmentAnalytics = async (
   try {
     const analytics = await departmentService.getDepartmentAnalytics(req.params.id as string);
     successResponse(res, 'Department analytics retrieved successfully', analytics);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Assign Department Head
+ */
+export const assignHead = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const department = await departmentService.assignDepartmentHead(
+      req.params.id as string,
+      req.body.headId as string,
+      (req as any).user?.name || 'HR Admin'
+    );
+    successResponse(res, 'Department head assigned successfully', department);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Assign Mentor to Department
+ */
+export const assignMentor = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    await departmentService.assignMentor(
+      req.params.id as string,
+      req.body.mentorId as string,
+      (req as any).user?.name || 'HR Admin'
+    );
+    successResponse(res, 'Mentor assigned to department successfully', null);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Move Intern to Department
+ */
+export const moveIntern = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    await departmentService.moveIntern(
+      req.params.id as string,
+      req.body.internId as string,
+      (req as any).user?.name || 'HR Admin'
+    );
+    successResponse(res, 'Intern transferred to department successfully', null);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get Department Activity Logs
+ */
+export const getActivityLogs = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const logs = await departmentService.getDepartmentActivityLogs(req.params.id as string);
+    successResponse(res, 'Department activity logs retrieved successfully', logs);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get Company Hierarchy tree
+ */
+export const getHierarchy = async (
+  _req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const tree = await departmentService.getDepartmentHierarchy();
+    successResponse(res, 'Company hierarchy retrieved successfully', tree);
   } catch (error) {
     next(error);
   }

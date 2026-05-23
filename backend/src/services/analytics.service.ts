@@ -377,14 +377,17 @@ export class AnalyticsService {
         include: {
           interns: {
             include: {
-              tasks: { select: { status: true } },
-              feedbacks: { select: { rating: true } },
+              intern: {
+                include: {
+                  tasks: { select: { status: true } },
+                  feedbacks: { select: { rating: true } },
+                },
+              },
             },
           },
-          mentors: {
-            include: {
-              user: { select: { name: true } },
-            },
+          mentors: true,
+          head: {
+            select: { name: true },
           },
         },
       });
@@ -397,28 +400,30 @@ export class AnalyticsService {
 
         // Avg attendance and score
         const avgAttendance = internCount > 0
-          ? Math.round((dept.interns.reduce((sum, i) => sum + i.attendance, 0) / internCount) * 10) / 10
+          ? Math.round((dept.interns.reduce((sum, i) => sum + (i.intern?.attendance || 0), 0) / internCount) * 10) / 10
           : 0;
         const avgScore = internCount > 0
-          ? Math.round((dept.interns.reduce((sum, i) => sum + i.score, 0) / internCount) * 10) / 10
+          ? Math.round((dept.interns.reduce((sum, i) => sum + (i.intern?.score || 0), 0) / internCount) * 10) / 10
           : 0;
 
         // Task stats
         let totalDeptTasks = 0;
         let completedDeptTasks = 0;
-        dept.interns.forEach((intern) => {
-          totalDeptTasks += intern.tasks.length;
-          completedDeptTasks += intern.tasks.filter((t) => t.status === 'COMPLETED').length;
+        dept.interns.forEach((u) => {
+          if (u.intern) {
+            totalDeptTasks += u.intern.tasks.length;
+            completedDeptTasks += u.intern.tasks.filter((t) => t.status === 'COMPLETED').length;
+          }
         });
 
         // Feedback stats
-        const allFeedbacks = dept.interns.flatMap((i) => i.feedbacks);
+        const allFeedbacks = dept.interns.flatMap((u) => u.intern?.feedbacks || []);
         const avgFeedbackRating = allFeedbacks.length > 0
           ? Math.round((allFeedbacks.reduce((sum, f) => sum + f.rating, 0) / allFeedbacks.length) * 10) / 10
           : 0;
 
         // CGPA spread
-        const cgpas = dept.interns.filter((i) => i.cgpa != null).map((i) => i.cgpa as number);
+        const cgpas = dept.interns.filter((u) => u.intern?.cgpa != null).map((u) => u.intern?.cgpa as number);
         const avgCgpa = cgpas.length > 0
           ? Math.round((cgpas.reduce((sum, c) => sum + c, 0) / cgpas.length) * 100) / 100
           : 0;
@@ -426,8 +431,8 @@ export class AnalyticsService {
         return {
           id: dept.id,
           name: dept.name,
-          head: dept.head,
-          color: dept.color,
+          head: dept.head?.name || 'N/A',
+          color: dept.colorTheme || 'indigo',
           internCount,
           mentorCount,
           avgAttendance,
@@ -441,7 +446,7 @@ export class AnalyticsService {
           avgFeedbackRating,
           mentors: dept.mentors.map((m) => ({
             id: m.id,
-            name: m.user?.name || 'N/A',
+            name: m.name,
           })),
         };
       });

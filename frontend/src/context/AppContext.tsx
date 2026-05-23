@@ -242,9 +242,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           name: d.name,
           internCount: d._count?.interns || 0,
           mentorCount: d._count?.mentors || 0,
-          projectsCount: 0,
-          head: d.head,
-          color: d.color || 'indigo'
+          projectsCount: d._count?.projects || 0,
+          head: d.head?.name || 'N/A',
+          color: d.colorTheme || 'indigo'
         }));
         dispatch({ type: 'SET_DEPARTMENTS', payload: mappedDepts });
       }
@@ -255,6 +255,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const rawInterns = internsRes.data.data.data || [];
         const mappedInterns = rawInterns.map((i: any) => ({
           id: i.id,
+          userId: i.user?.id || '',
           name: i.user?.name || '',
           email: i.user?.email || '',
           college: i.college,
@@ -287,6 +288,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const rawMentors = mentorsRes.data.data.data || [];
         const mappedMentors = rawMentors.map((m: any) => ({
           id: m.id,
+          userId: m.user?.id || '',
           name: m.user?.name || '',
           email: m.user?.email || '',
           dept: m.department?.name || '',

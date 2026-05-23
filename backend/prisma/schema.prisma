@@ -12,6 +12,7 @@ datasource db {
 enum UserRole {
   SUPER_ADMIN
   HR
+  DEPARTMENT_HEAD
   MENTOR
   INTERN
 }
@@ -80,6 +81,13 @@ model User {
   notifications Notification[]
   leaveRequests LeaveRequest[] @relation("UserLeaveRequests")
 
+  // Department Relations
+  departmentId          String?
+  department            Department?  @relation("DepartmentInterns", fields: [departmentId], references: [id])
+  mentorDepartmentId    String?
+  mentorDepartment      Department?  @relation("DepartmentMentors", fields: [mentorDepartmentId], references: [id])
+  headedDepartment      Department?  @relation("DepartmentHead")
+
   // Settings & Security Relations
   otpVerifications       OtpVerification[]
   userSessions           UserSession[]
@@ -94,20 +102,29 @@ model User {
 
 // Department Model
 model Department {
-  id          String  @id @default(uuid())
-  name        String  @unique
-  head        String
-  color       String  @default("indigo")
-  description String?
+  id              String      @id @default(uuid())
+  name            String      @unique
+  code            String      @unique
+  description     String?
+  colorTheme      String?     @map("color")
+  isActive        Boolean     @default(true)
 
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  headId          String?     @unique
+  head            User?       @relation("DepartmentHead", fields: [headId], references: [id])
 
-  // Relations
-  interns     Intern[]
-  mentors     Mentor[]
-  jobPostings JobPosting[]
+  mentors         User[]      @relation("DepartmentMentors")
+  interns         User[]      @relation("DepartmentInterns")
+
+  projects        Project[]
+  activities      DepartmentActivity[]
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Profile-level backwards compatibility links
+  profileInterns  Intern[]    @relation("ProfileInterns")
+  profileMentors  Mentor[]    @relation("ProfileMentors")
+  jobPostings     JobPosting[]
 
   @@map("departments")
 }
@@ -172,7 +189,7 @@ model Intern {
 
   // Relations
   user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  department         Department          @relation(fields: [departmentId], references: [id])
+  department         Department          @relation("ProfileInterns", fields: [departmentId], references: [id])
   mentor             Mentor?             @relation(fields: [mentorId], references: [id])
   tasks              Task[]
   feedbacks          Feedback[]
@@ -237,7 +254,7 @@ model Mentor {
 
   // Relations
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  department Department @relation(fields: [departmentId], references: [id])
+  department Department @relation("ProfileMentors", fields: [departmentId], references: [id])
   interns    Intern[]
   tasks      Task[]
   feedbacks  Feedback[]
@@ -741,5 +758,37 @@ model TrustedSession {
   @@index([userId])
   @@index([sessionToken])
   @@map("trusted_sessions")
+}
+
+// Project Model
+model Project {
+  id           String      @id @default(uuid())
+  title        String
+  description  String?     @db.Text
+  status       String      @default("ACTIVE") // ACTIVE, COMPLETED, PENDING
+
+  departmentId String
+  department   Department  @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@map("projects")
+}
+
+// Department Activity Log Model
+model DepartmentActivity {
+  id           String   @id @default(uuid())
+  departmentId String
+  activityType String   // "HEAD_ASSIGNED", "MENTOR_ASSIGNED", "INTERN_TRANSFERRED", "LEAVE_APPROVED", etc.
+  description  String   @db.Text
+  performedBy  String   // Name or ID of executor
+  createdAt    DateTime @default(now())
+
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@index([departmentId])
+  @@index([createdAt])
+  @@map("department_activities")
 }
 

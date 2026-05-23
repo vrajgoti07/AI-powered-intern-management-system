@@ -17,6 +17,7 @@ import { HRDashboard } from './pages/hr/HRDashboard';
 import { InternManagement } from './pages/hr/InternManagement';
 import { MentorManagement } from './pages/hr/MentorManagement';
 import { DepartmentManagement } from './pages/hr/DepartmentManagement';
+import { DepartmentDetails } from './pages/hr/DepartmentDetails';
 import { ReportsAnalytics } from './pages/hr/ReportsAnalytics';
 import { Announcements } from './pages/hr/Announcements';
 import { OnboardingVerification } from './pages/hr/OnboardingVerification';
@@ -184,6 +185,14 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute allowedRole="hr">
                   <DepartmentManagement />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/hr/departments/:id" 
+              element={
+                <ProtectedRoute allowedRole="hr">
+                  <DepartmentDetails />
                 </ProtectedRoute>
               } 
             />
