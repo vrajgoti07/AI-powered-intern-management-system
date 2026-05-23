@@ -1,0 +1,56 @@
+intern_id,mentor_name,feedback_text,rating,date
+INT001,Dr. Sarah Chen,Shows strong initiative and consistently delivers high-quality work. A pleasure to mentor.,5,2025-09-15
+INT002,Prof. James Wilson,Good technical skills but struggles with meeting deadlines. Needs better time management.,3,2025-09-18
+INT003,Dr. Sarah Chen,Excellent communication skills and team collaboration. Highly recommended for full-time conversion.,5,2025-09-20
+INT004,Mark Thompson,Poor attendance record and frequently misses standup meetings. Should improve reliability.,2,2025-09-22
+INT005,Dr. Priya Patel,Shows great promise in data analysis but needs to improve documentation practices.,4,2025-09-25
+INT006,Prof. James Wilson,Struggles with complex problem solving. Would benefit from additional mentoring sessions.,2,2025-10-01
+INT007,Lisa Rodriguez,Outstanding presentation skills and proactive in seeking feedback. Top performer this quarter.,5,2025-10-03
+INT008,Mark Thompson,Average performance overall. Completes assigned tasks but rarely goes beyond minimum requirements.,3,2025-10-05
+INT009,Dr. Priya Patel,Exceptional coding skills and quick learner. Has already contributed to production codebase.,5,2025-10-08
+INT010,Lisa Rodriguez,Needs significant improvement in written communication. Reports lack clarity and structure.,2,2025-10-10
+INT011,Dr. Sarah Chen,Reliable and consistent performer. Good at following instructions but could show more initiative.,3,2025-10-12
+INT012,Prof. James Wilson,Excellent problem-solving abilities. Resolved a critical bug that senior developers had missed.,5,2025-10-15
+INT013,Mark Thompson,Frequently needs reminders about task deadlines. Productivity score is below team average.,2,2025-10-18
+INT014,Dr. Priya Patel,Strong analytical mindset with great attention to detail. Produces thorough research reports.,4,2025-10-20
+INT015,Lisa Rodriguez,Has difficulty working in team settings. Should improve collaboration and communication skills.,2,2025-10-22
+INT016,Dr. Sarah Chen,Very enthusiastic and eager to learn. Sometimes takes on too much and quality suffers as a result.,3,2025-10-25
+INT017,Prof. James Wilson,Consistently meets expectations and occasionally exceeds them. Good candidate for advancement.,4,2025-10-28
+INT018,Mark Thompson,Lacks technical depth in core area. Recommend focused training on fundamental concepts.,2,2025-11-01
+INT019,Dr. Priya Patel,Creative thinker who brings fresh perspectives to the team. Excellent brainstorming contributor.,4,2025-11-03
+INT020,Lisa Rodriguez,Demonstrates strong leadership potential. Has mentored other interns informally.,5,2025-11-05
+INT021,Dr. Sarah Chen,Solid work ethic but needs to improve speed of task completion. Quality is good when delivered.,3,2025-11-08
+INT022,Prof. James Wilson,Exceptional at debugging and troubleshooting. Very methodical approach to problem solving.,5,2025-11-10
+INT023,Mark Thompson,Attendance has improved recently but overall productivity remains below average.,2,2025-11-12
+INT024,Dr. Priya Patel,Good understanding of machine learning concepts. Successfully built a prototype classifier.,4,2025-11-15
+INT025,Lisa Rodriguez,Needs to work on professional communication. Emails and messages are often unclear.,2,2025-11-18
+INT026,Dr. Sarah Chen,Proactive in identifying potential issues before they become problems. Great preventive mindset.,5,2025-11-20
+INT027,Prof. James Wilson,Delivers clean well-documented code. Follows best practices consistently.,4,2025-11-22
+INT028,Mark Thompson,Struggles with task prioritization. Often works on low-priority items while urgent tasks wait.,2,2025-11-25
+INT029,Dr. Priya Patel,Shows remarkable improvement over the past month. Response to feedback has been excellent.,4,2025-11-28
+INT030,Lisa Rodriguez,Completed all assigned tasks ahead of schedule this month. Exceptional time management.,5,2025-12-01
+INT031,Dr. Sarah Chen,Technical skills are strong but interpersonal skills need development. Tends to work in isolation.,3,2025-12-03
+INT032,Prof. James Wilson,Has shown steady growth in both technical and soft skills since joining the program.,4,2025-12-05
+INT033,Mark Thompson,Unreliable attendance pattern. Called in sick multiple times without prior notice.,1,2025-12-08
+INT034,Dr. Priya Patel,Excellent at data visualization. Created dashboards that the entire department now uses.,5,2025-12-10
+INT035,Lisa Rodriguez,Meets basic requirements but shows little enthusiasm or initiative for growth.,2,2025-12-12
+INT036,Dr. Sarah Chen,Very responsive to constructive criticism. Implements feedback quickly and thoroughly.,4,2025-12-15
+INT037,Prof. James Wilson,Should focus more on testing. Code submissions often have bugs that could be caught with unit tests.,3,2025-12-18
+INT038,Mark Thompson,Has great potential but lacks discipline. Inconsistent performance from week to week.,2,2025-12-20
+INT039,Dr. Priya Patel,Outstanding contribution to the quarterly project. Went above and beyond expectations.,5,2025-12-22
+INT040,Lisa Rodriguez,Adequate performance in routine tasks. Does not yet demonstrate readiness for complex assignments.,3,2025-12-25
+INT041,Dr. Sarah Chen,Fast learner who adapted to our tech stack within the first two weeks. Impressive onboarding.,5,2026-01-05
+INT042,Prof. James Wilson,Needs improvement in understanding system architecture. Focus on the bigger picture.,3,2026-01-08
+INT043,Mark Thompson,Poor code quality and lack of testing. Multiple production issues traced back to their commits.,1,2026-01-10
+INT044,Dr. Priya Patel,Good research methodology and strong academic foundation. Applies theory well to practice.,4,2026-01-12
+INT045,Lisa Rodriguez,Excellent teamwork during the hackathon. Helped coordinate across three different teams.,5,2026-01-15
+INT046,Dr. Sarah Chen,Shows initiative in learning new technologies independently. Self-motivated and curious.,4,2026-01-18
+INT047,Prof. James Wilson,Communication with stakeholders needs work. Technical explanations are too complex for non-tech audience.,3,2026-01-20
+INT048,Mark Thompson,Consistently late to morning meetings. Punctuality is a concern that affects team morale.,2,2026-01-22
+INT049,Dr. Priya Patel,Stellar performance in the data pipeline project. Reduced processing time by forty percent.,5,2026-01-25
+INT050,Lisa Rodriguez,Average performer who does the minimum required. Could benefit from clearer goal setting.,3,2026-01-28
+INT051,Dr. Sarah Chen,Great attitude and willingness to help others. A positive influence on team culture.,4,2026-02-01
+INT052,Prof. James Wilson,Submitted incomplete documentation for the API project. Needs to improve thoroughness.,2,2026-02-03
+INT053,Mark Thompson,Shows strong analytical skills when focused. Distractions seem to affect output quality.,3,2026-02-05
+INT054,Dr. Priya Patel,Excellent at implementing CI/CD pipelines. Automated several manual deployment steps.,5,2026-02-08
+INT055,Lisa Rodriguez,Struggle with version control basics. Should complete Git training module as soon as possible.,2,2026-02-10

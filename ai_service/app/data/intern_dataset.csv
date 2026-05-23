@@ -1,0 +1,56 @@
+intern_id,name,skills,education,interests,technologies,department,experience_level
+INT001,Aarav Sharma,"Python,Machine Learning,Data Analysis",B.Tech Computer Science,"AI Research,Data Science","TensorFlow,Pandas,Jupyter",Data Science,Intermediate
+INT002,Emily Johnson,"JavaScript,React,CSS",B.Sc Information Technology,"Web Development,UI Design","React,Node.js,Figma",Engineering,Beginner
+INT003,Raj Patel,"Java,Spring Boot,SQL",M.Tech Software Engineering,"Backend Development,System Design","Spring,PostgreSQL,Docker",Engineering,Advanced
+INT004,Sophia Martinez,"Photoshop,Illustrator,Figma",B.Des Graphic Design,"Visual Design,Branding","Adobe Suite,Canva,Sketch",Design,Intermediate
+INT005,Liam O'Brien,"SEO,Content Writing,Analytics",B.A Marketing,"Digital Marketing,Growth Hacking","Google Analytics,Mailchimp,HubSpot",Marketing,Beginner
+INT006,Priya Krishnan,"Python,NLP,Deep Learning",M.Sc Data Science,"Natural Language Processing,Research","PyTorch,NLTK,Scikit-learn",Data Science,Advanced
+INT007,James Wilson,"Excel,HRIS,Recruiting",B.B.A Human Resources,"Talent Acquisition,Employee Engagement","SAP HR,Workday,LinkedIn Recruiter",HR,Intermediate
+INT008,Mei Lin Chen,"C++,Algorithms,Data Structures",B.Tech Computer Engineering,"Competitive Programming,System Design","GCC,Visual Studio,Git",Engineering,Intermediate
+INT009,Carlos Rivera,"Social Media,Copywriting,Branding",B.A Communications,"Content Strategy,Brand Management","Hootsuite,Buffer,WordPress",Marketing,Beginner
+INT010,Aisha Mohammed,"R,Statistics,Tableau",M.Sc Statistics,"Data Visualization,Predictive Modeling","R Studio,Tableau,Power BI",Data Science,Intermediate
+INT011,Tom Nguyen,"HTML,CSS,JavaScript",B.Sc Web Development,"Frontend Development,Responsive Design","Bootstrap,Sass,Webpack",Engineering,Beginner
+INT012,Fatima Al-Rashid,"UX Research,Wireframing,Prototyping",M.Des Interaction Design,"User Experience,Accessibility","Figma,InVision,UserTesting",Design,Advanced
+INT013,Daniel Kim,"Python,Django,REST APIs",B.Tech Information Systems,"Full Stack Development,Cloud","Django,AWS,Redis",Engineering,Intermediate
+INT014,Sarah O'Connor,"Payroll,Compliance,Training",B.B.A Business Administration,"HR Operations,Learning Development","ADP,Cornerstone,Zoom",HR,Beginner
+INT015,Vikram Singh,"Power BI,SQL,ETL",B.Tech Electronics,"Business Intelligence,Data Warehousing","SSIS,Azure,Snowflake",Data Science,Intermediate
+INT016,Jessica Brown,"Video Editing,Motion Graphics,UI Design",B.F.A Visual Arts,"Animation,Digital Media","After Effects,Premiere Pro,Blender",Design,Beginner
+INT017,Ahmed Hassan,"Kotlin,Android,Firebase",B.Tech Mobile Computing,"Mobile Development,IoT","Android Studio,Firebase,Gradle",Engineering,Intermediate
+INT018,Laura Schmidt,"Email Marketing,PPC,Market Research",M.B.A Marketing Management,"Performance Marketing,CRM","Google Ads,Salesforce,Marketo",Marketing,Advanced
+INT019,Yuki Tanaka,"Rust,WebAssembly,Linux",M.Tech Systems Programming,"Open Source,DevOps","Cargo,Docker,Kubernetes",Engineering,Advanced
+INT020,Grace Thompson,"Conflict Resolution,Onboarding,Benefits",B.A Psychology,"Organizational Development,Wellness","BambooHR,Slack,Teams",HR,Intermediate
+INT021,Michael Davis,"TypeScript,Angular,GraphQL",B.Sc Software Engineering,"Enterprise Apps,Microservices","Angular,Apollo,NestJS",Engineering,Intermediate
+INT022,Nina Petrova,"Pandas,Scikit-learn,Feature Engineering",M.Sc Machine Learning,"Predictive Analytics,AutoML","Python,MLflow,DVC",Data Science,Advanced
+INT023,Robert Chen,"Go,Microservices,Kubernetes",B.Tech Cloud Computing,"Distributed Systems,SRE","Golang,K8s,Prometheus",Engineering,Advanced
+INT024,Isabella Rossi,"Illustration,Typography,Layout",B.Des Communication Design,"Print Design,Digital Art","InDesign,Procreate,CorelDRAW",Design,Intermediate
+INT025,Omar Farouk,"Public Relations,Event Management,Surveys",B.A Mass Communication,"Corporate Communications,CSR","Eventbrite,SurveyMonkey,Canva",Marketing,Beginner
+INT026,Ananya Desai,"TensorFlow,Computer Vision,MLOps",M.Tech AI and ML,"Deep Learning,Edge Computing","TF Serving,OpenCV,Weights & Biases",Data Science,Advanced
+INT027,Kevin Murphy,"PHP,Laravel,MySQL",B.Sc Information Systems,"Web Development,E-commerce","Laravel,Composer,PHPUnit",Engineering,Beginner
+INT028,Zara Ahmed,"Benefits Administration,HRIS,Analytics",M.B.A Human Capital,"People Analytics,DEI","Workday,Visier,Culture Amp",HR,Advanced
+INT029,Lucas Martin,"Vue.js,Nuxt,Tailwind",B.Tech Web Technologies,"Frontend Frameworks,JAMstack","Vue,Vite,Netlify",Engineering,Intermediate
+INT030,Hana Yamamoto,"Branding,Photography,Social Media",B.F.A Applied Arts,"Visual Storytelling,Marketing Design","Lightroom,Canva,Instagram API",Design,Beginner
+INT031,David Clark,"AWS,Terraform,CI/CD",B.Tech DevOps Engineering,"Cloud Architecture,Automation","AWS CLI,Jenkins,Ansible",Engineering,Advanced
+INT032,Meera Reddy,"Biostatistics,SAS,Clinical Trials",M.Sc Biostatistics,"Health Data,Epidemiology","SAS,SPSS,REDCap",Data Science,Intermediate
+INT033,Jack Robinson,"React Native,Expo,TypeScript",B.Sc Mobile Development,"Cross-Platform Apps,UX","Expo,Redux,Jest",Engineering,Intermediate
+INT034,Emma Watson,"Training Design,LMS,Performance Management",B.Ed Education Technology,"E-Learning,Instructional Design","Moodle,Articulate,Camtasia",HR,Intermediate
+INT035,Alex Petrov,"Scala,Spark,Hadoop",M.Tech Big Data,"Distributed Computing,Data Engineering","Databricks,Airflow,Hive",Data Science,Advanced
+INT036,Chloe Dubois,"UI Animation,Design Systems,Accessibility",M.Des Digital Experience,"Inclusive Design,Design Ops","Storybook,Lottie,Axe",Design,Advanced
+INT037,Ryan Taylor,"Node.js,Express,MongoDB",B.Tech Backend Development,"API Design,Real-time Systems","Express,Socket.IO,Mongoose",Engineering,Intermediate
+INT038,Sneha Kapoor,"Google Ads,Facebook Ads,Attribution",B.B.A Digital Business,"Paid Media,Conversion Optimization","GA4,Facebook Business,Optimizely",Marketing,Intermediate
+INT039,Benjamin Lee,"Cybersecurity,Penetration Testing,Networking",B.Tech Information Security,"Ethical Hacking,Forensics","Kali Linux,Wireshark,Burp Suite",Engineering,Advanced
+INT040,Diana Morales,"Recruitment Marketing,Employer Branding,ATS",B.A Organizational Behavior,"Talent Strategy,Workforce Planning","Greenhouse,Lever,LinkedIn",HR,Beginner
+INT041,Arjun Nair,"SQL,Python,Data Modeling",B.Tech Data Engineering,"Analytics Engineering,dbt","PostgreSQL,dbt,Airflow",Data Science,Intermediate
+INT042,Olivia White,"Brand Strategy,Content Marketing,Podcasting",M.A Communications,"Thought Leadership,Storytelling","Anchor,Medium,Notion",Marketing,Intermediate
+INT043,Chris Anderson,"Flutter,Dart,Swift",B.Sc Computer Science,"Mobile Development,AR/VR","Xcode,Android Studio,ARKit",Engineering,Intermediate
+INT044,Riya Gupta,"Sketch,Principle,User Testing",B.Des Product Design,"Product Strategy,Design Thinking","Sketch,Maze,Miro",Design,Intermediate
+INT045,Ethan Moore,"Python,FastAPI,Redis",B.Tech Software Engineering,"Backend Systems,ML Deployment","FastAPI,Celery,Docker",Engineering,Intermediate
+INT046,Nadia Ivanova,"Compensation,Labor Law,Negotiations",M.B.A Industrial Relations,"Employee Relations,Policy Design","PeopleSoft,DocuSign,Jira",HR,Advanced
+INT047,Samuel Wright,"Data Mining,Feature Selection,XGBoost",M.Sc Applied Mathematics,"Kaggle Competitions,Research","XGBoost,LightGBM,Optuna",Data Science,Intermediate
+INT048,Hannah Green,"Influencer Marketing,TikTok,YouTube",B.A Media Studies,"Social Media Strategy,Video Marketing","TikTok Ads,Tubular,Sprout Social",Marketing,Beginner
+INT049,Rohan Mehta,"Embedded C,RTOS,IoT Protocols",B.Tech Electronics and Communication,"IoT,Robotics","Arduino,Raspberry Pi,MQTT",Engineering,Intermediate
+INT050,Sofia Andersson,"Service Design,Journey Mapping,CX Research",M.Des Service Design,"Customer Experience,Co-creation","OptimalSort,Dovetail,Mural",Design,Advanced
+INT051,William Harris,"Jenkins,GitLab CI,Docker Compose",B.Sc IT Infrastructure,"DevOps,Monitoring","Grafana,ELK Stack,Terraform",Engineering,Intermediate
+INT052,Tanvi Joshi,"NLP,Hugging Face,Text Classification",M.Tech Computational Linguistics,"Conversational AI,Chatbots","Transformers,Rasa,SpaCy",Data Science,Advanced
+INT053,Patrick O'Neill,"WordPress,Shopify,SEO Auditing",B.Sc E-Commerce,"Digital Commerce,CRO","Yoast,Ahrefs,Shopify Plus",Marketing,Beginner
+INT054,Maya Johnson,"3D Modeling,Rendering,AR Design",B.F.A Industrial Design,"Product Visualization,Spatial Design","Blender,Unity,Substance Painter",Design,Intermediate
+INT055,Leo Zhang,"Elixir,Phoenix,PostgreSQL",M.Tech Distributed Systems,"Functional Programming,Scalability","Elixir,LiveView,Fly.io",Engineering,Advanced

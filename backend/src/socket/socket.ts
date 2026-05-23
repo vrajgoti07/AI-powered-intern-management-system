@@ -1,0 +1,195 @@
+import { Server as SocketIOServer, Socket } from 'socket.io';
+import { Server as HttpServer } from 'http';
+import { createAdapter } from '@socket.io/redis-adapter';
+import { verifyAccessToken } from '../utils/jwt';
+import { logger } from '../utils/logger';
+import redis from '../config/redis';
+import { config } from '../config/env';
+
+// Extended socket interface to store user metadata
+export interface AuthenticatedSocket extends Socket {
+  user?: {
+    userId: string;
+    email: string;
+    role: string;
+    name?: string;
+  };
+}
+
+let io: SocketIOServer | null = null;
+
+// Track active socket IDs per user (in-memory within this instance)
+// Key: userId, Value: Set of socket.id
+const userConnections = new Map<string, Set<string>>();
+
+/**
+ * Initialize Socket.IO server
+ */
+export const initSocket = (httpServer: HttpServer): SocketIOServer => {
+  io = new SocketIOServer(httpServer, {
+    cors: {
+      origin: config.cors.origin,
+      credentials: true,
+      methods: ['GET', 'POST'],
+    },
+    pingTimeout: 60000,
+  });
+
+  // Use Redis Adapter for multi-instance scaling
+  const subClient = redis.duplicate();
+  io.adapter(createAdapter(redis, subClient));
+
+  // JWT authentication handshake middleware
+  io.use(async (socket: AuthenticatedSocket, next) => {
+    try {
+      // Token can be sent in auth handshake or in query parameters/headers
+      const token = 
+        socket.handshake.auth?.token || 
+        socket.handshake.headers?.authorization?.split(' ')[1] ||
+        socket.handshake.query?.token;
+
+      if (!token) {
+        logger.warn(`Rejected connection attempt on socket ${socket.id}: No authentication token provided.`);
+        return next(new Error('Authentication failed: No token provided'));
+      }
+
+      const decoded = verifyAccessToken(token as string);
+      
+      // Attempt to find user's name from database or defaults
+      socket.user = {
+        userId: decoded.userId,
+        email: decoded.email,
+        role: decoded.role,
+      };
+
+      next();
+    } catch (error: any) {
+      logger.warn(`Rejected socket connection ${socket.id} due to invalid token: ${error.message}`);
+      next(new Error('Authentication failed: Invalid or expired token'));
+    }
+  });
+
+  io.on('connection', async (socket: AuthenticatedSocket) => {
+    if (!socket.user) return;
+    const { userId } = socket.user;
+
+    logger.info(`User connected to socket: ${userId} (Socket ID: ${socket.id})`);
+
+    // 1. Manage user connections (Multi-tab support)
+    if (!userConnections.has(userId)) {
+      userConnections.set(userId, new Set());
+    }
+    userConnections.get(userId)!.add(socket.id);
+
+    // 2. Add user to the unified Redis online set
+    try {
+      await redis.sadd('online_users', userId);
+      // Join self room (user:userId) for user-specific real-time alerts
+      await socket.join(`user:${userId}`);
+      
+      // Broadcast online status to all connected users
+      socket.broadcast.emit('user_status_change', {
+        userId,
+        status: 'online',
+      });
+    } catch (err) {
+      logger.error('Failed to sync online status to Redis on connect:', err);
+    }
+
+    // 3. Room mapping for Active Chats
+    socket.on('join_conversation', async ({ conversationId }) => {
+      if (!conversationId) return;
+      await socket.join(`conversation:${conversationId}`);
+      logger.info(`Socket ${socket.id} joined conversation room: ${conversationId}`);
+    });
+
+    socket.on('leave_conversation', async ({ conversationId }) => {
+      if (!conversationId) return;
+      await socket.leave(`conversation:${conversationId}`);
+      logger.info(`Socket ${socket.id} left conversation room: ${conversationId}`);
+    });
+
+    // 4. Typing Indicator broadcasts
+    socket.on('typing', ({ conversationId, isTyping }) => {
+      if (!conversationId) return;
+      socket.to(`conversation:${conversationId}`).emit('user_typing', {
+        conversationId,
+        userId,
+        isTyping,
+      });
+    });
+
+    // 5. Read receipt broadcasts
+    socket.on('message_read', ({ conversationId, messageId }) => {
+      if (!conversationId || !messageId) return;
+      socket.to(`conversation:${conversationId}`).emit('message_read_receipt', {
+        conversationId,
+        messageId,
+        userId,
+      });
+    });
+
+    // 6. Mentor Details room management (HR real-time updates)
+    socket.on('join_mentor_details', async ({ mentorId }) => {
+      if (!mentorId) return;
+      await socket.join(`mentor:${mentorId}`);
+      logger.info(`Socket ${socket.id} joined mentor details room: ${mentorId}`);
+    });
+
+    socket.on('leave_mentor_details', async ({ mentorId }) => {
+      if (!mentorId) return;
+      await socket.leave(`mentor:${mentorId}`);
+      logger.info(`Socket ${socket.id} left mentor details room: ${mentorId}`);
+    });
+
+    // 6. Handle Disconnection
+    socket.on('disconnect', async () => {
+      logger.info(`Socket disconnected: ${socket.id} (User: ${userId})`);
+
+      const connections = userConnections.get(userId);
+      if (connections) {
+        connections.delete(socket.id);
+        
+        if (connections.size === 0) {
+          userConnections.delete(userId);
+          
+          try {
+            // Remove user from online set in Redis
+            await redis.srem('online_users', userId);
+            
+            // Broadcast offline status
+            io?.emit('user_status_change', {
+              userId,
+              status: 'offline',
+            });
+            logger.info(`User ${userId} went completely offline`);
+          } catch (err) {
+            logger.error('Failed to sync offline status to Redis on disconnect:', err);
+          }
+        }
+      }
+    });
+  });
+
+  return io;
+};
+
+/**
+ * Get Socket.IO server instance
+ */
+export const getSocketIO = (): SocketIOServer | null => {
+  return io;
+};
+
+/**
+ * Helper to check if a specific user is currently online
+ */
+export const isUserOnline = async (userId: string): Promise<boolean> => {
+  try {
+    const isOnline = await redis.sismember('online_users', userId);
+    return isOnline === 1;
+  } catch (err) {
+    logger.error(`Error checking online status for user ${userId}:`, err);
+    return userConnections.has(userId);
+  }
+};

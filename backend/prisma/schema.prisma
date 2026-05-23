@@ -1,0 +1,745 @@
+// Prisma Schema for AI-Powered Intern Management System
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enum for User Roles
+enum UserRole {
+  SUPER_ADMIN
+  HR
+  MENTOR
+  INTERN
+}
+
+// Enum for Intern Status
+enum InternStatus {
+  ACTIVE
+  COMPLETED
+  ONBOARDING
+  TERMINATED
+  OFFERED
+  PENDING
+}
+
+// Enum for Task Priority
+enum TaskPriority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+// Enum for Task Status
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  COMPLETED
+}
+
+// Enum for Announcement Priority
+enum AnnouncementPriority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+// User Model - Base authentication model
+model User {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  password        String
+  name            String
+  role            UserRole
+  avatarUrl       String?
+  isActive        Boolean  @default(true)
+  isEmailVerified Boolean  @default(false)
+
+  // Password reset fields
+  resetPasswordToken       String?   @unique
+  resetPasswordTokenExpiry DateTime?
+
+  // Refresh token for JWT
+  refreshToken String? @db.Text
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  lastLogin DateTime?
+
+  // Relations
+  intern        Intern?
+  mentor        Mentor?
+  conversations Conversation[] @relation("ConversationParticipants")
+  sentMessages  Message[]      @relation("MessageSender")
+  readMessages  Message[]      @relation("MessageReadBy")
+  notifications Notification[]
+  leaveRequests LeaveRequest[] @relation("UserLeaveRequests")
+
+  // Settings & Security Relations
+  otpVerifications       OtpVerification[]
+  userSessions           UserSession[]
+  loginActivities        LoginActivity[]
+  notificationPreference NotificationPreference?
+  trustedSessions        TrustedSession[]
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+// Department Model
+model Department {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  head        String
+  color       String  @default("indigo")
+  description String?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  interns     Intern[]
+  mentors     Mentor[]
+  jobPostings JobPosting[]
+
+  @@map("departments")
+}
+
+// Intern Model
+model Intern {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  // Personal Information
+  phone   String?
+  dob     DateTime?
+  college String
+  degree  String?
+  branch  String?
+  cgpa    Float?
+
+  // Internship Details
+  departmentId String
+  mentorId     String?
+  status       InternStatus @default(PENDING)
+  score        Float        @default(0)
+  attendance   Float        @default(0)
+
+  // Skills and Experience (AI Extracted from Resume)
+  skills     String[] @default([])
+  experience Json? // AI Extracted experience list
+  education  Json? // AI Extracted education list
+
+  duration      String?
+  startDate     DateTime?
+  joinedDate    DateTime  @default(now())
+  completedDate DateTime?
+  whyJoin       String?   @db.Text
+  resumeUrl     String?
+
+  // Onboarding Data
+  address            String?   @db.Text
+  workAddress        String?   @db.Text
+  emergencyName      String?
+  emergencyRelation  String?
+  emergencyPhone     String?
+  signedName         String?
+  agreementAccepted  Boolean   @default(false)
+  offerLetterAccepted Boolean  @default(false)
+  onboardingStep     Int       @default(0)
+  
+  // New Onboarding Fields
+  gender             String?
+  semester           Int?
+  parentName         String?
+  parentPhone        String?
+  idProofUrl         String?
+  marksheetUrl       String?
+  aadhaarPanUrl      String?
+  collegeIdUrl       String?
+  passportPhotoUrl   String?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department         Department          @relation(fields: [departmentId], references: [id])
+  mentor             Mentor?             @relation(fields: [mentorId], references: [id])
+  tasks              Task[]
+  feedbacks          Feedback[]
+  leaves             Leave[]
+  attendances        Attendance[]
+  onboardingProgress OnboardingProgress?
+
+  @@index([userId])
+  @@index([departmentId])
+  @@index([mentorId])
+  @@index([status])
+  @@map("interns")
+}
+
+// OnboardingProgress Model
+model OnboardingProgress {
+  id                    String   @id @default(uuid())
+  internId              String   @unique
+  
+  currentStep           Int      @default(1)
+  
+  offerAccepted         Boolean  @default(false)
+  personalInfoCompleted Boolean  @default(false)
+  educationCompleted    Boolean  @default(false)
+  emergencyCompleted    Boolean  @default(false)
+  documentsCompleted    Boolean  @default(false)
+  agreementAccepted     Boolean  @default(false)
+  finalSubmitted        Boolean  @default(false)
+
+  verificationStatus    String   @default("PENDING") // PENDING, UNDER_REVIEW, APPROVED, REJECTED
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  intern                Intern   @relation(fields: [internId], references: [id], onDelete: Cascade)
+
+  @@map("onboarding_progress")
+}
+
+// Mentor Model
+model Mentor {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  // Professional Information
+  departmentId String
+  rating       Float    @default(0)
+  expertise    String[] @default([])
+  bio          String?  @db.Text
+
+  // Extended Profile Fields
+  phone          String?
+  designation    String?
+  experience     Int?        @default(0)
+  skills         String[]    @default([])
+  mentorCapacity Int         @default(5)
+  mentorStatus   String      @default("ACTIVE")
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department Department @relation(fields: [departmentId], references: [id])
+  interns    Intern[]
+  tasks      Task[]
+  feedbacks  Feedback[]
+  analytics  MentorAnalytics[]
+  documents  MentorDocument[]
+  activities MentorActivity[]
+
+  @@index([userId])
+  @@index([departmentId])
+  @@map("mentors")
+}
+
+// Mentor Analytics - Computed performance metrics
+model MentorAnalytics {
+  id                    String   @id @default(uuid())
+  mentorId              String
+  totalInterns          Int      @default(0)
+  completedInternships  Int      @default(0)
+  avgRating             Float    @default(0)
+  attendanceReviews     Int      @default(0)
+  taskReviews           Int      @default(0)
+  leaveApprovalsHandled Int      @default(0)
+  aiMentorScore         Float?
+  performanceTrend      Json?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  mentor Mentor @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+
+  @@index([mentorId])
+  @@map("mentor_analytics")
+}
+
+// Mentor Documents - File attachments
+model MentorDocument {
+  id         String   @id @default(uuid())
+  mentorId   String
+  fileName   String
+  fileUrl    String
+  fileType   String
+  fileSize   Int?
+  uploadedAt DateTime @default(now())
+
+  mentor Mentor @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+
+  @@index([mentorId])
+  @@map("mentor_documents")
+}
+
+// Mentor Activity Log - Timeline events
+model MentorActivity {
+  id           String   @id @default(uuid())
+  mentorId     String
+  activityType String
+  description  String   @db.Text
+  metadata     Json?
+  createdAt    DateTime @default(now())
+
+  mentor Mentor @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+
+  @@index([mentorId])
+  @@index([createdAt])
+  @@map("mentor_activities")
+}
+
+// Task Model
+model Task {
+  id          String @id @default(uuid())
+  title       String
+  description String @db.Text
+
+  // Assignment Details
+  internId String
+  mentorId String
+  priority TaskPriority @default(MEDIUM)
+  status   TaskStatus   @default(TODO)
+  dueDate  DateTime
+
+  // Submission Details
+  submissionUrl   String?
+  submittedAt     DateTime?
+  submissionNotes String?   @db.Text
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  intern Intern @relation(fields: [internId], references: [id], onDelete: Cascade)
+  mentor Mentor @relation(fields: [mentorId], references: [id])
+
+  @@index([internId])
+  @@index([mentorId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("tasks")
+}
+
+// Feedback Model
+model Feedback {
+  id String @id @default(uuid())
+
+  // Feedback Details
+  internId String
+  mentorId String
+  rating   Int // 1-5 rating
+  comment  String  @db.Text
+  category String? // e.g., "Technical Skills", "Communication", "Teamwork"
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  intern Intern @relation(fields: [internId], references: [id], onDelete: Cascade)
+  mentor Mentor @relation(fields: [mentorId], references: [id])
+
+  @@index([internId])
+  @@index([mentorId])
+  @@map("feedbacks")
+}
+
+// Announcement Model
+model Announcement {
+  id       String               @id @default(uuid())
+  title    String
+  content  String               @db.Text
+  priority AnnouncementPriority @default(MEDIUM)
+  audience String // "All", "HR", "Mentors", "Interns", or specific department
+  author   String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([audience])
+  @@index([createdAt])
+  @@map("announcements")
+}
+
+// Enum for Leave Status
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Enum for Leave Type
+enum LeaveType {
+  SICK
+  CASUAL
+  EMERGENCY
+  OTHER
+}
+
+// Attendance Model
+model Attendance {
+  id           String    @id @default(uuid())
+  internId     String
+  date         DateTime  @db.Date
+  checkIn      DateTime?
+  checkOut     DateTime?
+  status       String    @default("ABSENT") // PRESENT, ABSENT, HALF_DAY, LEAVE, LATE, HOLIDAY, WEEKEND, NOT_MARKED
+  workingHours Float?
+  lateMinutes  Int?
+  markedBy     String?   // "SYSTEM", "HR", "MENTOR", or User ID
+  deviceInfo   String?
+  ipAddress    String?
+  notes        String?
+
+  // Timestamps
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  intern       Intern   @relation(fields: [internId], references: [id], onDelete: Cascade)
+
+  @@unique([internId, date])
+  @@index([internId])
+  @@index([date])
+  @@map("attendances")
+}
+
+// Leave Model
+model Leave {
+  id        String      @id @default(uuid())
+  internId  String
+  type      LeaveType
+  startDate DateTime    @db.Date
+  endDate   DateTime    @db.Date
+  reason    String      @db.Text
+  status    LeaveStatus @default(PENDING)
+
+  // Approval Details
+  approvedBy      String?
+  approvedAt      DateTime?
+  rejectionReason String?   @db.Text
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  intern Intern @relation(fields: [internId], references: [id], onDelete: Cascade)
+
+  @@index([internId])
+  @@index([status])
+  @@index([startDate])
+  @@map("leaves")
+}
+
+// LeaveRequest Model - Enterprise Leave system
+model LeaveRequest {
+  id         String   @id @default(uuid())
+  userId     String
+  mentorId   String?
+  hrId       String?
+  leaveType  String   // "Sick Leave", "Casual Leave", "Emergency Leave", "Half Day", "Work From Home"
+  reason     String   @db.Text
+  startDate  DateTime @db.Date
+  endDate    DateTime @db.Date
+  status     String   @default("Pending Mentor") // "Pending Mentor", "Pending HR", "Approved", "Rejected"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  user       User     @relation("UserLeaveRequests", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("leave_requests")
+}
+
+// Holiday Model
+model Holiday {
+  id    String   @id @default(uuid())
+  title String
+  date  DateTime @unique @db.Date
+  type  String   @default("NATIONAL") // NATIONAL, COMPANY, REGIONAL
+
+  @@map("holidays")
+}
+
+// AttendanceSettings Model
+model AttendanceSettings {
+  id                  String   @id @default(uuid())
+  internshipStartDate DateTime @db.Date
+  internshipEndDate   DateTime @db.Date
+  lateThreshold       String   @default("09:15") // HH:MM format
+  attendanceCloseTime String   @default("18:00") // HH:MM format
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@map("attendance_settings")
+}
+
+// Task Comment Model
+model TaskComment {
+  id      String @id @default(uuid())
+  taskId  String
+  userId  String
+  comment String @db.Text
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([taskId])
+  @@index([userId])
+  @@map("task_comments")
+}
+
+// Task File Model
+model TaskFile {
+  id         String @id @default(uuid())
+  taskId     String
+  fileName   String
+  fileUrl    String
+  fileType   String
+  fileSize   Int
+  uploadedBy String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  @@index([taskId])
+  @@map("task_files")
+}
+
+// Conversation Model
+model Conversation {
+  id        String   @id @default(uuid())
+  name      String? // Group chat name
+  isGroup   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  participants User[]    @relation("ConversationParticipants")
+  messages     Message[]
+
+  @@map("conversations")
+}
+
+// Message Model
+model Message {
+  id             String  @id @default(uuid())
+  conversationId String
+  senderId       String
+  content        String  @db.Text
+  fileUrl        String?
+  fileName       String?
+  fileType       String?
+  fileSize       Int?
+  metadata       Json?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  readBy       User[]       @relation("MessageReadBy")
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@map("messages")
+}
+
+// Notification Model
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String   @db.Text
+  type      String // TASK, ANNOUNCEMENT, CHAT, LEAVE, SYSTEM
+  isRead    Boolean  @default(false)
+  data      Json? // PostgreSQL native JSON
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// ============================================
+// RECRUITMENT MODULE MODELS
+// ============================================
+
+enum ApplicationStatus {
+  APPLIED
+  SHORTLISTED
+  INTERVIEW_SCHEDULED
+  INTERVIEWED
+  OFFERED
+  REJECTED
+}
+
+model JobPosting {
+  id           String   @id @default(uuid())
+  title        String
+  description  String   @db.Text
+  departmentId String
+  isActive     Boolean  @default(true)
+  requirements String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  department Department  @relation(fields: [departmentId], references: [id])
+  candidates Candidate[]
+
+  @@map("job_postings")
+}
+
+model Candidate {
+  id           String  @id @default(uuid())
+  jobPostingId String
+  firstName    String
+  lastName     String
+  email        String  @unique
+  phone        String?
+  resumeUrl    String
+
+  // AI Parsed Data
+  parsedSkills     String[] @default([])
+  parsedEducation  Json?
+  parsedExperience Json?
+  aiMatchScore     Float?
+
+  status ApplicationStatus @default(APPLIED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  jobPosting JobPosting  @relation(fields: [jobPostingId], references: [id])
+  interviews Interview[]
+
+  @@map("candidates")
+}
+
+model Interview {
+  id            String   @id @default(uuid())
+  candidateId   String
+  interviewerId String // References User.id
+  scheduledAt   DateTime
+  meetingLink   String?
+  feedback      String?  @db.Text
+  score         Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@map("interviews")
+}
+
+model OtpVerification {
+  id            String   @id @default(cuid())
+  userId        String
+  otpCode       String
+  expiresAt     DateTime
+  verified      Boolean  @default(false)
+  attempts      Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("otp_verifications")
+}
+
+model UserSession {
+  id            String   @id @default(cuid())
+  userId        String
+  tokenId       String   @unique
+  deviceName    String
+  browser       String
+  ipAddress     String
+  isActive      Boolean  @default(true)
+  lastActivity  DateTime @updatedAt
+  createdAt     DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_sessions")
+}
+
+model LoginActivity {
+  id            String   @id @default(cuid())
+  userId        String
+  status        String   // "SUCCESS", "FAILED", "LOGOUT"
+  browser       String
+  device        String
+  ipAddress     String
+  createdAt     DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("login_activities")
+}
+
+model NotificationPreference {
+  id                    String  @id @default(cuid())
+  userId                String  @unique
+  emailNotifications    Boolean @default(true)
+  attendanceAlerts      Boolean @default(true)
+  leaveAlerts           Boolean @default(true)
+  taskAlerts            Boolean @default(true)
+  announcementAlerts    Boolean @default(true)
+
+  user                  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+model TrustedSession {
+  id                  String   @id @default(cuid())
+  userId              String
+  sessionToken        String   @unique
+  deviceFingerprint   String
+  browser             String
+  operatingSystem     String
+  ipAddress           String?
+  status              String   // "ACTIVE", "EXPIRED", "REVOKED", "LOGGED_OUT"
+  expiresAt           DateTime
+  lastActivityAt      DateTime
+  createdAt           DateTime @default(now())
+
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([sessionToken])
+  @@map("trusted_sessions")
+}
+

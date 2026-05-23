@@ -1,0 +1,33 @@
+{
+  "model_name": "distilbert-base-uncased-finetuned-sst-2-english",
+  "task": "sentiment-analysis",
+  "device": "cpu",
+  "test_results": [
+    {
+      "text": "Shows strong initiative and consistently delivers high-quality work.",
+      "label": "POSITIVE",
+      "score": 0.9999
+    },
+    {
+      "text": "Poor attendance record and frequently misses standup meetings.",
+      "label": "NEGATIVE",
+      "score": 0.9998
+    },
+    {
+      "text": "Average performance overall. Completes tasks but rarely goes beyond.",
+      "label": "NEGATIVE",
+      "score": 0.9007
+    },
+    {
+      "text": "Excellent communication skills and team collaboration. Highly recommended.",
+      "label": "POSITIVE",
+      "score": 0.9999
+    },
+    {
+      "text": "Struggles with complex problem solving. Needs additional mentoring.",
+      "label": "NEGATIVE",
+      "score": 0.9993
+    }
+  ],
+  "status": "ready"
+}
