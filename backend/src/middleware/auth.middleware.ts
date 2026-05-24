@@ -37,12 +37,13 @@ export const authenticate = async (
     // Verify token
     const decoded = verifyAccessToken(token);
     
-    // Fetch full user with intern and mentor profiles
+    // Fetch full user with intern, mentor, and headedDepartment profiles
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
       include: {
         intern: true,
         mentor: true,
+        headedDepartment: true,
       },
     });
 
@@ -86,6 +87,7 @@ export const optionalAuthenticate = async (
         include: {
           intern: true,
           mentor: true,
+          headedDepartment: true,
         },
       });
 

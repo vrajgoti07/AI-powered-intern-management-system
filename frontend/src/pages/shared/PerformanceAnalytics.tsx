@@ -128,7 +128,7 @@ export const PerformanceAnalytics: React.FC = () => {
   const [quizFinished, setQuizFinished] = useState(false);
 
   // Check the selected intern's skills
-  const internSkills = Array.isArray(selectedIntern?.skills) 
+  const internSkills: string[] = Array.isArray(selectedIntern?.skills) 
     ? selectedIntern.skills.map((s: string) => s.toLowerCase()) 
     : [];
 

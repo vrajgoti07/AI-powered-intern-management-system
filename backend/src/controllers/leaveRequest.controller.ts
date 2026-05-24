@@ -227,17 +227,22 @@ export class LeaveRequestController {
    */
   async getAll(req: Request, res: Response): Promise<void> {
     try {
-      const { userId, status } = req.query;
+      const { userId, status, departmentId } = req.query;
       const filters: any = {};
 
       if (userId) filters.userId = userId as string;
       if (status) filters.status = status as string;
+      if (departmentId) filters.departmentId = departmentId as string;
 
       // Mentor access filtering
       if (req.user?.role === 'MENTOR') {
         filters.mentorId = req.user.mentor?.id;
       } else if (req.user?.role === 'INTERN') {
         filters.userId = req.user.id;
+      } else if (req.user?.role === 'DEPARTMENT_HEAD') {
+        if (req.user.headedDepartment?.id) {
+          filters.departmentId = req.user.headedDepartment.id;
+        }
       }
 
       const records = await leaveRequestService.getLeaveRequests(filters);

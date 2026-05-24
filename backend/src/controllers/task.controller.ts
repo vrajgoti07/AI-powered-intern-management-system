@@ -74,7 +74,7 @@ export class TaskController {
    */
   async getTasks(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { page, limit, sortBy, sortOrder, internId, mentorId, status, priority, search } = req.query;
+      const { page, limit, sortBy, sortOrder, internId, mentorId, status, priority, search, departmentId } = req.query;
 
       // Build filters based on user role
       const filters: any = {};
@@ -83,11 +83,16 @@ export class TaskController {
         filters.internId = req.user.intern?.id;
       } else if (req.user?.role === 'MENTOR') {
         filters.mentorId = req.user.mentor?.id;
+      } else if (req.user?.role === 'DEPARTMENT_HEAD') {
+        if (req.user.headedDepartment?.id) {
+          filters.departmentId = req.user.headedDepartment.id;
+        }
       }
 
       // Override with query params if provided (for HR)
       if (internId) filters.internId = internId as string;
       if (mentorId) filters.mentorId = mentorId as string;
+      if (departmentId) filters.departmentId = departmentId as string;
       if (status) filters.status = status;
       if (priority) filters.priority = priority;
       if (search) filters.search = search as string;

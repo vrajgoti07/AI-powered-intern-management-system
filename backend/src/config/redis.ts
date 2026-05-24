@@ -12,8 +12,14 @@ redis.on("connect", () => {
   console.log("✅ Redis Connected");
 });
 
-redis.on("error", (err) => {
-  console.log("❌ Redis Error:", err);
+let lastErrorLoggedTime = 0;
+
+redis.on("error", (err: any) => {
+  const now = Date.now();
+  if (now - lastErrorLoggedTime > 30000) {
+    console.log("❌ Redis Error (throttled to 30s):", err.message || err);
+    lastErrorLoggedTime = now;
+  }
 });
 
 export default redis;

@@ -31,6 +31,7 @@ interface TaskFilterOptions {
   status?: TaskStatus;
   priority?: TaskPriority;
   search?: string;
+  departmentId?: string;
 }
 
 export class TaskService {
@@ -95,6 +96,12 @@ export class TaskService {
 
     if (filters.mentorId) {
       where.mentorId = filters.mentorId;
+    }
+
+    if (filters.departmentId) {
+      where.intern = {
+        departmentId: filters.departmentId,
+      };
     }
 
     if (filters.status) {

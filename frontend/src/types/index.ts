@@ -6,6 +6,11 @@ export interface User {
   name: string;
   role: UserRole;
   avatarUrl?: string;
+  originalRole?: string;
+  headedDepartment?: {
+    id: string;
+    name: string;
+  };
 }
 
 export interface Intern {
@@ -43,6 +48,7 @@ export interface Intern {
   aadhaarPanUrl?: string;
   collegeIdUrl?: string;
   passportPhotoUrl?: string;
+  experience?: any;
 }
 
 export interface Mentor {

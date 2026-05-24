@@ -186,7 +186,12 @@ export const CommunicationSystem: React.FC = () => {
   const { data: myTasks } = useTasks();
 
   const isMentor = user?.role === 'mentor';
-  const { data: interns = [] } = useInterns();
+  const resolvedDeptId = (user as any)?.mentor?.departmentId || (user as any)?.headedDepartment?.id;
+  const { data: interns = [] } = useInterns(
+    isMentor && resolvedDeptId
+      ? { departmentId: resolvedDeptId }
+      : undefined
+  );
   const [selectedInternId, setSelectedInternId] = useState<string | null>(null);
 
   // Auto-select first intern if mentor
@@ -1242,33 +1247,7 @@ export const CommunicationSystem: React.FC = () => {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex-shrink-0">
             <div className="text-left">
               <span className="text-xs font-bold text-[#2563eb] bg-blue-50 px-3 py-1 rounded-full uppercase tracking-wider">Workspace Comms</span>
-              <h1 className="text-lg font-black text-slate-800 tracking-tight mt-1.5">Collaboration & AI Tutor</h1>
-            </div>
-
-            <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200/50 w-full md:w-auto overflow-x-auto gap-1">
-              {[
-                { id: 'chat', label: 'Group Channels', icon: MessageSquare },
-                { id: 'tutor', label: 'AI Help Tutor', icon: Brain },
-                { id: 'tickets', label: 'Helpdesk Tickets', icon: HelpCircle },
-                { id: 'forum', label: 'Discussion Forum', icon: Megaphone }
-              ].map((tab) => {
-                const Icon = tab.icon;
-                const active = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
-                    className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all duration-300 whitespace-nowrap cursor-pointer
-                      ${active 
-                        ? 'bg-white text-[#2563eb] shadow-sm border border-slate-200/40' 
-                        : 'text-slate-500 hover:text-slate-800'
-                      }`}
-                  >
-                    <Icon className={`w-4 h-4 ${active ? 'text-[#2563eb]' : 'text-slate-400'}`} />
-                    {tab.label}
-                  </button>
-                );
-              })}
+              <h1 className="text-lg font-black text-slate-800 tracking-tight mt-1.5">Collaboration Channels</h1>
             </div>
           </div>
 

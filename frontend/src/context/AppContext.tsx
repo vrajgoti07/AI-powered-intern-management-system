@@ -285,7 +285,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           resumeUrl: i.resumeUrl,
           avatarUrl: i.user?.avatarUrl,
           address: i.address || '',
-          workAddress: i.workAddress || ''
+          workAddress: i.workAddress || '',
+          experience: i.experience
         }));
         dispatch({ type: 'SET_INTERNS', payload: mappedInterns });
       }

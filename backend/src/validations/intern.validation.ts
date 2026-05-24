@@ -75,6 +75,8 @@ export const updateInternSchema = z.object({
     emergencyPhone: z.string().optional().nullable(),
     emergencyRelation: z.string().optional().nullable(),
     semester: z.number().optional().nullable(),
+    experience: z.any().optional(),
+    education: z.any().optional(),
   }),
 });
 

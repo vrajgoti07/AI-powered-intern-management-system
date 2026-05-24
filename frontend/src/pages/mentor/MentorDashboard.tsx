@@ -12,7 +12,12 @@ import api from '../../services/api';
 
 export const MentorDashboard: React.FC = () => {
   const { user } = useAuth();
-  const { data: interns = [] } = useInterns();
+  const isDepartmentHead = user?.originalRole === 'DEPARTMENT_HEAD';
+  const { data: interns = [] } = useInterns(
+    isDepartmentHead && user?.headedDepartment?.id
+      ? { departmentId: user.headedDepartment.id }
+      : undefined
+  );
   const { data: tasks = [] } = useTasks();
   const { data: leaveRequests = [], refetch: refetchLeaves } = useLeaves();
   const { data: attendances = [], refetch: refetchAttendance } = useAttendance();
@@ -33,9 +38,20 @@ export const MentorDashboard: React.FC = () => {
 
   // Mentor dynamic reference
   const mentorName = user?.name || "Mentor";
-  const myInterns = interns.filter((i: any) => i.mentor?.user?.name === mentorName);
-  const myTasks = tasks.filter((t: any) => t.mentor?.user?.name === mentorName);
-  const myPendingLeaves = (leaveRequests || []).filter((l: any) => l.intern?.mentor?.user?.name === mentorName && l.status === 'PENDING');
+  const myInterns = isDepartmentHead
+    ? interns
+    : interns.filter((i: any) => i.mentor?.user?.name === mentorName);
+
+  const myTasks = isDepartmentHead
+    ? tasks.filter((t: any) => t.intern?.departmentId === user?.headedDepartment?.id)
+    : tasks.filter((t: any) => t.mentor?.user?.name === mentorName);
+
+  const myPendingLeaves = isDepartmentHead
+    ? (leaveRequests || []).filter((l: any) => l.user?.intern?.departmentId === user?.headedDepartment?.id && (l.status === 'Pending Mentor' || l.status === 'PENDING'))
+    : (leaveRequests || []).filter((l: any) => (l.mentorId === (user as any)?.mentor?.id || l.user?.intern?.mentorId === (user as any)?.mentor?.id) && (l.status === 'Pending Mentor' || l.status === 'PENDING'));
+
+  const myInternIds = new Set(myInterns.map((i: any) => i.id));
+  const myAttendancesList = attendances.filter((a: any) => myInternIds.has(a.internId));
   
   const pendingReviewsCount = myTasks.filter((t: any) => t.status === 'REVIEW').length;
   const completedTasksCount = myTasks.filter((t: any) => t.status === 'COMPLETED').length;
@@ -166,7 +182,7 @@ export const MentorDashboard: React.FC = () => {
                   </button>
                 </div>
                 <div className="overflow-x-auto flex-1 max-h-[300px] overflow-y-auto">
-                  {attendances.length === 0 ? (
+                  {myAttendancesList.length === 0 ? (
                     <p className="text-[11px] text-slate-400 font-semibold text-center italic py-8">No supervisor logs recorded for assigned interns.</p>
                   ) : (
                     <table className="w-full text-xs text-left">
@@ -181,7 +197,7 @@ export const MentorDashboard: React.FC = () => {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-50">
-                        {attendances.map((a: any) => (
+                        {myAttendancesList.map((a: any) => (
                           <tr key={a.id} className="hover:bg-slate-50/40 transition-colors">
                             <td className="px-5 py-3 font-bold text-slate-755">
                               {a.intern?.user?.name || "Unknown Intern"}

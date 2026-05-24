@@ -307,8 +307,10 @@ export class ChatService {
     const isPrivateChannel = channelName === 'tech-support' || channelName === 'stipend-queries';
     let formattedChannelName = `#${channelName}`;
 
-    // 1. Resolve which intern this private chat belongs to
+    // 1. Resolve which intern this private chat belongs to OR which department this general chat belongs to
     let resolvedInternId = '';
+    let resolvedDepartmentId = '';
+
     if (isPrivateChannel) {
       if (userRole === 'INTERN') {
         const intern = await prisma.intern.findUnique({
@@ -321,6 +323,48 @@ export class ChatService {
         resolvedInternId = targetInternId;
       }
       formattedChannelName = `#${channelName}-${resolvedInternId}`;
+    } else if (channelName === 'general') {
+      if (userRole === 'INTERN') {
+        const intern = await prisma.intern.findUnique({
+          where: { userId }
+        });
+        if (intern) {
+          resolvedDepartmentId = intern.departmentId;
+        }
+      } else if (userRole === 'MENTOR') {
+        const mentor = await prisma.mentor.findUnique({
+          where: { userId }
+        });
+        if (mentor) {
+          resolvedDepartmentId = mentor.departmentId;
+        }
+      } else if (userRole === 'DEPARTMENT_HEAD') {
+        const department = await prisma.department.findFirst({
+          where: { headId: userId }
+        });
+        if (department) {
+          resolvedDepartmentId = department.id;
+        }
+      } else if (userRole === 'HR' || userRole === 'SUPER_ADMIN') {
+        if (targetInternId) {
+          const intern = await prisma.intern.findUnique({
+            where: { id: targetInternId }
+          });
+          if (intern) {
+            resolvedDepartmentId = intern.departmentId;
+          }
+        } else {
+          // Default to the first department
+          const department = await prisma.department.findFirst();
+          if (department) {
+            resolvedDepartmentId = department.id;
+          }
+        }
+      }
+
+      if (resolvedDepartmentId) {
+        formattedChannelName = `#${channelName}-${resolvedDepartmentId}`;
+      }
     }
 
     // 2. Resolve all expected participant IDs first
@@ -339,33 +383,29 @@ export class ChatService {
         }
       }
     } else {
-      // Shared general channel - Cohort-wide
-      if (userRole === 'INTERN') {
-        const intern = await prisma.intern.findUnique({
-          where: { userId },
-          include: { mentor: true }
+      // Shared general channel - Department-wide / Cohort-wide
+      if (resolvedDepartmentId) {
+        // Find all interns in this department
+        const interns = await prisma.intern.findMany({
+          where: { departmentId: resolvedDepartmentId },
+          select: { userId: true }
         });
-        if (intern && intern.mentorId) {
-          const mentor = await prisma.mentor.findUnique({
-            where: { id: intern.mentorId }
-          });
-          if (mentor) {
-            participantIds.push(mentor.userId);
-            const peers = await prisma.intern.findMany({
-              where: { mentorId: intern.mentorId, NOT: { userId } }
-            });
-            peers.forEach(p => participantIds.push(p.userId));
-          }
-        }
-      } else if (userRole === 'MENTOR') {
-        const mentor = await prisma.mentor.findUnique({
-          where: { userId }
+        interns.forEach(i => participantIds.push(i.userId));
+
+        // Find all mentors in this department
+        const mentors = await prisma.mentor.findMany({
+          where: { departmentId: resolvedDepartmentId },
+          select: { userId: true }
         });
-        if (mentor) {
-          const interns = await prisma.intern.findMany({
-            where: { mentorId: mentor.id }
-          });
-          interns.forEach(i => participantIds.push(i.userId));
+        mentors.forEach(m => participantIds.push(m.userId));
+
+        // Find the department head (if any)
+        const dept = await prisma.department.findUnique({
+          where: { id: resolvedDepartmentId },
+          select: { headId: true }
+        });
+        if (dept && dept.headId) {
+          participantIds.push(dept.headId);
         }
       }
     }
@@ -468,43 +508,7 @@ export class ChatService {
       }
     });
 
-    // 5. Seed initial conversation history between mentor and intern if they exist
-    const mentorParticipant = newConversation.participants.find(p => p.role === 'MENTOR');
-    const internParticipant = newConversation.participants.find(p => p.role === 'INTERN');
-
-    if (mentorParticipant && internParticipant) {
-      let seedData: { senderId: string; content: string }[] = [];
-      
-      if (channelName === 'general') {
-        seedData = [
-          { senderId: mentorParticipant.id, content: `Welcome to the batch chat group! Feel free to ask questions here.` },
-          { senderId: internParticipant.id, content: `Hi ${mentorParticipant.name}! Glad to be here. Working on the task submission layout.` }
-        ];
-      } else if (channelName === 'tech-support') {
-        seedData = [
-          { senderId: mentorParticipant.id, content: `Hi team, if you run into any environment setup, package, or build issues, post them here!` },
-          { senderId: internParticipant.id, content: `Hey, had a quick issue with npm dev server port conflict earlier, but got it resolved. All good now!` }
-        ];
-      } else if (channelName === 'stipend-queries') {
-        seedData = [
-          { senderId: mentorParticipant.id, content: `Please direct any questions regarding stipend tracking, bank details submission, or invoice generation here.` },
-          { senderId: internParticipant.id, content: `Thanks! I've updated my banking information in the profile. When does the processing cycle usually start?` }
-        ];
-      }
-
-      for (const msg of seedData) {
-        await prisma.message.create({
-          data: {
-            conversationId: newConversation.id,
-            senderId: msg.senderId,
-            content: msg.content,
-            readBy: {
-              connect: { id: msg.senderId }
-            }
-          }
-        });
-      }
-    }
+    // 5. Seed initial conversation history disabled for production
 
     // 6. Fetch fully-loaded conversation with messages
     const loadedConversation = await prisma.conversation.findUnique({

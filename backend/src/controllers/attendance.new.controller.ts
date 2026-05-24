@@ -280,6 +280,9 @@ export class AttendanceNewController {
 
       if (req.user?.role === 'INTERN') {
         filters.internId = req.user.intern?.id;
+      } else if (req.user?.role === 'DEPARTMENT_HEAD') {
+        filters.departmentId = departmentId ? (departmentId as string) : (req.user.headedDepartment?.id || undefined);
+        if (internId) filters.internId = internId as string;
       } else {
         if (internId) filters.internId = internId as string;
         if (departmentId) filters.departmentId = departmentId as string;
@@ -394,6 +397,30 @@ export class AttendanceNewController {
           orderBy: { date: 'desc' },
         });
         successResponse(res, 'Assigned team attendance records loaded', records);
+      } else if (role === 'DEPARTMENT_HEAD') {
+        if (!req.user.headedDepartment?.id) {
+          res.status(403).json({ success: false, message: 'Headed department not found' });
+          return;
+        }
+        // Fetch all interns in department
+        const interns = await prisma.intern.findMany({
+          where: { departmentId: req.user.headedDepartment.id },
+          select: { id: true },
+        });
+        const internIds = interns.map(i => i.id);
+        const records = await prisma.attendance.findMany({
+          where: { internId: { in: internIds } },
+          include: {
+            intern: {
+              include: {
+                user: { select: { name: true, email: true } },
+                department: { select: { name: true } },
+              }
+            }
+          },
+          orderBy: { date: 'desc' },
+        });
+        successResponse(res, 'Department team attendance records loaded', records);
       } else if (role === 'HR') {
         const records = await prisma.attendance.findMany({
           include: {

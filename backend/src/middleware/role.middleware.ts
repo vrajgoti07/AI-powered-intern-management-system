@@ -13,8 +13,11 @@ export const authorize = (...allowedRoles: string[]) => {
       return;
     }
 
-    // Check if user has required role
-    if (!allowedRoles.includes(req.user.role)) {
+    // Check if user has required role (allow DEPARTMENT_HEAD to act as MENTOR)
+    const hasRole = allowedRoles.includes(req.user.role) || 
+      (allowedRoles.includes('MENTOR') && req.user.role === 'DEPARTMENT_HEAD');
+
+    if (!hasRole) {
       forbiddenResponse(
         res,
         `Access denied. Required role: ${allowedRoles.join(' or ')}`

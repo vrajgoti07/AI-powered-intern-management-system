@@ -118,6 +118,7 @@ export const loginUser = async (
           department: true,
         },
       },
+      headedDepartment: true,
     },
   });
 
@@ -309,6 +310,7 @@ export const getCurrentUser = async (userId: string): Promise<SafeUser> => {
           department: true,
         },
       },
+      headedDepartment: true,
     },
   });
 

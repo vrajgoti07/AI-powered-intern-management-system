@@ -8,10 +8,18 @@ import { TaskForm } from '../../components/forms/TaskForm';
 import { Plus, FileText, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
+import { useAuth } from '../../hooks/useAuth';
 
 export const TaskManagement: React.FC = () => {
+  const { user } = useAuth();
   const { data: tasks = [], refetch: refreshTasks } = useTasks();
-  const { data: interns = [] } = useInterns();
+  const isMentor = user?.role === 'mentor';
+  const resolvedDeptId = (user as any)?.mentor?.departmentId || (user as any)?.headedDepartment?.id;
+  const { data: interns = [] } = useInterns(
+    isMentor && resolvedDeptId
+      ? { departmentId: resolvedDeptId }
+      : undefined
+  );
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const [showAddModal, setShowAddModal] = useState(false);
@@ -58,6 +66,20 @@ export const TaskManagement: React.FC = () => {
     }
   };
 
+  const handleDeleteTask = async (id: string) => {
+    try {
+      if (!window.confirm("Are you sure you want to delete this task milestone?")) return;
+      await api.delete(`/tasks/${id}`);
+      toast.success("Task deleted successfully!");
+      setSelectedTask(null);
+      await refreshTasks();
+    } catch (error: any) {
+      console.error(error);
+      const errMsg = error.response?.data?.message || "Failed to delete task";
+      toast.error(errMsg);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
       <Sidebar collapsed={sidebarCollapsed} />
@@ -98,26 +120,32 @@ export const TaskManagement: React.FC = () => {
                 </div>
 
                 {/* Column content */}
-                <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-                  {colTasks.map((t: any) => (
-                    <div 
-                      key={t.id} 
-                      onClick={() => setSelectedTask(t)}
-                      className="bg-slate-50 hover:bg-slate-100/50 p-4 border border-slate-200/50 rounded-2xl text-left cursor-pointer transition-all duration-300 transform hover:-translate-y-0.5 space-y-3 shadow-sm hover:shadow-md"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <span className="font-extrabold text-slate-800 text-xs leading-snug line-clamp-2">{t.title}</span>
-                        <StatusBadge type="priority" value={t.priority} />
-                      </div>
-                      
-                      <p className="text-[10px] text-slate-400 font-semibold line-clamp-2 leading-relaxed">{t.description}</p>
-                      
-                      <div className="flex items-center justify-between pt-2.5 border-t border-slate-200/40 text-[9px] text-slate-400 font-bold">
-                        <span>Due: {new Date(t.dueDate).toLocaleDateString()}</span>
-                        <span className="text-indigo-600 truncate max-w-[80px]">@{t.intern?.user?.name?.split(' ')[0] || "Unknown"}</span>
-                      </div>
+                <div className="flex-1 overflow-y-auto space-y-3 pr-1 flex flex-col justify-start">
+                  {colTasks.length === 0 ? (
+                    <div className="flex-1 flex flex-col items-center justify-center border border-dashed border-slate-200/60 rounded-3xl p-4 text-center text-slate-350 min-h-[140px] bg-slate-50/20">
+                      <span className="text-[10px] text-slate-400 font-bold">No tasks here</span>
                     </div>
-                  ))}
+                  ) : (
+                    colTasks.map((t: any) => (
+                      <div 
+                        key={t.id} 
+                        onClick={() => setSelectedTask(t)}
+                        className="bg-slate-50 hover:bg-slate-100/50 p-4 border border-slate-200/50 rounded-2xl text-left cursor-pointer transition-all duration-300 transform hover:-translate-y-0.5 space-y-3 shadow-sm hover:shadow-md"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="font-extrabold text-slate-800 text-xs leading-snug line-clamp-2">{t.title}</span>
+                          <StatusBadge type="priority" value={t.priority} />
+                        </div>
+                        
+                        <p className="text-[10px] text-slate-400 font-semibold line-clamp-2 leading-relaxed">{t.description}</p>
+                        
+                        <div className="flex items-center justify-between pt-2.5 border-t border-slate-200/40 text-[9px] text-slate-400 font-bold">
+                          <span>Due: {new Date(t.dueDate).toLocaleDateString()}</span>
+                          <span className="text-indigo-600 truncate max-w-[80px]">@{t.intern?.user?.name?.split(' ')[0] || "Unknown"}</span>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             );
@@ -184,6 +212,13 @@ export const TaskManagement: React.FC = () => {
 
             {/* Actions for Mentors */}
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+              <button 
+                onClick={() => handleDeleteTask(selectedTask.id)}
+                className="px-4 py-2.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-all cursor-pointer mr-auto"
+              >
+                Delete Task
+              </button>
+              
               <button 
                 onClick={() => setSelectedTask(null)}
                 className="px-4 py-2.5 text-xs font-bold text-slate-500 hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors cursor-pointer"

@@ -70,11 +70,19 @@ export class LeaveRequestService {
    * Mentor approves the leave request (moves to Pending HR)
    */
   async mentorApprove(leaveRequestId: string, mentorUserId: string) {
-    const mentor = await prisma.mentor.findUnique({
-      where: { userId: mentorUserId },
+    const user = await prisma.user.findUnique({
+      where: { id: mentorUserId },
+      include: { mentor: true }
     });
 
-    if (!mentor) {
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const isDeptHead = user.role === 'DEPARTMENT_HEAD';
+    const mentor = user.mentor;
+
+    if (!mentor && !isDeptHead) {
       throw new Error('Only registered supervisors can approve leave requests');
     }
 
@@ -102,7 +110,7 @@ export class LeaveRequestService {
       where: { id: leaveRequestId },
       data: {
         status: 'Pending HR',
-        mentorId: mentor.id,
+        mentorId: mentor ? mentor.id : leaveRequest.user.intern?.mentorId || null,
       },
     });
 
@@ -251,12 +259,20 @@ export class LeaveRequestService {
   /**
    * List all leave requests
    */
-  async getLeaveRequests(filters: { userId?: string; status?: string; mentorId?: string }) {
+  async getLeaveRequests(filters: { userId?: string; status?: string; mentorId?: string; departmentId?: string }) {
     const where: any = {};
 
     if (filters.userId) where.userId = filters.userId;
     if (filters.status) where.status = filters.status;
     if (filters.mentorId) where.mentorId = filters.mentorId;
+
+    if (filters.departmentId) {
+      where.user = {
+        intern: {
+          departmentId: filters.departmentId
+        }
+      };
+    }
 
     return prisma.leaveRequest.findMany({
       where,
@@ -268,8 +284,10 @@ export class LeaveRequestService {
             intern: {
               select: {
                 id: true,
+                departmentId: true,
                 department: {
                   select: {
+                    id: true,
                     name: true,
                   },
                 },
