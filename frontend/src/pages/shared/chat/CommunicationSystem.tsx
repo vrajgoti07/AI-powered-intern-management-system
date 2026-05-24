@@ -1247,8 +1247,42 @@ export const CommunicationSystem: React.FC = () => {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex-shrink-0">
             <div className="text-left">
               <span className="text-xs font-bold text-[#2563eb] bg-blue-50 px-3 py-1 rounded-full uppercase tracking-wider">Workspace Comms</span>
-              <h1 className="text-lg font-black text-slate-800 tracking-tight mt-1.5">Collaboration Channels</h1>
+              <h1 className="text-lg font-black text-slate-800 tracking-tight mt-1.5">
+                {activeTab === 'chat' && "Collaboration Channels"}
+                {activeTab === 'tutor' && "AI Learning Copilot"}
+                {activeTab === 'tickets' && "Query Helpdesk Tickets"}
+                {activeTab === 'forum' && "Discussion Forum"}
+              </h1>
             </div>
+
+            {/* Conditionally show tabs ONLY for interns (hide completely for mentors) */}
+            {!isMentor && (
+              <div className="flex items-center gap-1.5 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/40">
+                {[
+                  { key: 'chat', label: 'Live Chat', icon: MessageSquare },
+                  { key: 'tutor', label: 'AI Tutor', icon: Brain },
+                  { key: 'tickets', label: 'Tickets', icon: HelpCircle },
+                  { key: 'forum', label: 'Forum', icon: Megaphone }
+                ].map((tab) => {
+                  const TabIcon = tab.icon;
+                  const active = activeTab === tab.key;
+                  return (
+                    <button
+                      key={tab.key}
+                      onClick={() => setActiveTab(tab.key as any)}
+                      className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer border-0 outline-none ${
+                        active 
+                          ? 'bg-[#2563eb] text-white shadow-md shadow-blue-100' 
+                          : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
+                      }`}
+                    >
+                      <TabIcon className="w-3.5 h-3.5" />
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="flex-1 bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col text-left min-h-0 h-0">
