@@ -326,7 +326,7 @@ export const OnboardingVerification: React.FC = () => {
                     <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Signing Audit Validation</p>
                     <p className="text-xs text-slate-700 font-semibold">
                       Candidate has completed signing the standard IP Internship Agreement with validation signature key:
-                      <strong className="text-indigo-600 ml-1">"{selectedCandidate.user?.name}"</strong>
+                      <strong className="text-indigo-600 ml-1">"{selectedCandidate.signedName || 'N/A'}"</strong>
                     </p>
                   </div>
 

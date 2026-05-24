@@ -4,6 +4,8 @@ AI Chatbot Service — Intent classification with TF-IDF + LogisticRegression.
 Trains an intent classifier on FAQ pairs at init time, then
 classifies user messages, selects a response template, and optionally
 personalises the reply using user context data (attendance, score, tasks, etc.).
+
+Supports role-aware responses for Interns, Mentors, and HR users.
 """
 
 import json
@@ -251,6 +253,109 @@ INTENT_DATA = {
             "Data security is a priority. Never share login credentials, use approved tools only, and report any security concerns immediately to IT support.",
         ],
     },
+    "my_department": {
+        "examples": [
+            "which department am i in",
+            "my department",
+            "what team am i on",
+            "what department do i belong to",
+            "show my department",
+            "tell me my department",
+            "my team",
+            "what is my department name",
+            "department info",
+            "department details",
+            "which team am i assigned to",
+            "what group am i in",
+            "my assigned department",
+            "department assignment",
+        ],
+        "responses": [
+            "You are currently assigned to the **{department}** department. If you have questions about your department's work, reach out to your mentor **{mentor_name}** or your team lead.",
+            "Your department is **{department}**. All your tasks and projects are aligned with this department's goals and responsibilities.",
+            "You belong to the **{department}** department. You can find department-specific resources and contacts in the HR Resources section.",
+        ],
+    },
+    "my_skills": {
+        "examples": [
+            "what are my skills",
+            "show my skill profile",
+            "my skills",
+            "what skills do i have",
+            "list my skills",
+            "skill set",
+            "my technical skills",
+            "what technologies do i know",
+            "my registered skills",
+            "skills on my profile",
+            "show skills",
+            "my expertise",
+        ],
+        "responses": [
+            "{skills_info}",
+        ],
+    },
+    "internship_status": {
+        "examples": [
+            "what is my internship status",
+            "am i active",
+            "my current status",
+            "internship progress",
+            "how far am i in my internship",
+            "show my status",
+            "is my internship active",
+            "my internship state",
+            "check my status",
+            "status update",
+            "where am i in the process",
+            "onboarding status",
+            "am i onboarded",
+            "my profile status",
+        ],
+        "responses": [
+            "{status_info}",
+        ],
+    },
+    "my_interns": {
+        "examples": [
+            "how many interns do i have",
+            "show my assigned interns",
+            "who are my interns",
+            "list my interns",
+            "interns assigned to me",
+            "my mentees",
+            "who am i mentoring",
+            "show my mentees",
+            "interns under me",
+            "how many people am i mentoring",
+            "my intern list",
+            "assigned interns",
+            "mentee list",
+            "who do i mentor",
+        ],
+        "responses": [
+            "{interns_info}",
+        ],
+    },
+    "intern_performance": {
+        "examples": [
+            "how are my interns performing",
+            "check intern progress",
+            "intern performance report",
+            "are my interns doing well",
+            "intern scores",
+            "mentee performance",
+            "how are my mentees doing",
+            "intern attendance report",
+            "show intern performance",
+            "track intern progress",
+            "mentee progress",
+            "intern evaluation",
+        ],
+        "responses": [
+            "{intern_performance_info}",
+        ],
+    },
     "general": {
         "examples": [
             "hello",
@@ -259,23 +364,86 @@ INTENT_DATA = {
             "help me",
             "what can you do",
             "who are you",
-            "thank you",
-            "thanks",
-            "goodbye",
-            "bye",
             "hey",
             "hi",
             "good afternoon",
             "good evening",
-            "thanks a lot",
         ],
         "responses": [
             "Hello{name_greeting}! I'm your AI assistant for the Intern Management System. I can help with attendance, tasks, leaves, performance scores, and more. What would you like to know?",
             "Hi{name_greeting}! I'm here to help you navigate the platform. Ask me about your attendance, tasks, scores, leave applications, or any other questions!",
             "I'm the AI-powered assistant designed to help interns, mentors, and HR. I can answer questions about attendance, tasks, leaves, and platform features. How can I assist you?",
-            "You're welcome! Let me know if there's anything else I can help you with.",
-            "Goodbye! Feel free to come back anytime you need assistance. Have a great day!",
         ],
+    },
+    "goodbyes": {
+        "examples": [
+            "thank you",
+            "thanks",
+            "goodbye",
+            "bye",
+            "thanks a lot",
+            "no thank you",
+            "no thanks",
+            "no, thanks",
+            "no, thank you",
+            "thank you very much",
+            "bye bye",
+            "that is all",
+            "that's all",
+            "that's it",
+            "nothing else",
+            "nothing, thank you",
+            "nothing, thanks",
+            "exit",
+            "stop",
+            "no thanks, i am good",
+            "no thank you, i am good",
+            "no thank you, that is all",
+            "that's all, thank you",
+            "that is all, thank you",
+            "exit chat",
+        ],
+        "responses": [
+            "You're welcome{name_greeting}! Let me know if there's anything else I can help you with.",
+            "Goodbye{name_greeting}! Feel free to come back anytime you need assistance. Have a great day!",
+            "My pleasure! Let me know if you need anything else later. Have a wonderful day!",
+            "Anytime{name_greeting}! I'm here if you have more questions in the future. Take care!",
+        ],
+    },
+}
+
+
+# ── Role-specific suggested prompts ──────────────────────────────────
+SUGGESTED_PROMPTS = {
+    "INTERN": {
+        "my_attendance": ["What is my score?", "How do I check in?", "Am I eligible for certificate?"],
+        "my_score": ["What is my attendance?", "Show my pending tasks", "Certificate criteria"],
+        "my_tasks": ["What is my score?", "When is my next deadline?", "How to submit a task?"],
+        "certificate": ["What is my attendance?", "What is my score?", "Show my pending tasks"],
+        "mentor_info": ["Show my tasks", "What is my score?", "How to apply for leave?"],
+        "attendance": ["What is my attendance?", "How to check out?", "What if I forgot to check in?"],
+        "task_help": ["Show my pending tasks", "How to upload files?", "Check task deadlines"],
+        "hr_support": ["Check leave balance", "Apply for sick leave", "Who approves my leave?"],
+        "policy": ["Working hours", "Remote work policy", "Code of conduct"],
+        "my_department": ["Who is my mentor?", "Show my tasks", "What is my score?"],
+        "my_skills": ["Show my tasks", "What is my score?", "Certificate criteria"],
+        "internship_status": ["What is my attendance?", "Show my tasks", "Certificate criteria"],
+        "general": ["What is my attendance?", "Show my score", "Pending tasks", "Certificate criteria"],
+        "goodbyes": ["Show my tasks", "Check my attendance", "What is my score?"],
+    },
+    "MENTOR": {
+        "my_interns": ["How are my interns performing?", "Show my department", "Company policy"],
+        "intern_performance": ["Show my assigned interns", "Working hours", "Leave policy"],
+        "my_department": ["How many interns do I have?", "Show intern performance", "Company policy"],
+        "attendance": ["Show my interns", "Check intern progress", "Leave policy"],
+        "task_help": ["Show my interns", "How are my interns performing?", "Company policy"],
+        "hr_support": ["Show my interns", "Check intern progress", "Working hours"],
+        "policy": ["Working hours", "Remote work policy", "Code of conduct"],
+        "general": ["How many interns do I have?", "Show intern performance", "Company policy"],
+        "goodbyes": ["Show my interns", "Check intern performance", "Company policy"],
+    },
+    "DEFAULT": {
+        "general": ["What is my attendance?", "Show my score", "Pending tasks", "Certificate criteria"],
     },
 }
 
@@ -367,23 +535,24 @@ class ChatbotService:
             if confidence < 0.25:
                 intent = "general"
 
-        # ── Select and personalise response ──────────────────────────
-        responses = INTENT_DATA.get(intent, INTENT_DATA["general"])["responses"]
-        reply_template = random.choice(responses)
-
-        # Build context-aware substitution values
+        # ── Build context-aware substitution values ──────────────────
         replacements = self._build_replacements(intent, ctx)
+
+        # ── Select the best response template ────────────────────────
+        responses = INTENT_DATA.get(intent, INTENT_DATA["general"])["responses"]
+        reply_template = self._select_best_template(responses, replacements, intent, ctx)
         reply = reply_template.format_map(SafeDict(replacements))
 
-        # ── Suggested prompts ────────────────────────────────────────
-        suggested = self._get_suggested_prompts(intent)
+        # ── Suggested prompts (role-aware) ───────────────────────────
+        user_role = ctx.get("user_role", "INTERN").upper()
+        suggested = self._get_suggested_prompts(intent, user_role)
 
         # ── Cache session in Redis ───────────────────────────────────
         self._cache_session(redis_client, session_id, message, reply, intent)
 
         logger.info(
-            "Chatbot reply: intent=%s (conf=%.3f) session=%s",
-            intent, confidence, session_id,
+            "Chatbot reply: intent=%s (conf=%.3f) role=%s session=%s",
+            intent, confidence, user_role, session_id,
         )
 
         return {
@@ -394,20 +563,69 @@ class ChatbotService:
         }
 
     @staticmethod
+    def _select_best_template(
+        responses: List[str],
+        replacements: Dict[str, str],
+        intent: str,
+        ctx: Dict[str, Any],
+    ) -> str:
+        """Select the most contextually relevant template instead of random.
+
+        Prefers templates whose placeholders are all resolved (i.e. have
+        real data rather than fallback values). Falls back to random if all
+        templates are equally applicable.
+        """
+        if len(responses) <= 1:
+            return responses[0]
+
+        # Score each template by how many placeholders get real data
+        scored: List[tuple] = []
+        for tmpl in responses:
+            # Find all {placeholder} names in the template
+            import re
+            placeholders = re.findall(r"\{(\w+)\}", tmpl)
+            if not placeholders:
+                scored.append((tmpl, 1.0))
+                continue
+
+            filled = 0
+            for ph in placeholders:
+                val = replacements.get(ph, "")
+                # Consider it "filled" if it has a real value (not N/A, not empty,
+                # not a fallback "I don't have" message)
+                if val and val != "N/A" and not val.startswith("I don't have"):
+                    filled += 1
+            score = filled / len(placeholders)
+            scored.append((tmpl, score))
+
+        # Sort by score descending, pick the best or random among top ties
+        scored.sort(key=lambda x: x[1], reverse=True)
+        best_score = scored[0][1]
+        top_templates = [t for t, s in scored if s == best_score]
+        return random.choice(top_templates)
+
+    @staticmethod
     def _build_replacements(intent: str, ctx: Dict[str, Any]) -> Dict[str, str]:
         """Build template replacement values from user context."""
         user_name = ctx.get("user_name") or ""
+        user_role = (ctx.get("user_role") or "INTERN").upper()
         attendance = ctx.get("attendance")
         score = ctx.get("score")
         mentor_name = ctx.get("mentor_name") or "your assigned mentor"
         tasks = ctx.get("tasks") or []
+        department = ctx.get("department") or ""
+        skills = ctx.get("skills") or []
+        status = ctx.get("status") or ""
+        interns = ctx.get("interns") or []
+        intern_count = ctx.get("intern_count")
 
         replacements: Dict[str, str] = {
             "name_greeting": f", {user_name}" if user_name else "",
             "mentor_name": mentor_name,
+            "department": department if department else "your assigned department",
         }
 
-        # Attendance context
+        # ── Attendance context ───────────────────────────────────────
         if attendance is not None:
             replacements["attendance"] = str(round(float(attendance), 1))
             att_val = float(attendance)
@@ -423,7 +641,7 @@ class ChatbotService:
             replacements["attendance"] = "N/A"
             replacements["attendance_feedback"] = "I don't have your attendance data at the moment. Please check the Attendance page for your latest records."
 
-        # Score context
+        # ── Score context ────────────────────────────────────────────
         if score is not None:
             replacements["score"] = str(round(float(score), 1))
             sc_val = float(score)
@@ -439,7 +657,7 @@ class ChatbotService:
             replacements["score"] = "N/A"
             replacements["score_feedback"] = "I don't have your score data right now. Check the Dashboard for your latest performance metrics."
 
-        # Task context
+        # ── Task context ─────────────────────────────────────────────
         if tasks and isinstance(tasks, list) and len(tasks) > 0:
             pending = [t for t in tasks if t.get("status") in ("Todo", "In Progress", "TODO", "IN_PROGRESS")]
             if pending:
@@ -447,8 +665,8 @@ class ChatbotService:
                 for i, t in enumerate(pending[:5], 1):
                     title = t.get("title", "Untitled")
                     due = t.get("dueDate", "No deadline")
-                    status = t.get("status", "Unknown")
-                    task_lines.append(f"**{i}.** {title} — Due: {due} ({status})")
+                    status_val = t.get("status", "Unknown")
+                    task_lines.append(f"**{i}.** {title} — Due: {due} ({status_val})")
                 task_info = f"You have **{len(pending)}** pending task(s):\n\n" + "\n".join(task_lines)
                 if len(pending) > 5:
                     task_info += f"\n\n...and {len(pending) - 5} more. Visit the Tasks page to see all."
@@ -458,7 +676,7 @@ class ChatbotService:
         else:
             replacements["task_info"] = "I don't have your task data at the moment. Visit the **Tasks** page to see your assigned work and deadlines."
 
-        # Certificate status
+        # ── Certificate status ───────────────────────────────────────
         if attendance is not None and score is not None:
             att_ok = float(attendance) >= 75
             score_ok = float(score) >= 60
@@ -474,24 +692,88 @@ class ChatbotService:
         else:
             replacements["certificate_status"] = "I don't have enough data to assess your eligibility right now. Check your Dashboard for the latest metrics."
 
+        # ── Skills context ───────────────────────────────────────────
+        if skills and isinstance(skills, list) and len(skills) > 0:
+            skills_list = ", ".join([f"**{s}**" for s in skills])
+            replacements["skills_info"] = f"Your registered skills are: {skills_list}. You can update your skill profile from the Settings or Profile page."
+        else:
+            replacements["skills_info"] = "I don't have your skills data at the moment. You can update your skill profile from the Settings or Profile page."
+
+        # ── Internship status context ────────────────────────────────
+        if status:
+            status_display = status.replace("_", " ").title()
+            status_msg = f"Your current internship status is **{status_display}**."
+            if status.upper() == "ACTIVE":
+                status_msg += " You are fully onboarded and active. Keep up the great work!"
+            elif status.upper() == "ONBOARDING":
+                status_msg += " You are currently going through the onboarding process. Complete all required steps to become active."
+            elif status.upper() == "PENDING":
+                status_msg += " Your application is pending review by HR. You'll be notified once it's approved."
+            elif status.upper() == "COMPLETED":
+                status_msg += " 🎓 Congratulations! Your internship has been completed."
+            replacements["status_info"] = status_msg
+        else:
+            replacements["status_info"] = "I don't have your status information right now. Check your Dashboard for the latest updates."
+
+        # ── Mentor-specific: My Interns context ──────────────────────
+        if user_role == "MENTOR":
+            if intern_count is not None:
+                count = int(intern_count)
+                if interns and isinstance(interns, list) and len(interns) > 0:
+                    intern_lines = []
+                    for i, intern in enumerate(interns[:8], 1):
+                        iname = intern.get("name", "Unknown")
+                        istatus = intern.get("status", "")
+                        iscore = intern.get("score", "N/A")
+                        intern_lines.append(f"**{i}.** {iname} — Score: {iscore}, Status: {istatus}")
+                    interns_info = f"You currently have **{count}** intern(s) assigned to you:\n\n" + "\n".join(intern_lines)
+                    if count > 8:
+                        interns_info += f"\n\n...and {count - 8} more. Visit the Interns page for the full list."
+                else:
+                    interns_info = f"You currently have **{count}** intern(s) assigned to you. Visit the Interns page to see their details and progress."
+            else:
+                interns_info = "I don't have your intern assignment data at the moment. Visit the **Interns** page to see your assigned mentees."
+            replacements["interns_info"] = interns_info
+
+            # Intern performance summary for mentors
+            if interns and isinstance(interns, list) and len(interns) > 0:
+                scores = [float(i.get("score", 0)) for i in interns if i.get("score") is not None]
+                avg_score = round(sum(scores) / len(scores), 1) if scores else "N/A"
+                perf_lines = []
+                for i, intern in enumerate(interns[:5], 1):
+                    iname = intern.get("name", "Unknown")
+                    iscore = intern.get("score", "N/A")
+                    iattendance = intern.get("attendance", "N/A")
+                    perf_lines.append(f"**{i}.** {iname} — Score: {iscore}/100, Attendance: {iattendance}%")
+                perf_info = f"Here's a performance summary of your interns (Average Score: **{avg_score}/100**):\n\n" + "\n".join(perf_lines)
+                if len(interns) > 5:
+                    perf_info += f"\n\n...and {len(interns) - 5} more. Check the Dashboard for detailed analytics."
+            else:
+                perf_info = "I don't have performance data for your interns right now. Visit the **Dashboard** to view detailed intern analytics."
+            replacements["intern_performance_info"] = perf_info
+        else:
+            replacements["interns_info"] = "This information is available for mentors only. If you believe you should have mentor access, please contact HR."
+            replacements["intern_performance_info"] = "This information is available for mentors only. If you believe you should have mentor access, please contact HR."
+
         return replacements
 
     @staticmethod
-    def _get_suggested_prompts(current_intent: str) -> List[str]:
-        """Return contextual follow-up prompts based on the detected intent."""
-        prompts = {
-            "my_attendance": ["What is my score?", "How do I check in?", "Am I eligible for certificate?"],
-            "my_score": ["What is my attendance?", "Show my pending tasks", "Certificate criteria"],
-            "my_tasks": ["What is my score?", "When is my next deadline?", "How to submit a task?"],
-            "certificate": ["What is my attendance?", "What is my score?", "Show my pending tasks"],
-            "mentor_info": ["Show my tasks", "What is my score?", "How to apply for leave?"],
-            "attendance": ["What is my attendance?", "How to check out?", "What if I forgot to check in?"],
-            "task_help": ["Show my pending tasks", "How to upload files?", "Check task deadlines"],
-            "hr_support": ["Check leave balance", "Apply for sick leave", "Who approves my leave?"],
-            "policy": ["Working hours", "Remote work policy", "Code of conduct"],
-            "general": ["What is my attendance?", "Show my score", "Pending tasks", "Certificate criteria"],
-        }
-        return prompts.get(current_intent, prompts["general"])
+    def _get_suggested_prompts(current_intent: str, user_role: str = "INTERN") -> List[str]:
+        """Return contextual follow-up prompts based on the detected intent and user role."""
+        role_key = user_role.upper()
+        role_prompts = SUGGESTED_PROMPTS.get(role_key, SUGGESTED_PROMPTS.get("INTERN", {}))
+        prompts = role_prompts.get(current_intent)
+
+        if prompts:
+            return prompts
+
+        # Fallback: try default prompts for the intent across all roles
+        for rp in SUGGESTED_PROMPTS.values():
+            if current_intent in rp:
+                return rp[current_intent]
+
+        # Final fallback
+        return SUGGESTED_PROMPTS.get("INTERN", {}).get("general", ["What is my attendance?", "Show my score", "Pending tasks"])
 
     @staticmethod
     def _cache_session(redis_client, session_id: str, message: str, reply: str, intent: str) -> None:

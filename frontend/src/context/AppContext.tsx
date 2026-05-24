@@ -36,6 +36,7 @@ type Action =
     }
   | { type: 'ADD_ANNOUNCEMENT'; payload: Announcement }
   | { type: 'SEND_CHAT_MESSAGE'; payload: { sender: 'user' | 'bot'; text: string } }
+  | { type: 'SET_CHAT_HISTORY'; payload: { sender: 'user' | 'bot'; text: string }[] }
   | { type: 'CLEAR_CHAT_HISTORY' }
   | { type: 'PUNCH_ATTENDANCE'; payload: { name: string } }
   | { type: 'LOG_ATTENDANCE'; payload: { internEmail: string; date: string; checkIn: string; checkOut: string; status: 'Present' | 'Absent' | 'Half Day' } }
@@ -161,10 +162,17 @@ const appReducer = (state: AppState, action: Action): AppState => {
         ...state,
         chatHistory: [...state.chatHistory, action.payload]
       };
+    case 'SET_CHAT_HISTORY':
+      return {
+        ...state,
+        chatHistory: action.payload
+      };
     case 'CLEAR_CHAT_HISTORY':
       return {
         ...state,
-        chatHistory: []
+        chatHistory: [
+          { sender: 'bot', text: 'Hello! I am your AI Assistant. How can I help you today?' }
+        ]
       };
     case 'PUNCH_ATTENDANCE': {
       const { name } = action.payload;
@@ -332,11 +340,35 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       dispatch({ type: 'SET_INTERNS', payload: [] });
       dispatch({ type: 'SET_MENTORS', payload: [] });
       dispatch({ type: 'SET_TASKS', payload: [] });
+      dispatch({ type: 'CLEAR_CHAT_HISTORY' });
       return;
+    }
+
+    // Load user-specific chat history from localStorage
+    try {
+      const stored = localStorage.getItem(`ai_chat_history_${user.id}`);
+      if (stored) {
+        dispatch({ type: 'SET_CHAT_HISTORY', payload: JSON.parse(stored) });
+      } else {
+        dispatch({ type: 'CLEAR_CHAT_HISTORY' });
+      }
+    } catch (e) {
+      console.error('Failed to load chat history:', e);
     }
 
     refreshData();
   }, [user]);
+
+  // Persist chat history changes to localStorage
+  useEffect(() => {
+    if (user && state.chatHistory.length > 0) {
+      try {
+        localStorage.setItem(`ai_chat_history_${user.id}`, JSON.stringify(state.chatHistory));
+      } catch (e) {
+        console.error('Failed to save chat history:', e);
+      }
+    }
+  }, [state.chatHistory, user]);
 
   return (
     <AppContext.Provider value={{ state, dispatch, refreshData }}>

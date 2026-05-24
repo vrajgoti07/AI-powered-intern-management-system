@@ -29,6 +29,7 @@ export interface ChatbotPayload {
   message: string;
   history?: Array<{ role: 'user' | 'assistant'; content: string }>;
   context?: Record<string, any>;
+  sessionId?: string;
 }
 
 export class AIService {
@@ -250,7 +251,7 @@ export class AIService {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: payload.message,
-          session_id: "default",
+          session_id: payload.sessionId || "default",
           history: payload.history,
           context: payload.context || {},
         }),

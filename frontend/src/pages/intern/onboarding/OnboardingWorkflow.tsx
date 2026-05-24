@@ -494,23 +494,23 @@ export const OnboardingWorkflow: React.FC = () => {
                       <h3 className="font-extrabold text-slate-800 text-base tracking-tight border-b pb-2 border-slate-100">Personal Information</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-600">Full Name</label>
+                          <label className="text-xs font-bold text-slate-600">Full Name <span className="text-red-500 ml-0.5">*</span></label>
                           <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500" />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-600">Email Address</label>
+                          <label className="text-xs font-bold text-slate-600">Email Address <span className="text-red-500 ml-0.5">*</span></label>
                           <input type="email" name="email" value={formData.email} disabled className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl focus:outline-none opacity-70" />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-600">Phone Number</label>
+                          <label className="text-xs font-bold text-slate-600">Phone Number <span className="text-red-500 ml-0.5">*</span></label>
                           <input type="text" name="phone" value={formData.phone} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500" />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-600">Date of Birth</label>
+                          <label className="text-xs font-bold text-slate-600">Date of Birth <span className="text-red-500 ml-0.5">*</span></label>
                           <input type="date" name="dob" value={formData.dob} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500" />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-600">Gender</label>
+                          <label className="text-xs font-bold text-slate-600">Gender <span className="text-red-500 ml-0.5">*</span></label>
                           <select name="gender" value={formData.gender} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500">
                             <option value="">Select Gender</option>
                             <option value="Male">Male</option>
@@ -520,7 +520,7 @@ export const OnboardingWorkflow: React.FC = () => {
                         </div>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600">Residential Address</label>
+                        <label className="text-xs font-bold text-slate-600">Residential Address <span className="text-red-500 ml-0.5">*</span></label>
                         <textarea name="address" value={formData.address} onChange={handleInputChange} rows={2} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none" />
                       </div>
                     </div>
@@ -532,23 +532,23 @@ export const OnboardingWorkflow: React.FC = () => {
                       <h3 className="font-extrabold text-slate-800 text-base tracking-tight border-b pb-2 border-slate-100">Educational Background</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-600">College / University</label>
+                          <label className="text-xs font-bold text-slate-600">College / University <span className="text-red-500 ml-0.5">*</span></label>
                           <input type="text" name="college" value={formData.college} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500" />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-600">Degree</label>
+                          <label className="text-xs font-bold text-slate-600">Degree <span className="text-red-500 ml-0.5">*</span></label>
                           <input type="text" name="degree" value={formData.degree} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500" />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-600">Branch / Specialization</label>
+                          <label className="text-xs font-bold text-slate-600">Branch / Specialization <span className="text-red-500 ml-0.5">*</span></label>
                           <input type="text" name="branch" value={formData.branch} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500" />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-600">Current Semester</label>
+                          <label className="text-xs font-bold text-slate-600">Current Semester <span className="text-red-500 ml-0.5">*</span></label>
                           <input type="number" name="semester" value={formData.semester} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500" />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-600">CGPA / Score</label>
+                          <label className="text-xs font-bold text-slate-600">CGPA / Score <span className="text-red-500 ml-0.5">*</span></label>
                           <input type="number" step="0.01" name="cgpa" value={formData.cgpa} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500" />
                         </div>
                         <div className="space-y-1">
@@ -565,15 +565,15 @@ export const OnboardingWorkflow: React.FC = () => {
                       <h3 className="font-extrabold text-slate-800 text-base tracking-tight border-b pb-2 border-slate-100">Emergency Contacts</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-600">Parent / Guardian Name</label>
+                          <label className="text-xs font-bold text-slate-600">Parent / Guardian Name <span className="text-red-500 ml-0.5">*</span></label>
                           <input type="text" name="parentName" value={formData.parentName} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500" />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-600">Parent / Guardian Phone</label>
+                          <label className="text-xs font-bold text-slate-600">Parent / Guardian Phone <span className="text-red-500 ml-0.5">*</span></label>
                           <input type="text" name="parentPhone" value={formData.parentPhone} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500" />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-600">Secondary Emergency Contact Name</label>
+                          <label className="text-xs font-bold text-slate-600">Secondary Emergency Contact Name <span className="text-red-500 ml-0.5">*</span></label>
                           <input type="text" name="emergencyName" value={formData.emergencyName} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500" />
                         </div>
                         <div className="space-y-1">
@@ -581,7 +581,7 @@ export const OnboardingWorkflow: React.FC = () => {
                           <input type="text" name="emergencyRelation" value={formData.emergencyRelation} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500" />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-600">Secondary Emergency Phone</label>
+                          <label className="text-xs font-bold text-slate-600">Secondary Emergency Phone <span className="text-red-500 ml-0.5">*</span></label>
                           <input type="text" name="emergencyPhone" value={formData.emergencyPhone} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500" />
                         </div>
                       </div>
@@ -610,7 +610,7 @@ export const OnboardingWorkflow: React.FC = () => {
                                   <doc.icon className="w-5 h-5" />
                                 </div>
                                 <div>
-                                  <p className="text-xs font-bold text-slate-700">{doc.label}</p>
+                                  <p className="text-xs font-bold text-slate-700">{doc.label} <span className="text-red-500 ml-0.5">*</span></p>
                                   <p className="text-[10px] text-slate-400 font-semibold">{url ? 'Uploaded successfully' : 'PDF/JPG up to 5MB'}</p>
                                 </div>
                               </div>
@@ -657,7 +657,7 @@ export const OnboardingWorkflow: React.FC = () => {
 
                       <div className="flex flex-col gap-3 pt-2">
                         <div className="space-y-1 w-full md:w-1/2">
-                          <label className="text-xs font-bold text-slate-600">Digital Signature (Type your full name)</label>
+                          <label className="text-xs font-bold text-slate-600">Digital Signature (Type your full name) <span className="text-red-500 ml-0.5">*</span></label>
                           <input type="text" name="signedName" value={formData.signedName} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500" />
                         </div>
                         <div className="flex items-center gap-3 p-3 bg-indigo-50 border border-indigo-100 rounded-xl">
@@ -833,23 +833,23 @@ export const OnboardingWorkflow: React.FC = () => {
                               <div className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Full Name</label>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Full Name <span className="text-red-500 ml-0.5">*</span></label>
                                     <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white" />
                                   </div>
                                   <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address</label>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address <span className="text-red-500 ml-0.5">*</span></label>
                                     <input type="email" name="email" value={formData.email} disabled className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl focus:outline-none opacity-60 cursor-not-allowed" />
                                   </div>
                                   <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Phone Number</label>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Phone Number <span className="text-red-500 ml-0.5">*</span></label>
                                     <input type="text" name="phone" value={formData.phone} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white" />
                                   </div>
                                   <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date of Birth</label>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date of Birth <span className="text-red-500 ml-0.5">*</span></label>
                                     <input type="date" name="dob" value={formData.dob} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white" />
                                   </div>
                                   <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Gender</label>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Gender <span className="text-red-500 ml-0.5">*</span></label>
                                     <select name="gender" value={formData.gender} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white">
                                       <option value="Male">Male</option>
                                       <option value="Female">Female</option>
@@ -858,7 +858,7 @@ export const OnboardingWorkflow: React.FC = () => {
                                   </div>
                                 </div>
                                 <div className="space-y-1">
-                                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Residential Address</label>
+                                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Residential Address <span className="text-red-500 ml-0.5">*</span></label>
                                   <textarea name="address" value={formData.address} onChange={handleInputChange} rows={2} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white resize-none" />
                                 </div>
                               </div>
@@ -931,15 +931,15 @@ export const OnboardingWorkflow: React.FC = () => {
                             ) : (
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-1">
-                                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Parent Name</label>
+                                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Parent Name <span className="text-red-500 ml-0.5">*</span></label>
                                   <input type="text" name="parentName" value={formData.parentName} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white" />
                                 </div>
                                 <div className="space-y-1">
-                                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Parent Phone</label>
+                                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Parent Phone <span className="text-red-500 ml-0.5">*</span></label>
                                   <input type="text" name="parentPhone" value={formData.parentPhone} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white" />
                                 </div>
                                 <div className="space-y-1">
-                                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Secondary Contact Name</label>
+                                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Secondary Contact Name <span className="text-red-500 ml-0.5">*</span></label>
                                   <input type="text" name="emergencyName" value={formData.emergencyName} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white" />
                                 </div>
                                 <div className="space-y-1">
@@ -947,7 +947,7 @@ export const OnboardingWorkflow: React.FC = () => {
                                   <input type="text" name="emergencyRelation" value={formData.emergencyRelation} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white" />
                                 </div>
                                 <div className="space-y-1 md:col-span-2">
-                                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Secondary Contact Phone</label>
+                                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Secondary Contact Phone <span className="text-red-500 ml-0.5">*</span></label>
                                   <input type="text" name="emergencyPhone" value={formData.emergencyPhone} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white" />
                                 </div>
                               </div>
@@ -1038,23 +1038,23 @@ export const OnboardingWorkflow: React.FC = () => {
                               <div className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">College / University</label>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">College / University <span className="text-red-500 ml-0.5">*</span></label>
                                     <input type="text" name="college" value={formData.college} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white" />
                                   </div>
                                   <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Degree</label>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Degree <span className="text-red-500 ml-0.5">*</span></label>
                                     <input type="text" name="degree" value={formData.degree} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white" />
                                   </div>
                                   <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Branch</label>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Branch <span className="text-red-500 ml-0.5">*</span></label>
                                     <input type="text" name="branch" value={formData.branch} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white" />
                                   </div>
                                   <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Semester</label>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Semester <span className="text-red-500 ml-0.5">*</span></label>
                                     <input type="number" name="semester" value={formData.semester} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white" />
                                   </div>
                                   <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">CGPA</label>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">CGPA <span className="text-red-500 ml-0.5">*</span></label>
                                     <input type="number" step="0.01" name="cgpa" value={formData.cgpa} onChange={handleInputChange} className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white" />
                                   </div>
                                 </div>

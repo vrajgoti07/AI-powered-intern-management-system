@@ -1,4 +1,3 @@
-// Prisma Schema for AI-Powered Intern Management System
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,194 +7,117 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Enum for User Roles
-enum UserRole {
-  SUPER_ADMIN
-  HR
-  DEPARTMENT_HEAD
-  MENTOR
-  INTERN
-}
-
-// Enum for Intern Status
-enum InternStatus {
-  ACTIVE
-  COMPLETED
-  ONBOARDING
-  TERMINATED
-  OFFERED
-  PENDING
-}
-
-// Enum for Task Priority
-enum TaskPriority {
-  HIGH
-  MEDIUM
-  LOW
-}
-
-// Enum for Task Status
-enum TaskStatus {
-  TODO
-  IN_PROGRESS
-  REVIEW
-  COMPLETED
-}
-
-// Enum for Announcement Priority
-enum AnnouncementPriority {
-  HIGH
-  MEDIUM
-  LOW
-}
-
-// User Model - Base authentication model
 model User {
-  id              String   @id @default(uuid())
-  email           String   @unique
-  password        String
-  name            String
-  role            UserRole
-  avatarUrl       String?
-  isActive        Boolean  @default(true)
-  isEmailVerified Boolean  @default(false)
-
-  // Password reset fields
-  resetPasswordToken       String?   @unique
+  id                       String                  @id @default(uuid())
+  email                    String                  @unique
+  password                 String
+  name                     String
+  role                     UserRole
+  avatarUrl                String?
+  isActive                 Boolean                 @default(true)
+  isEmailVerified          Boolean                 @default(false)
+  resetPasswordToken       String?                 @unique
   resetPasswordTokenExpiry DateTime?
-
-  // Refresh token for JWT
-  refreshToken String? @db.Text
-
-  // Timestamps
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  lastLogin DateTime?
-
-  // Relations
-  intern        Intern?
-  mentor        Mentor?
-  conversations Conversation[] @relation("ConversationParticipants")
-  sentMessages  Message[]      @relation("MessageSender")
-  readMessages  Message[]      @relation("MessageReadBy")
-  notifications Notification[]
-  leaveRequests LeaveRequest[] @relation("UserLeaveRequests")
-
-  // Department Relations
-  departmentId          String?
-  department            Department?  @relation("DepartmentInterns", fields: [departmentId], references: [id])
-  mentorDepartmentId    String?
-  mentorDepartment      Department?  @relation("DepartmentMentors", fields: [mentorDepartmentId], references: [id])
-  headedDepartment      Department?  @relation("DepartmentHead")
-
-  // Settings & Security Relations
-  otpVerifications       OtpVerification[]
-  userSessions           UserSession[]
-  loginActivities        LoginActivity[]
-  notificationPreference NotificationPreference?
-  trustedSessions        TrustedSession[]
+  refreshToken             String?
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
+  lastLogin                DateTime?
+  departmentId             String?
+  mentorDepartmentId       String?
+  headedDepartment         Department?             @relation("DepartmentHead")
+  intern                   Intern?
+  leaveRequests            LeaveRequest[]          @relation("UserLeaveRequests")
+  loginActivities          LoginActivity[]
+  mentor                   Mentor?
+  sentMessages             Message[]               @relation("MessageSender")
+  notificationPreference   NotificationPreference?
+  notifications            Notification[]
+  otpVerifications         OtpVerification[]
+  trustedSessions          TrustedSession[]
+  userSessions             UserSession[]
+  department               Department?             @relation("DepartmentInterns", fields: [departmentId], references: [id])
+  mentorDepartment         Department?             @relation("DepartmentMentors", fields: [mentorDepartmentId], references: [id])
+  conversations            Conversation[]          @relation("ConversationParticipants")
+  readMessages             Message[]               @relation("MessageReadBy")
 
   @@index([email])
   @@index([role])
   @@map("users")
 }
 
-// Department Model
 model Department {
-  id              String      @id @default(uuid())
-  name            String      @unique
-  code            String      @unique
-  description     String?
-  colorTheme      String?     @map("color")
-  isActive        Boolean     @default(true)
-
-  headId          String?     @unique
-  head            User?       @relation("DepartmentHead", fields: [headId], references: [id])
-
-  mentors         User[]      @relation("DepartmentMentors")
-  interns         User[]      @relation("DepartmentInterns")
-
-  projects        Project[]
-  activities      DepartmentActivity[]
-
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-
-  // Profile-level backwards compatibility links
-  profileInterns  Intern[]    @relation("ProfileInterns")
-  profileMentors  Mentor[]    @relation("ProfileMentors")
-  jobPostings     JobPosting[]
+  id             String               @id @default(uuid())
+  name           String               @unique
+  code           String               @unique
+  description    String?
+  colorTheme     String?              @map("color")
+  isActive       Boolean              @default(true)
+  headId         String?              @unique
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  activities     DepartmentActivity[]
+  head           User?                @relation("DepartmentHead", fields: [headId], references: [id])
+  profileInterns Intern[]             @relation("ProfileInterns")
+  jobPostings    JobPosting[]
+  profileMentors Mentor[]             @relation("ProfileMentors")
+  projects       Project[]
+  interns        User[]               @relation("DepartmentInterns")
+  mentors        User[]               @relation("DepartmentMentors")
 
   @@map("departments")
 }
 
-// Intern Model
 model Intern {
-  id     String @id @default(uuid())
-  userId String @unique
-
-  // Personal Information
-  phone   String?
-  dob     DateTime?
-  college String
-  degree  String?
-  branch  String?
-  cgpa    Float?
-
-  // Internship Details
-  departmentId String
-  mentorId     String?
-  status       InternStatus @default(PENDING)
-  score        Float        @default(0)
-  attendance   Float        @default(0)
-
-  // Skills and Experience (AI Extracted from Resume)
-  skills     String[] @default([])
-  experience Json? // AI Extracted experience list
-  education  Json? // AI Extracted education list
-
-  duration      String?
-  startDate     DateTime?
-  joinedDate    DateTime  @default(now())
-  completedDate DateTime?
-  whyJoin       String?   @db.Text
-  resumeUrl     String?
-
-  // Onboarding Data
-  address            String?   @db.Text
-  workAddress        String?   @db.Text
-  emergencyName      String?
-  emergencyRelation  String?
-  emergencyPhone     String?
-  signedName         String?
-  agreementAccepted  Boolean   @default(false)
-  offerLetterAccepted Boolean  @default(false)
-  onboardingStep     Int       @default(0)
-  
-  // New Onboarding Fields
-  gender             String?
-  semester           Int?
-  parentName         String?
-  parentPhone        String?
-  idProofUrl         String?
-  marksheetUrl       String?
-  aadhaarPanUrl      String?
-  collegeIdUrl       String?
-  passportPhotoUrl   String?
-
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  department         Department          @relation("ProfileInterns", fields: [departmentId], references: [id])
-  mentor             Mentor?             @relation(fields: [mentorId], references: [id])
-  tasks              Task[]
-  feedbacks          Feedback[]
-  leaves             Leave[]
-  attendances        Attendance[]
-  onboardingProgress OnboardingProgress?
+  id                  String              @id @default(uuid())
+  userId              String              @unique
+  phone               String?
+  dob                 DateTime?
+  college             String
+  degree              String?
+  branch              String?
+  cgpa                Float?
+  departmentId        String
+  mentorId            String?
+  status              InternStatus        @default(PENDING)
+  score               Float               @default(0)
+  attendance          Float               @default(0)
+  skills              String[]            @default([])
+  experience          Json?
+  education           Json?
+  duration            String?
+  startDate           DateTime?
+  joinedDate          DateTime            @default(now())
+  completedDate       DateTime?
+  whyJoin             String?
+  resumeUrl           String?
+  address             String?
+  workAddress         String?
+  emergencyName       String?
+  emergencyRelation   String?
+  emergencyPhone      String?
+  signedName          String?
+  agreementAccepted   Boolean             @default(false)
+  offerLetterAccepted Boolean             @default(false)
+  onboardingStep      Int                 @default(0)
+  gender              String?
+  semester            Int?
+  parentName          String?
+  parentPhone         String?
+  idProofUrl          String?
+  marksheetUrl        String?
+  aadhaarPanUrl       String?
+  collegeIdUrl        String?
+  passportPhotoUrl    String?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  attendances         Attendance[]
+  feedbacks           Feedback[]
+  department          Department          @relation("ProfileInterns", fields: [departmentId], references: [id])
+  mentor              Mentor?             @relation(fields: [mentorId], references: [id])
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaves              Leave[]
+  onboardingProgress  OnboardingProgress?
+  tasks               Task[]
 
   @@index([userId])
   @@index([departmentId])
@@ -204,13 +126,10 @@ model Intern {
   @@map("interns")
 }
 
-// OnboardingProgress Model
 model OnboardingProgress {
   id                    String   @id @default(uuid())
   internId              String   @unique
-  
   currentStep           Int      @default(1)
-  
   offerAccepted         Boolean  @default(false)
   personalInfoCompleted Boolean  @default(false)
   educationCompleted    Boolean  @default(false)
@@ -218,56 +137,43 @@ model OnboardingProgress {
   documentsCompleted    Boolean  @default(false)
   agreementAccepted     Boolean  @default(false)
   finalSubmitted        Boolean  @default(false)
-
-  verificationStatus    String   @default("PENDING") // PENDING, UNDER_REVIEW, APPROVED, REJECTED
-
+  verificationStatus    String   @default("PENDING")
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
-
   intern                Intern   @relation(fields: [internId], references: [id], onDelete: Cascade)
 
   @@map("onboarding_progress")
 }
 
-// Mentor Model
 model Mentor {
-  id     String @id @default(uuid())
-  userId String @unique
-
-  // Professional Information
-  departmentId String
-  rating       Float    @default(0)
-  expertise    String[] @default([])
-  bio          String?  @db.Text
-
-  // Extended Profile Fields
+  id             String            @id @default(uuid())
+  userId         String            @unique
+  departmentId   String
+  rating         Float             @default(0)
+  expertise      String[]          @default([])
+  bio            String?
   phone          String?
   designation    String?
-  experience     Int?        @default(0)
-  skills         String[]    @default([])
-  mentorCapacity Int         @default(5)
-  mentorStatus   String      @default("ACTIVE")
-
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  department Department @relation("ProfileMentors", fields: [departmentId], references: [id])
-  interns    Intern[]
-  tasks      Task[]
-  feedbacks  Feedback[]
-  analytics  MentorAnalytics[]
-  documents  MentorDocument[]
-  activities MentorActivity[]
+  experience     Int?              @default(0)
+  skills         String[]          @default([])
+  mentorCapacity Int               @default(5)
+  mentorStatus   String            @default("ACTIVE")
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  feedbacks      Feedback[]
+  interns        Intern[]
+  activities     MentorActivity[]
+  analytics      MentorAnalytics[]
+  documents      MentorDocument[]
+  department     Department        @relation("ProfileMentors", fields: [departmentId], references: [id])
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks          Task[]
 
   @@index([userId])
   @@index([departmentId])
   @@map("mentors")
 }
 
-// Mentor Analytics - Computed performance metrics
 model MentorAnalytics {
   id                    String   @id @default(uuid())
   mentorId              String
@@ -281,14 +187,12 @@ model MentorAnalytics {
   performanceTrend      Json?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
-
-  mentor Mentor @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  mentor                Mentor   @relation(fields: [mentorId], references: [id], onDelete: Cascade)
 
   @@index([mentorId])
   @@map("mentor_analytics")
 }
 
-// Mentor Documents - File attachments
 model MentorDocument {
   id         String   @id @default(uuid())
   mentorId   String
@@ -297,54 +201,42 @@ model MentorDocument {
   fileType   String
   fileSize   Int?
   uploadedAt DateTime @default(now())
-
-  mentor Mentor @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  mentor     Mentor   @relation(fields: [mentorId], references: [id], onDelete: Cascade)
 
   @@index([mentorId])
   @@map("mentor_documents")
 }
 
-// Mentor Activity Log - Timeline events
 model MentorActivity {
   id           String   @id @default(uuid())
   mentorId     String
   activityType String
-  description  String   @db.Text
+  description  String
   metadata     Json?
   createdAt    DateTime @default(now())
-
-  mentor Mentor @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  mentor       Mentor   @relation(fields: [mentorId], references: [id], onDelete: Cascade)
 
   @@index([mentorId])
   @@index([createdAt])
   @@map("mentor_activities")
 }
 
-// Task Model
 model Task {
-  id          String @id @default(uuid())
-  title       String
-  description String @db.Text
-
-  // Assignment Details
-  internId String
-  mentorId String
-  priority TaskPriority @default(MEDIUM)
-  status   TaskStatus   @default(TODO)
-  dueDate  DateTime
-
-  // Submission Details
+  id              String       @id @default(uuid())
+  title           String
+  description     String
+  internId        String
+  mentorId        String
+  priority        TaskPriority @default(MEDIUM)
+  status          TaskStatus   @default(TODO)
+  dueDate         DateTime
   submissionUrl   String?
   submittedAt     DateTime?
-  submissionNotes String?   @db.Text
-
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  intern Intern @relation(fields: [internId], references: [id], onDelete: Cascade)
-  mentor Mentor @relation(fields: [mentorId], references: [id])
+  submissionNotes String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  intern          Intern       @relation(fields: [internId], references: [id], onDelete: Cascade)
+  mentor          Mentor       @relation(fields: [mentorId], references: [id])
 
   @@index([internId])
   @@index([mentorId])
@@ -353,84 +245,54 @@ model Task {
   @@map("tasks")
 }
 
-// Feedback Model
 model Feedback {
-  id String @id @default(uuid())
-
-  // Feedback Details
-  internId String
-  mentorId String
-  rating   Int // 1-5 rating
-  comment  String  @db.Text
-  category String? // e.g., "Technical Skills", "Communication", "Teamwork"
-
-  // Timestamps
+  id        String   @id @default(uuid())
+  internId  String
+  mentorId  String
+  rating    Int
+  comment   String
+  category  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  // Relations
-  intern Intern @relation(fields: [internId], references: [id], onDelete: Cascade)
-  mentor Mentor @relation(fields: [mentorId], references: [id])
+  intern    Intern   @relation(fields: [internId], references: [id], onDelete: Cascade)
+  mentor    Mentor   @relation(fields: [mentorId], references: [id])
 
   @@index([internId])
   @@index([mentorId])
   @@map("feedbacks")
 }
 
-// Announcement Model
 model Announcement {
-  id       String               @id @default(uuid())
-  title    String
-  content  String               @db.Text
-  priority AnnouncementPriority @default(MEDIUM)
-  audience String // "All", "HR", "Mentors", "Interns", or specific department
-  author   String
-
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String               @id @default(uuid())
+  title     String
+  content   String
+  priority  AnnouncementPriority @default(MEDIUM)
+  audience  String
+  author    String
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
 
   @@index([audience])
   @@index([createdAt])
   @@map("announcements")
 }
 
-// Enum for Leave Status
-enum LeaveStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-// Enum for Leave Type
-enum LeaveType {
-  SICK
-  CASUAL
-  EMERGENCY
-  OTHER
-}
-
-// Attendance Model
 model Attendance {
   id           String    @id @default(uuid())
   internId     String
   date         DateTime  @db.Date
   checkIn      DateTime?
   checkOut     DateTime?
-  status       String    @default("ABSENT") // PRESENT, ABSENT, HALF_DAY, LEAVE, LATE, HOLIDAY, WEEKEND, NOT_MARKED
+  status       String    @default("ABSENT")
   workingHours Float?
   lateMinutes  Int?
-  markedBy     String?   // "SYSTEM", "HR", "MENTOR", or User ID
+  markedBy     String?
   deviceInfo   String?
   ipAddress    String?
   notes        String?
-
-  // Timestamps
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  // Relations
-  intern       Intern   @relation(fields: [internId], references: [id], onDelete: Cascade)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  intern       Intern    @relation(fields: [internId], references: [id], onDelete: Cascade)
 
   @@unique([internId, date])
   @@index([internId])
@@ -438,27 +300,20 @@ model Attendance {
   @@map("attendances")
 }
 
-// Leave Model
 model Leave {
-  id        String      @id @default(uuid())
-  internId  String
-  type      LeaveType
-  startDate DateTime    @db.Date
-  endDate   DateTime    @db.Date
-  reason    String      @db.Text
-  status    LeaveStatus @default(PENDING)
-
-  // Approval Details
+  id              String      @id @default(uuid())
+  internId        String
+  type            LeaveType
+  startDate       DateTime    @db.Date
+  endDate         DateTime    @db.Date
+  reason          String
+  status          LeaveStatus @default(PENDING)
   approvedBy      String?
   approvedAt      DateTime?
-  rejectionReason String?   @db.Text
-
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  intern Intern @relation(fields: [internId], references: [id], onDelete: Cascade)
+  rejectionReason String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  intern          Intern      @relation(fields: [internId], references: [id], onDelete: Cascade)
 
   @@index([internId])
   @@index([status])
@@ -466,59 +321,51 @@ model Leave {
   @@map("leaves")
 }
 
-// LeaveRequest Model - Enterprise Leave system
 model LeaveRequest {
-  id         String   @id @default(uuid())
-  userId     String
-  mentorId   String?
-  hrId       String?
-  leaveType  String   // "Sick Leave", "Casual Leave", "Emergency Leave", "Half Day", "Work From Home"
-  reason     String   @db.Text
-  startDate  DateTime @db.Date
-  endDate    DateTime @db.Date
-  status     String   @default("Pending Mentor") // "Pending Mentor", "Pending HR", "Approved", "Rejected"
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  // Relations
-  user       User     @relation("UserLeaveRequests", fields: [userId], references: [id], onDelete: Cascade)
+  id        String   @id @default(uuid())
+  userId    String
+  mentorId  String?
+  hrId      String?
+  leaveType String
+  reason    String
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  status    String   @default("Pending Mentor")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation("UserLeaveRequests", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
   @@map("leave_requests")
 }
 
-// Holiday Model
 model Holiday {
   id    String   @id @default(uuid())
   title String
   date  DateTime @unique @db.Date
-  type  String   @default("NATIONAL") // NATIONAL, COMPANY, REGIONAL
+  type  String   @default("NATIONAL")
 
   @@map("holidays")
 }
 
-// AttendanceSettings Model
 model AttendanceSettings {
   id                  String   @id @default(uuid())
   internshipStartDate DateTime @db.Date
   internshipEndDate   DateTime @db.Date
-  lateThreshold       String   @default("09:15") // HH:MM format
-  attendanceCloseTime String   @default("18:00") // HH:MM format
+  lateThreshold       String   @default("09:15")
+  attendanceCloseTime String   @default("18:00")
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
   @@map("attendance_settings")
 }
 
-// Task Comment Model
 model TaskComment {
-  id      String @id @default(uuid())
-  taskId  String
-  userId  String
-  comment String @db.Text
-
-  // Timestamps
+  id        String   @id @default(uuid())
+  taskId    String
+  userId    String
+  comment   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -527,78 +374,64 @@ model TaskComment {
   @@map("task_comments")
 }
 
-// Task File Model
 model TaskFile {
-  id         String @id @default(uuid())
+  id         String   @id @default(uuid())
   taskId     String
   fileName   String
   fileUrl    String
   fileType   String
   fileSize   Int
   uploadedBy String
-
-  // Timestamps
-  createdAt DateTime @default(now())
+  createdAt  DateTime @default(now())
 
   @@index([taskId])
   @@map("task_files")
 }
 
-// Conversation Model
 model Conversation {
-  id        String   @id @default(uuid())
-  name      String? // Group chat name
-  isGroup   Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  participants User[]    @relation("ConversationParticipants")
+  id           String    @id @default(uuid())
+  name         String?
+  isGroup      Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
   messages     Message[]
+  participants User[]    @relation("ConversationParticipants")
 
   @@map("conversations")
 }
 
-// Message Model
 model Message {
-  id             String  @id @default(uuid())
+  id             String       @id @default(uuid())
   conversationId String
   senderId       String
-  content        String  @db.Text
+  content        String
   fileUrl        String?
   fileName       String?
   fileType       String?
   fileSize       Int?
   metadata       Json?
-
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender       User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
-  readBy       User[]       @relation("MessageReadBy")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  readBy         User[]       @relation("MessageReadBy")
 
   @@index([conversationId])
   @@index([senderId])
   @@map("messages")
 }
 
-// Notification Model
 model Notification {
   id        String   @id @default(uuid())
   userId    String
   title     String
-  message   String   @db.Text
-  type      String // TASK, ANNOUNCEMENT, CHAT, LEAVE, SYSTEM
+  message   String
+  type      String
   isRead    Boolean  @default(false)
-  data      Json? // PostgreSQL native JSON
+  data      Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([isRead])
@@ -606,9 +439,208 @@ model Notification {
   @@map("notifications")
 }
 
-// ============================================
-// RECRUITMENT MODULE MODELS
-// ============================================
+model JobPosting {
+  id           String      @id @default(uuid())
+  title        String
+  description  String
+  departmentId String
+  isActive     Boolean     @default(true)
+  requirements String[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  candidates   Candidate[]
+  department   Department  @relation(fields: [departmentId], references: [id])
+
+  @@map("job_postings")
+}
+
+model Candidate {
+  id               String            @id @default(uuid())
+  jobPostingId     String
+  firstName        String
+  lastName         String
+  email            String            @unique
+  phone            String?
+  resumeUrl        String
+  parsedSkills     String[]          @default([])
+  parsedEducation  Json?
+  parsedExperience Json?
+  aiMatchScore     Float?
+  status           ApplicationStatus @default(APPLIED)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  jobPosting       JobPosting        @relation(fields: [jobPostingId], references: [id])
+  interviews       Interview[]
+
+  @@map("candidates")
+}
+
+model Interview {
+  id            String    @id @default(uuid())
+  candidateId   String
+  interviewerId String
+  scheduledAt   DateTime
+  meetingLink   String?
+  feedback      String?
+  score         Int?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  candidate     Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@map("interviews")
+}
+
+model OtpVerification {
+  id        String   @id @default(cuid())
+  userId    String
+  otpCode   String
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("otp_verifications")
+}
+
+model UserSession {
+  id           String   @id @default(cuid())
+  userId       String
+  tokenId      String   @unique
+  deviceName   String
+  browser      String
+  ipAddress    String
+  isActive     Boolean  @default(true)
+  lastActivity DateTime @updatedAt
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_sessions")
+}
+
+model LoginActivity {
+  id        String   @id @default(cuid())
+  userId    String
+  status    String
+  browser   String
+  device    String
+  ipAddress String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("login_activities")
+}
+
+model NotificationPreference {
+  id                 String  @id @default(cuid())
+  userId             String  @unique
+  emailNotifications Boolean @default(true)
+  attendanceAlerts   Boolean @default(true)
+  leaveAlerts        Boolean @default(true)
+  taskAlerts         Boolean @default(true)
+  announcementAlerts Boolean @default(true)
+  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+model TrustedSession {
+  id                String   @id @default(cuid())
+  userId            String
+  sessionToken      String   @unique
+  deviceFingerprint String
+  browser           String
+  operatingSystem   String
+  ipAddress         String?
+  status            String
+  expiresAt         DateTime
+  lastActivityAt    DateTime
+  createdAt         DateTime @default(now())
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([sessionToken])
+  @@map("trusted_sessions")
+}
+
+model Project {
+  id           String     @id @default(uuid())
+  title        String
+  description  String?
+  status       String     @default("ACTIVE")
+  departmentId String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@map("projects")
+}
+
+model DepartmentActivity {
+  id           String     @id @default(uuid())
+  departmentId String
+  activityType String
+  description  String
+  performedBy  String
+  createdAt    DateTime   @default(now())
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@index([departmentId])
+  @@index([createdAt])
+  @@map("department_activities")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  HR
+  DEPARTMENT_HEAD
+  MENTOR
+  INTERN
+}
+
+enum InternStatus {
+  ACTIVE
+  COMPLETED
+  ONBOARDING
+  TERMINATED
+  OFFERED
+  PENDING
+}
+
+enum TaskPriority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  COMPLETED
+}
+
+enum AnnouncementPriority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum LeaveType {
+  SICK
+  CASUAL
+  EMERGENCY
+  OTHER
+}
 
 enum ApplicationStatus {
   APPLIED
@@ -618,177 +650,3 @@ enum ApplicationStatus {
   OFFERED
   REJECTED
 }
-
-model JobPosting {
-  id           String   @id @default(uuid())
-  title        String
-  description  String   @db.Text
-  departmentId String
-  isActive     Boolean  @default(true)
-  requirements String[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  department Department  @relation(fields: [departmentId], references: [id])
-  candidates Candidate[]
-
-  @@map("job_postings")
-}
-
-model Candidate {
-  id           String  @id @default(uuid())
-  jobPostingId String
-  firstName    String
-  lastName     String
-  email        String  @unique
-  phone        String?
-  resumeUrl    String
-
-  // AI Parsed Data
-  parsedSkills     String[] @default([])
-  parsedEducation  Json?
-  parsedExperience Json?
-  aiMatchScore     Float?
-
-  status ApplicationStatus @default(APPLIED)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  jobPosting JobPosting  @relation(fields: [jobPostingId], references: [id])
-  interviews Interview[]
-
-  @@map("candidates")
-}
-
-model Interview {
-  id            String   @id @default(uuid())
-  candidateId   String
-  interviewerId String // References User.id
-  scheduledAt   DateTime
-  meetingLink   String?
-  feedback      String?  @db.Text
-  score         Int?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-
-  @@map("interviews")
-}
-
-model OtpVerification {
-  id            String   @id @default(cuid())
-  userId        String
-  otpCode       String
-  expiresAt     DateTime
-  verified      Boolean  @default(false)
-  attempts      Int      @default(0)
-  createdAt     DateTime @default(now())
-
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@map("otp_verifications")
-}
-
-model UserSession {
-  id            String   @id @default(cuid())
-  userId        String
-  tokenId       String   @unique
-  deviceName    String
-  browser       String
-  ipAddress     String
-  isActive      Boolean  @default(true)
-  lastActivity  DateTime @updatedAt
-  createdAt     DateTime @default(now())
-
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@map("user_sessions")
-}
-
-model LoginActivity {
-  id            String   @id @default(cuid())
-  userId        String
-  status        String   // "SUCCESS", "FAILED", "LOGOUT"
-  browser       String
-  device        String
-  ipAddress     String
-  createdAt     DateTime @default(now())
-
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@map("login_activities")
-}
-
-model NotificationPreference {
-  id                    String  @id @default(cuid())
-  userId                String  @unique
-  emailNotifications    Boolean @default(true)
-  attendanceAlerts      Boolean @default(true)
-  leaveAlerts           Boolean @default(true)
-  taskAlerts            Boolean @default(true)
-  announcementAlerts    Boolean @default(true)
-
-  user                  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("notification_preferences")
-}
-
-model TrustedSession {
-  id                  String   @id @default(cuid())
-  userId              String
-  sessionToken        String   @unique
-  deviceFingerprint   String
-  browser             String
-  operatingSystem     String
-  ipAddress           String?
-  status              String   // "ACTIVE", "EXPIRED", "REVOKED", "LOGGED_OUT"
-  expiresAt           DateTime
-  lastActivityAt      DateTime
-  createdAt           DateTime @default(now())
-
-  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([sessionToken])
-  @@map("trusted_sessions")
-}
-
-// Project Model
-model Project {
-  id           String      @id @default(uuid())
-  title        String
-  description  String?     @db.Text
-  status       String      @default("ACTIVE") // ACTIVE, COMPLETED, PENDING
-
-  departmentId String
-  department   Department  @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-
-  @@map("projects")
-}
-
-// Department Activity Log Model
-model DepartmentActivity {
-  id           String   @id @default(uuid())
-  departmentId String
-  activityType String   // "HEAD_ASSIGNED", "MENTOR_ASSIGNED", "INTERN_TRANSFERRED", "LEAVE_APPROVED", etc.
-  description  String   @db.Text
-  performedBy  String   // Name or ID of executor
-  createdAt    DateTime @default(now())
-
-  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-
-  @@index([departmentId])
-  @@index([createdAt])
-  @@map("department_activities")
-}
-
