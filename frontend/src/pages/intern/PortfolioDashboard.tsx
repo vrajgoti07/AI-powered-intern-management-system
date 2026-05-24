@@ -37,32 +37,7 @@ export const PortfolioDashboard: React.FC = () => {
   const [showLocationModal, setShowLocationModal] = useState(false);
 
   // Interactive Projects showcase state
-  const [projects, setProjects] = useState<any[]>([
-    {
-      title: "AI-Powered Analytics Hub",
-      desc: "High-performance React dashboard integrating predictive analytics modeling and database-seeded charts.",
-      tech: "Next.js & TypeScript",
-      link: "https://github.com",
-      icon: Cpu,
-      iconName: "Cpu"
-    },
-    {
-      title: "Distributed Task Orchestrator",
-      desc: "Microservices-based message broker queue using Redis pub/sub channels and high-throughput Node.js workers.",
-      tech: "Node.js & Redis",
-      link: "https://github.com",
-      icon: Terminal,
-      iconName: "Terminal"
-    },
-    {
-      title: "ORM Database Performance Profiler",
-      desc: "Automated query analyzer plugin developed to profile and optimize database query bounds retroactively.",
-      tech: "Prisma & PostgreSQL",
-      link: "https://github.com",
-      icon: Layers,
-      iconName: "Layers"
-    }
-  ]);
+  const [projects, setProjects] = useState<any[]>([]);
 
   // Load custom projects on start
   useEffect(() => {
@@ -379,61 +354,79 @@ export const PortfolioDashboard: React.FC = () => {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <AnimatePresence>
-                  {projects.map((r, idx) => {
-                    const ProjectIcon = r.icon || Code;
-                    return (
-                      <motion.div
-                        key={idx}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.3 }}
-                        className="p-5 bg-slate-50/60 hover:bg-white border border-slate-200/50 hover:border-slate-300 rounded-3xl flex flex-col justify-between min-h-[160px] transition-all hover:shadow-[0_8px_25px_rgba(0,0,0,0.025)] group relative"
-                      >
-                        <div className="space-y-2.5">
-                          <div className="flex justify-between items-start gap-2">
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100/50 flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
-                                <ProjectIcon className="w-4 h-4 text-indigo-600 group-hover:text-white" />
+              {projects.length === 0 ? (
+                <div className="py-12 px-6 flex flex-col items-center justify-center text-center border border-dashed border-slate-200 rounded-3xl bg-slate-50/40">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100/50 flex items-center justify-center text-indigo-600 mb-3">
+                    <Code className="w-5 h-5 text-indigo-650" />
+                  </div>
+                  <h4 className="font-extrabold text-slate-880 text-xs tracking-tight">No projects in your showcase</h4>
+                  <p className="text-[10px] text-slate-400 font-semibold max-w-xs mt-1.5 leading-relaxed">
+                    Your portfolio is currently empty. Share your best deliverables, features or systems with your mentors and HR.
+                  </p>
+                  <button
+                    onClick={() => setShowAddModal(true)}
+                    className="mt-4 flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-[10px] rounded-xl shadow-md transition-all active:scale-[0.98]"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Add Project
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <AnimatePresence>
+                    {projects.map((r, idx) => {
+                      const ProjectIcon = r.icon || Code;
+                      return (
+                        <motion.div
+                          key={idx}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ duration: 0.3 }}
+                          className="p-5 bg-slate-50/60 hover:bg-white border border-slate-200/50 hover:border-slate-300 rounded-3xl flex flex-col justify-between min-h-[160px] transition-all hover:shadow-[0_8px_25px_rgba(0,0,0,0.025)] group relative"
+                        >
+                          <div className="space-y-2.5">
+                            <div className="flex justify-between items-start gap-2">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100/50 flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
+                                  <ProjectIcon className="w-4 h-4 text-indigo-600 group-hover:text-white" />
+                                </div>
+                                <h4 className="font-extrabold text-slate-850 text-xs tracking-tight truncate max-w-[150px]">{r.title}</h4>
                               </div>
-                              <h4 className="font-extrabold text-slate-850 text-xs tracking-tight truncate max-w-[150px]">{r.title}</h4>
+
+                              <div className="flex items-center gap-1.5">
+                                <a
+                                  href={r.link}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="p-1.5 hover:bg-slate-200/60 rounded-xl text-slate-400 hover:text-slate-700 cursor-pointer shadow-sm border border-slate-100 bg-white transition-colors"
+                                  title="View Project Link"
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                </a>
+                                <button
+                                  onClick={() => handleDeleteProject(idx)}
+                                  className="p-1.5 hover:bg-rose-50 rounded-xl text-slate-400 hover:text-rose-600 cursor-pointer shadow-sm border border-slate-100 bg-white transition-colors"
+                                  title="Remove Project"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             </div>
 
-                            <div className="flex items-center gap-1.5">
-                              <a
-                                href={r.link}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="p-1.5 hover:bg-slate-200/60 rounded-xl text-slate-400 hover:text-slate-700 cursor-pointer shadow-sm border border-slate-100 bg-white transition-colors"
-                                title="View Project Link"
-                              >
-                                <ExternalLink className="w-3.5 h-3.5" />
-                              </a>
-                              <button
-                                onClick={() => handleDeleteProject(idx)}
-                                className="p-1.5 hover:bg-rose-50 rounded-xl text-slate-400 hover:text-rose-600 cursor-pointer shadow-sm border border-slate-100 bg-white transition-colors"
-                                title="Remove Project"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
+                            <p className="text-[10.5px] text-slate-400 font-semibold leading-relaxed">
+                              {r.desc}
+                            </p>
                           </div>
 
-                          <p className="text-[10.5px] text-slate-400 font-semibold leading-relaxed">
-                            {r.desc}
-                          </p>
-                        </div>
-
-                        <span className="text-[8px] font-black uppercase tracking-wider bg-indigo-50/80 border border-indigo-100/30 text-indigo-600 px-2.5 py-1 rounded-md w-fit mt-4">
-                          {r.tech}
-                        </span>
-                      </motion.div>
-                    );
-                  })}
-                </AnimatePresence>
-              </div>
+                          <span className="text-[8px] font-black uppercase tracking-wider bg-indigo-50/80 border border-indigo-100/30 text-indigo-600 px-2.5 py-1 rounded-md w-fit mt-4">
+                            {r.tech}
+                          </span>
+                        </motion.div>
+                      );
+                    })}
+                  </AnimatePresence>
+                </div>
+              )}
             </div>
 
             {/* Right Column: Achievements & Badges */}

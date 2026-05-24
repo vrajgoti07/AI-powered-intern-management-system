@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Menu, Search, Bell, X, Calendar, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { Avatar } from './Avatar';
-import { useNotifications, useMarkAllNotificationsRead, useInternByUser } from '../../hooks/queries';
+import { useNotifications, useMarkAllNotificationsRead, useInternByUser, useMarkNotificationRead } from '../../hooks/queries';
+import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 
 interface NavbarProps {
@@ -16,6 +17,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, title }) => {
   
   const { data: notifications = [] } = useNotifications();
   const markAllAsReadMutation = useMarkAllNotificationsRead();
+  const markReadMutation = useMarkNotificationRead();
+  const navigate = useNavigate();
   const { data: myInternData } = useInternByUser(user?.id || '');
   const mentorName = myInternData?.mentor?.user?.name || '';
 
@@ -24,6 +27,37 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, title }) => {
   const markAllAsRead = () => {
     if (unreadCount > 0) {
       markAllAsReadMutation.mutate();
+    }
+  };
+
+  const handleNotificationClick = async (n: any) => {
+    if (!n.isRead) {
+      await markReadMutation.mutateAsync(n.id);
+    }
+    
+    setShowNotifications(false);
+    
+    const type = (n.type || '').toUpperCase();
+    const role = user?.role?.toLowerCase() || '';
+    
+    if (type === 'TASK') {
+      if (role === 'intern') {
+        navigate('/intern/tasks');
+      } else if (role === 'mentor') {
+        navigate('/mentor/tasks');
+      } else if (role === 'hr') {
+        navigate('/hr/dashboard');
+      }
+    } else if (type === 'LEAVE') {
+      navigate('/shared/attendance-leave');
+    } else if (type === 'ANNOUNCEMENT') {
+      if (role === 'hr') {
+        navigate('/hr/announcements');
+      } else {
+        navigate('/intern/dashboard');
+      }
+    } else if (type === 'CHAT') {
+      navigate('/shared/communication');
     }
   };
 
@@ -174,7 +208,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, title }) => {
                     notifications.map((n: any) => (
                       <div 
                         key={n.id} 
-                        className={`p-4 text-xs transition-all duration-200 flex items-start gap-3 hover:bg-slate-50/80
+                        onClick={() => handleNotificationClick(n)}
+                        className={`p-4 text-xs transition-all duration-200 flex items-start gap-3 hover:bg-slate-50/80 cursor-pointer text-left
                           ${!n.isRead ? "bg-blue-50/30" : ""}`}
                       >
                         <div className="relative flex-shrink-0 mt-1">

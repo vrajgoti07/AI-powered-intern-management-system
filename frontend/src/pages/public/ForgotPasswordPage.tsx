@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Mail, ShieldCheck, Sparkles, AlertCircle, KeyRound, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Logo } from '../../components/common/Logo';
+import api from '../../services/api';
 
 export const ForgotPasswordPage: React.FC = () => {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ export const ForgotPasswordPage: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
       toast.error("Please enter your registered email address.");
@@ -18,12 +19,19 @@ export const ForgotPasswordPage: React.FC = () => {
     }
 
     setLoading(true);
-    // Mimic secure server API request
-    setTimeout(() => {
-      setLoading(false);
+    const loadingToast = toast.loading("Processing your security request...");
+    try {
+      await api.post('/auth/forgot-password', { email });
+      toast.dismiss(loadingToast);
       setSubmitted(true);
       toast.success("Security token sent to your email!");
-    }, 1200);
+    } catch (err: any) {
+      toast.dismiss(loadingToast);
+      const errMsg = err.response?.data?.message || "Failed to process recovery request. Please try again.";
+      toast.error(errMsg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

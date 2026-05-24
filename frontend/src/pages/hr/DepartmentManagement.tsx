@@ -4,7 +4,7 @@ import { Sidebar } from '../../components/common/Sidebar';
 import { Navbar } from '../../components/common/Navbar';
 import { 
   Building2, Users, UserCheck, Briefcase, Plus, Search, 
-  ArrowRightLeft, Crown, ShieldAlert, CheckCircle2, ChevronRight, X
+  ArrowRightLeft, Crown, ShieldAlert, CheckCircle2, ChevronRight, X, Sparkles, Trash2
 } from 'lucide-react';
 import { Modal } from '../../components/common/Modal';
 import { useNavigate } from 'react-router-dom';
@@ -38,18 +38,91 @@ export const DepartmentManagement: React.FC = () => {
     headId: ''
   });
 
+  const [assignMode, setAssignMode] = useState<'existing' | 'new'>('existing');
+
+  const [newHeadForm, setNewHeadForm] = useState({
+    name: '',
+    email: ''
+  });
+
   const [transferForm, setTransferForm] = useState({
     memberType: 'intern', // 'intern' | 'mentor'
     memberId: '',
     targetDeptId: ''
   });
 
-  const colorsMap: Record<string, { border: string; bg: string; icon: string; tag: string; btn: string }> = {
-    indigo: { border: "border-indigo-100", bg: "bg-indigo-50/30", icon: "text-indigo-600 bg-indigo-50", tag: "bg-indigo-100 text-indigo-700", btn: "bg-indigo-600 hover:bg-indigo-700" },
-    purple: { border: "border-purple-100", bg: "bg-purple-50/30", icon: "text-purple-600 bg-purple-50", tag: "bg-purple-100 text-purple-700", btn: "bg-purple-600 hover:bg-purple-700" },
-    pink: { border: "border-pink-100", bg: "bg-pink-50/30", icon: "text-pink-600 bg-pink-50", tag: "bg-pink-100 text-pink-700", btn: "bg-pink-600 hover:bg-pink-700" },
-    emerald: { border: "border-emerald-100", bg: "bg-emerald-50/30", icon: "text-emerald-600 bg-emerald-50", tag: "bg-emerald-100 text-emerald-700", btn: "bg-emerald-600 hover:bg-emerald-700" },
-    amber: { border: "border-amber-100", bg: "bg-amber-50/30", icon: "text-amber-600 bg-amber-50", tag: "bg-amber-100 text-amber-700", btn: "bg-amber-600 hover:bg-amber-700" },
+  const colorsMap: Record<string, { 
+    border: string; 
+    bg: string; 
+    icon: string; 
+    tag: string; 
+    btn: string;
+    text: string;
+    hoverText: string;
+    groupHoverText: string;
+    hoverBg: string;
+    hoverBorder: string;
+  }> = {
+    indigo: { 
+      border: "border-indigo-100", 
+      bg: "bg-indigo-50/30", 
+      icon: "text-indigo-600 bg-indigo-50", 
+      tag: "bg-indigo-100 text-indigo-700", 
+      btn: "bg-indigo-600 hover:bg-indigo-700",
+      text: "text-indigo-600",
+      hoverText: "hover:text-indigo-600",
+      groupHoverText: "group-hover:text-indigo-600",
+      hoverBg: "hover:bg-indigo-50",
+      hoverBorder: "hover:border-indigo-100"
+    },
+    purple: { 
+      border: "border-purple-100", 
+      bg: "bg-purple-50/30", 
+      icon: "text-purple-600 bg-purple-50", 
+      tag: "bg-purple-100 text-purple-700", 
+      btn: "bg-purple-600 hover:bg-purple-700",
+      text: "text-purple-600",
+      hoverText: "hover:text-purple-600",
+      groupHoverText: "group-hover:text-purple-600",
+      hoverBg: "hover:bg-purple-50",
+      hoverBorder: "hover:border-purple-100"
+    },
+    pink: { 
+      border: "border-pink-100", 
+      bg: "bg-pink-50/30", 
+      icon: "text-pink-600 bg-pink-50", 
+      tag: "bg-pink-100 text-pink-700", 
+      btn: "bg-pink-600 hover:bg-pink-700",
+      text: "text-pink-600",
+      hoverText: "hover:text-pink-600",
+      groupHoverText: "group-hover:text-pink-600",
+      hoverBg: "hover:bg-pink-50",
+      hoverBorder: "hover:border-pink-100"
+    },
+    emerald: { 
+      border: "border-emerald-100", 
+      bg: "bg-emerald-50/30", 
+      icon: "text-emerald-600 bg-emerald-50", 
+      tag: "bg-emerald-100 text-emerald-700", 
+      btn: "bg-emerald-600 hover:bg-emerald-700",
+      text: "text-emerald-600",
+      hoverText: "hover:text-emerald-600",
+      groupHoverText: "group-hover:text-emerald-600",
+      hoverBg: "hover:bg-emerald-50",
+      hoverBorder: "hover:border-emerald-100"
+    },
+    amber: { 
+      border: "border-amber-100", 
+      bg: "bg-amber-50/30", 
+      icon: "text-amber-600 bg-amber-50", 
+      tag: "bg-amber-100 text-amber-700", 
+      btn: "bg-amber-600 hover:bg-amber-700",
+      text: "text-amber-600",
+      hoverText: "hover:text-amber-600",
+      groupHoverText: "group-hover:text-amber-600",
+      hoverBg: "hover:bg-amber-50",
+      hoverBorder: "hover:border-amber-100"
+    },
   };
 
   const handleCreateDepartment = async (e: React.FormEvent) => {
@@ -93,6 +166,78 @@ export const DepartmentManagement: React.FC = () => {
       refreshData();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to assign head');
+    }
+  };
+
+  const handleRegisterAndAssignHead = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newHeadForm.name || !newHeadForm.email) {
+      toast.error('Please enter name and email');
+      return;
+    }
+
+    // Generate secure random password internally to satisfy backend schema
+    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+    const numbers = '0123456789';
+    const specials = '!@#$%^&*';
+    const getRandomChar = (str: string) => str.charAt(Math.floor(Math.random() * str.length));
+
+    let generatedPassword = '';
+    generatedPassword += getRandomChar(uppercase);
+    generatedPassword += getRandomChar(lowercase);
+    generatedPassword += getRandomChar(numbers);
+    generatedPassword += getRandomChar(specials);
+    const allChars = uppercase + lowercase + numbers + specials;
+    for (let i = 0; i < 12; i++) {
+      generatedPassword += getRandomChar(allChars);
+    }
+    const securePassword = generatedPassword.split('').sort(() => 0.5 - Math.random()).join('');
+
+    try {
+      // 1. Register new user as a Mentor with the internally generated secure password
+      const registerRes = await api.post('/auth/register', {
+        name: newHeadForm.name,
+        email: newHeadForm.email,
+        role: 'MENTOR',
+        password: securePassword
+      });
+
+      const userId = registerRes.data.data.user.id;
+
+      // 2. Create Mentor Profile in target division
+      await api.post('/mentors', {
+        userId,
+        departmentId: selectedDept.id,
+        expertise: ['Management']
+      });
+
+      // 3. Assign as Division Head
+      await api.post(`/departments/${selectedDept.id}/assign-head`, {
+        headId: userId
+      });
+
+      toast.success(`Successfully registered and assigned ${newHeadForm.name}! Invitation setup email sent.`);
+      setShowAssignHeadModal(false);
+      setSelectedDept(null);
+      setAssignMode('existing');
+      setNewHeadForm({ name: '', email: '' });
+      refreshData();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to register and assign head');
+    }
+  };
+
+  const handleDeleteDepartment = async (deptId: string, deptName: string) => {
+    if (!window.confirm(`Are you sure you want to permanently delete the ${deptName} division? This action cannot be undone.`)) {
+      return;
+    }
+    try {
+      await api.delete(`/departments/${deptId}`);
+      toast.success(`${deptName} division has been successfully removed.`);
+      refreshData();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to delete department');
     }
   };
 
@@ -187,11 +332,18 @@ export const DepartmentManagement: React.FC = () => {
                       <span className={`text-[10px] font-black px-2.5 py-1 rounded-full tracking-wider uppercase ${styles.tag}`}>
                         {d.code}
                       </span>
+                      <button
+                        onClick={() => handleDeleteDepartment(d.id, d.name)}
+                        className="p-1.5 hover:bg-red-50 rounded-lg text-slate-300 hover:text-red-600 transition-all cursor-pointer border border-transparent hover:border-red-100 bg-white"
+                        title="Delete Division"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
 
                   <div className="space-y-2 relative">
-                    <h3 className="font-extrabold text-slate-800 text-lg tracking-tight group-hover:text-indigo-600 transition-colors">{d.name}</h3>
+                    <h3 className={`font-extrabold text-slate-800 text-lg tracking-tight ${styles.groupHoverText} transition-colors`}>{d.name}</h3>
                     <p className="text-xs text-slate-400 font-medium line-clamp-2 leading-relaxed">{d.description || 'No division description provided. Setup standard operating workflows.'}</p>
                     
                     {/* Head of Department details */}
@@ -208,7 +360,7 @@ export const DepartmentManagement: React.FC = () => {
                       
                       <button 
                         onClick={() => { setSelectedDept(d); setAssignHeadForm({ headId: '' }); setShowAssignHeadModal(true); }}
-                        className="p-2 hover:bg-slate-50 rounded-xl text-slate-400 hover:text-indigo-600 transition-all cursor-pointer border border-slate-100 hover:border-slate-200 bg-white"
+                        className={`p-2 hover:bg-slate-50 rounded-xl text-slate-400 ${styles.hoverText} transition-all cursor-pointer border border-slate-100 hover:border-slate-200 bg-white`}
                         title="Assign Division Head"
                       >
                         <Crown className="w-4 h-4" />
@@ -242,7 +394,7 @@ export const DepartmentManagement: React.FC = () => {
                     {/* View Details Button overlay */}
                     <div 
                       onClick={() => navigate(`/hr/departments/${d.id}`)}
-                      className="col-span-3 mt-4 flex items-center justify-center gap-1 py-2 bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-100 text-indigo-600 rounded-xl cursor-pointer font-bold text-xs shadow-sm hover:shadow transition-all duration-300"
+                      className={`col-span-3 mt-4 flex items-center justify-center gap-1 py-2 bg-white ${styles.hoverBg} border border-slate-200 ${styles.hoverBorder} ${styles.text} rounded-xl cursor-pointer font-bold text-xs shadow-sm hover:shadow transition-all duration-300`}
                     >
                       View Division Dashboard
                       <ChevronRight className="w-4 h-4" />
@@ -348,48 +500,148 @@ export const DepartmentManagement: React.FC = () => {
       {/* 2. Assign Head Modal */}
       <Modal
         isOpen={showAssignHeadModal}
-        onClose={() => { setShowAssignHeadModal(false); setSelectedDept(null); }}
-        title={`Assign Head for ${selectedDept?.name}`}
+        onClose={() => { 
+          setShowAssignHeadModal(false); 
+          setSelectedDept(null); 
+          setAssignMode('existing');
+          setNewHeadForm({ name: '', email: '' });
+        }}
+        title={`Assign Division Head for ${selectedDept?.name}`}
       >
-        <form onSubmit={handleAssignHead} className="space-y-4 text-left">
+        <div className="space-y-4 text-left">
+          {/* Mode Switcher Tabs */}
+          <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-2xl border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setAssignMode('existing')}
+              className={`py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                assignMode === 'existing' 
+                  ? 'bg-white text-indigo-600 shadow-sm border border-slate-100' 
+                  : 'text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              Assign Existing Mentor
+            </button>
+            <button
+              type="button"
+              onClick={() => setAssignMode('new')}
+              className={`py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                assignMode === 'new' 
+                  ? 'bg-white text-indigo-600 shadow-sm border border-slate-100' 
+                  : 'text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              Register & Assign New Head
+            </button>
+          </div>
+
           <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-2xl text-amber-800 text-xs font-semibold leading-relaxed border border-amber-100">
             <ShieldAlert className="w-5 h-5 flex-shrink-0 text-amber-600" />
             <p>
-              Assigning a new head will automatically update the target user's role to <strong>DEPARTMENT_HEAD</strong>. Any previous head will be gracefully reverted back to a Mentor role.
+              {assignMode === 'existing' 
+                ? "Assigning a new head will automatically update the target user's role to DEPARTMENT_HEAD. Any previous head will be gracefully reverted back to a Mentor role."
+                : "Registering a new professional will create a corporate profile and establish them directly as the Division Head. A welcome email with temporary password will be sent."
+              }
             </p>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700">Select Manager Profile</label>
-            <select
-              value={assignHeadForm.headId}
-              onChange={(e) => setAssignHeadForm({ headId: e.target.value })}
-              className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white cursor-pointer"
-            >
-              <option value="">Select a manager</option>
-              {state.mentors.map(m => (
-                <option key={m.id} value={m.userId}>{m.name} ({m.email})</option>
-              ))}
-            </select>
-          </div>
+          {assignMode === 'existing' ? (
+            <form onSubmit={handleAssignHead} className="space-y-4 text-left">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700">Select Manager Profile</label>
+                <select
+                  value={assignHeadForm.headId}
+                  onChange={(e) => setAssignHeadForm({ headId: e.target.value })}
+                  className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white cursor-pointer"
+                >
+                  <option value="">Select a manager</option>
+                  {state.mentors.map(m => (
+                    <option key={m.id} value={m.userId}>{m.name} ({m.email})</option>
+                  ))}
+                </select>
+              </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={() => { setShowAssignHeadModal(false); setSelectedDept(null); }}
-              className="px-4 py-2.5 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-all cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={!assignHeadForm.headId}
-              className="px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all shadow-md cursor-pointer"
-            >
-              Confirm Assignment
-            </button>
-          </div>
-        </form>
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => { 
+                    setShowAssignHeadModal(false); 
+                    setSelectedDept(null); 
+                    setAssignMode('existing');
+                  }}
+                  className="px-4 py-2.5 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!assignHeadForm.headId}
+                  className="px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all shadow-md cursor-pointer"
+                >
+                  Confirm Assignment
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleRegisterAndAssignHead} className="space-y-4 text-left">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700">Full Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Vikram Seth"
+                  value={newHeadForm.name}
+                  onChange={(e) => setNewHeadForm({ ...newHeadForm, name: e.target.value })}
+                  className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700">Corporate Email Address</label>
+                <input
+                  type="email"
+                  placeholder="vikram@company.com"
+                  value={newHeadForm.email}
+                  onChange={(e) => setNewHeadForm({ ...newHeadForm, email: e.target.value })}
+                  className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white"
+                  required
+                />
+              </div>
+
+              {/* Informational Message Card */}
+              <div className="p-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl flex items-start gap-2.5 text-xs text-indigo-700 font-semibold leading-relaxed">
+                <Sparkles className="w-4 h-4 flex-shrink-0 text-indigo-500 mt-0.5" />
+                <div>
+                  <p className="font-bold text-slate-800 text-[13px] mb-0.5">Password Setup Email Ready</p>
+                  <p className="text-slate-500 font-medium text-[11px]">
+                    To maintain strict security compliance, a secure password setup email will be automatically sent to the Head's corporate inbox. They can safely configure their own password when logging in for the first time.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => { 
+                    setShowAssignHeadModal(false); 
+                    setSelectedDept(null); 
+                    setAssignMode('existing');
+                    setNewHeadForm({ name: '', email: '' });
+                  }}
+                  className="px-4 py-2.5 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md cursor-pointer"
+                >
+                  Register & Assign Head
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       </Modal>
 
       {/* 3. Transfer Team Member Modal */}

@@ -82,13 +82,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRole, 
 
   const roles = allowedRoles || (allowedRole ? [allowedRole] : []);
 
-  // Support superadmin role accessing hr features as well
-  const hasAccess = roles.includes(user.role) || (user.role === 'admin' && roles.includes('hr'));
+  const userRoleLower = user.role.toLowerCase();
+  const hasAccess = roles.includes(userRoleLower as any) || 
+                    (userRoleLower === 'admin' && roles.includes('hr')) ||
+                    (userRoleLower === 'department_head' && roles.includes('mentor'));
   if (!hasAccess) {
     return <Navigate to="/" replace />;
   }
 
-  if (roles.includes('intern') && user.role === 'intern' && requireActiveIntern) {
+  if (roles.includes('intern') && userRoleLower === 'intern' && requireActiveIntern) {
     return <ActiveInternGuard>{children}</ActiveInternGuard>;
   }
 

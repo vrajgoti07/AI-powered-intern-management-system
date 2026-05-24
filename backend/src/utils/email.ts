@@ -24,6 +24,17 @@ const createTransporter = () => {
 
 const transporter = createTransporter();
 
+// Proactively verify the transporter on startup to alert developers of SMTP issues
+if (transporter) {
+  transporter.verify()
+    .then(() => {
+      logger.info('✅ SMTP Mail Transporter verified successfully and is ready to send emails.');
+    })
+    .catch((err) => {
+      logger.error('❌ SMTP Mail Transporter verification failed on boot:', err);
+    });
+}
+
 /**
  * Send email
  */
@@ -62,29 +73,154 @@ const getEmailWrapper = (title: string, bodyContent: string) => `
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-      body { font-family: Arial, sans-serif; line-height: 1.6; color: #1e293b; background-color: #f8fafc; margin: 0; padding: 0; }
-      .container { max-width: 600px; margin: 40px auto; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); background-color: #ffffff; border: 1px solid #e2e8f0; }
-      .header { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: white; padding: 40px 30px; text-align: center; }
-      .header h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.025em; }
-      .content { padding: 40px 30px; }
-      .button { display: inline-block; padding: 12px 30px; background: #4f46e5; color: white !important; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 600; text-align: center; }
-      .footer { text-align: center; padding: 25px 20px; background-color: #f1f5f9; color: #64748b; font-size: 12px; border-top: 1px solid #e2e8f0; }
-      .meta-box { margin-top: 20px; padding: 15px; background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
-      p { margin: 0 0 16px 0; color: #334155; font-size: 16px; }
-      strong { color: #0f172a; }
+      body { 
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+        line-height: 1.6; 
+        color: #334155; 
+        background-color: #f8fafc; 
+        margin: 0; 
+        padding: 0; 
+        -webkit-font-smoothing: antialiased;
+      }
+      .email-bg {
+        background-color: #f8fafc;
+        padding: 40px 20px;
+      }
+      .container { 
+        max-width: 580px; 
+        margin: 0 auto; 
+        border-radius: 16px; 
+        overflow: hidden; 
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03); 
+        background-color: #ffffff; 
+        border: 1px solid #e2e8f0; 
+      }
+      .brand-accent {
+        height: 6px;
+        background: linear-gradient(90deg, #2563eb 0%, #4f46e5 50%, #7c3aed 100%);
+      }
+      .header { 
+        padding: 35px 40px 25px 40px; 
+        text-align: left; 
+        border-bottom: 1px solid #f1f5f9;
+      }
+      .logo-text {
+        font-size: 20px;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.03em;
+        display: inline-flex;
+        align-items: center;
+      }
+      .logo-dot {
+        color: #2563eb;
+        font-size: 24px;
+        line-height: 0;
+        margin-left: 2px;
+      }
+      .content { 
+        padding: 40px 40px; 
+      }
+      .email-title {
+        font-size: 22px;
+        font-weight: 800;
+        color: #0f172a;
+        margin-top: 0;
+        margin-bottom: 24px;
+        letter-spacing: -0.02em;
+      }
+      .button { 
+        display: inline-block; 
+        padding: 14px 32px; 
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); 
+        color: #ffffff !important; 
+        text-decoration: none !important; 
+        border-radius: 12px; 
+        font-weight: 700; 
+        text-align: center; 
+        font-size: 14px;
+        letter-spacing: -0.01em;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        margin: 24px 0;
+        transition: all 0.2s ease;
+      }
+      .footer { 
+        text-align: center; 
+        padding: 30px 40px; 
+        background-color: #f8fafc; 
+        color: #94a3b8; 
+        font-size: 12px; 
+        border-top: 1px solid #f1f5f9; 
+      }
+      .footer-divider {
+        height: 1px;
+        background-color: #e2e8f0;
+        margin: 20px 0;
+      }
+      .meta-box { 
+        margin-top: 24px; 
+        padding: 20px; 
+        background-color: #f8fafc; 
+        border-radius: 12px; 
+        border: 1px solid #e2e8f0; 
+      }
+      .badge {
+        display: inline-block;
+        padding: 6px 12px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        border-radius: 6px;
+        margin-bottom: 12px;
+      }
+      .badge-info {
+        background-color: #eff6ff;
+        color: #1e40af;
+      }
+      .badge-success {
+        background-color: #ecfdf5;
+        color: #065f46;
+      }
+      p { 
+        margin: 0 0 16px 0; 
+        color: #475569; 
+        font-size: 15px; 
+        line-height: 1.6;
+      }
+      strong { 
+        color: #0f172a; 
+      }
+      .grid-card {
+        padding: 16px;
+        background-color: #ffffff;
+        border: 1px solid #f1f5f9;
+        border-radius: 10px;
+        margin-bottom: 12px;
+      }
     </style>
   </head>
   <body>
-    <div class="container">
-      <div class="header">
-        <h1>${title}</h1>
-      </div>
-      <div class="content">
-        ${bodyContent}
-      </div>
-      <div class="footer">
-        <p style="margin: 0; font-size: 12px; color: #64748b;">This is an automated email from the Intern Management System.</p>
-        <p style="margin: 4px 0 0 0; font-size: 12px; color: #94a3b8;">&copy; 2026 InternFlow Inc. All rights reserved.</p>
+    <div class="email-bg">
+      <div class="container">
+        <div class="brand-accent"></div>
+        <div class="header">
+          <div style="float: right; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 6px;">${title}</div>
+          <div class="logo-text">InternFlow<span class="logo-dot">•</span></div>
+          <div style="clear: both;"></div>
+        </div>
+        <div class="content">
+          ${bodyContent}
+        </div>
+        <div class="footer">
+          <p style="margin: 0; font-size: 12px; color: #94a3b8; font-weight: 500;">
+            This is an automated operational transmission from the InternFlow security gate.
+          </p>
+          <div class="footer-divider"></div>
+          <p style="margin: 0; font-size: 11px; color: #cbd5e1; font-weight: 600; uppercase; letter-spacing: 0.05em;">
+            © 2026 InternFlow Inc. · One Hacker Way · Palo Alto, CA
+          </p>
+        </div>
       </div>
     </div>
   </body>
@@ -100,19 +236,23 @@ export const sendPasswordResetEmail = async (
   resetToken: string
 ): Promise<boolean> => {
   const resetUrl = `${config.frontend.url}/reset-password?token=${resetToken}`;
-  
+
   const body = `
-    <p>Hi ${name},</p>
-    <p>We received a request to reset your password for your Intern Management System account.</p>
-    <p>Click the button below to reset your password:</p>
+    <span class="badge badge-info">Security Notice</span>
+    <h2 class="email-title">Password Reset Requested</h2>
+    <p>Hi <strong>${name}</strong>,</p>
+    <p>We received an authorized request to establish a new credential password for your secure InternFlow workspace.</p>
+    <p>Please use the verification gateway button below to set up your new credentials:</p>
     <div style="text-align: center;">
-      <a href="${resetUrl}" class="button">Reset Password</a>
+      <a href="${resetUrl}" class="button">Configure New Password</a>
     </div>
     <div class="meta-box">
-      <p style="margin: 0; font-size: 14px;"><strong>Direct Link:</strong> <a href="${resetUrl}" style="color: #4f46e5; word-break: break-all;">${resetUrl}</a></p>
-      <p style="margin: 8px 0 0 0; font-size: 12px; color: #64748b;"><strong>Note:</strong> This link is only valid for 1 hour. If you did not make this request, you can safely ignore this email.</p>
+      <p style="margin: 0 0 10px 0; font-size: 13px; font-weight: bold; color: #0f172a;">Gateway Link Details:</p>
+      <p style="margin: 0 0 8px 0; font-size: 13px; color: #2563eb; word-break: break-all;"><a href="${resetUrl}" style="color: #2563eb; text-decoration: none;">${resetUrl}</a></p>
+      <p style="margin: 12px 0 0 0; font-size: 11px; color: #64748b; font-weight: 500; border-t: 1px dashed #e2e8f0; padding-top: 10px;">
+        <strong>Notice:</strong> This security token is highly confidential and will automatically expire in <strong>1 hour</strong>. If you did not issue this password reset directive, please report this access attempt to security@internflow.com.
+      </p>
     </div>
-    <p style="margin-top: 20px;">Best regards,<br>Intern Management Team</p>
   `;
 
   const html = getEmailWrapper('Password Reset Request', body);
@@ -129,40 +269,49 @@ export const sendWelcomeEmail = async (
   resetToken?: string
 ): Promise<boolean> => {
   let body = '';
-  
+
   if (resetToken) {
     const setupUrl = `${config.frontend.url}/reset-password?token=${resetToken}`;
     body = `
+      <span class="badge badge-success">Onboarding Invitation</span>
+      <h2 class="email-title">Welcome to InternFlow!</h2>
       <p>Hi <strong>${name}</strong>,</p>
-      <p>Welcome aboard! Your account has been successfully approved as an <strong>${role}</strong> on our AI-powered Intern Management System.</p>
-      <p>Before you can access the platform, you must establish your secure password. Click the button below to set your account password:</p>
+      <p>Congratulations! Your corporate profile has been successfully provisioned as a registered <strong>${role.toUpperCase()}</strong> on the InternFlow management portal.</p>
+      <p>To initialize your secure workspace access, you must establish a personal account password. Click the verification button below to set up your credential:</p>
       <div style="text-align: center;">
-        <a href="${setupUrl}" class="button">Set Account Password</a>
+        <a href="${setupUrl}" class="button">Initialize Account Password</a>
       </div>
       <div class="meta-box">
-        <p style="margin: 0; font-size: 14px;"><strong>Direct Verification Link:</strong> <a href="${setupUrl}" style="color: #4f46e5; word-break: break-all;">${setupUrl}</a></p>
-        <p style="margin: 8px 0 0 0; font-size: 12px; color: #64748b;"><strong>Note:</strong> This verification setup link is only valid for 24 hours. Once set, you can sign in to the platform with your email.</p>
+        <p style="margin: 0 0 8px 0; font-size: 13px; font-weight: bold; color: #0f172a;">Activation Details:</p>
+        <p style="margin: 0 0 8px 0; font-size: 13px; color: #2563eb; word-break: break-all;"><a href="${setupUrl}" style="color: #2563eb; text-decoration: none;">${setupUrl}</a></p>
+        <p style="margin: 12px 0 0 0; font-size: 11px; color: #64748b; font-weight: 500; border-t: 1px dashed #e2e8f0; padding-top: 10px;">
+          <strong>Security Note:</strong> This activation gateway is highly sensitive and will expire in <strong>24 hours</strong>. Please configure your password immediately to prevent configuration suspension.
+        </p>
       </div>
-      <p style="margin-top: 20px;">Best regards,<br>Intern Management Team</p>
     `;
   } else {
     body = `
+      <span class="badge badge-success">Account Provisioned</span>
+      <h2 class="email-title">Account Successfully Created!</h2>
       <p>Hi <strong>${name}</strong>,</p>
-      <p>Welcome aboard! Your account has been successfully created as a <strong>${role}</strong> on our AI-powered Intern Management System.</p>
-      <p>You can now log in to the platform, explore your workspace, view analytics, and collaborate with your team.</p>
+      <p>Your platform profile is active as a registered <strong>${role.toUpperCase()}</strong>. You are cleared to log in, customize your settings, and access the daily milestones tracker.</p>
       <div style="text-align: center;">
-        <a href="${config.frontend.url}/login" class="button">Access Portal</a>
+        <a href="${config.frontend.url}/login" class="button">Access Platform</a>
       </div>
       <div class="meta-box">
-        <p style="margin: 0; font-size: 14px;"><strong>Portal Link:</strong> <a href="${config.frontend.url}">${config.frontend.url}</a></p>
-        <p style="margin: 4px 0 0 0; font-size: 14px;"><strong>Temporary Password:</strong> InternPass123! (If created by HR)</p>
+        <p style="margin: 0 0 10px 0; font-size: 13px; font-weight: bold; color: #0f172a;">Workspace Details:</p>
+        <div class="grid-card">
+          <p style="margin: 0 0 6px 0; font-size: 13px; color: #64748b;"><strong>Portal Address:</strong> <a href="${config.frontend.url}" style="color: #2563eb; text-decoration: none;">${config.frontend.url}</a></p>
+          <p style="margin: 0; font-size: 13px; color: #64748b;"><strong>Default Password:</strong> <code style="background-color: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #0f172a; font-weight: bold;">InternPass123!</code></p>
+        </div>
+        <p style="margin: 10px 0 0 0; font-size: 11px; color: #ef4444; font-weight: bold;">
+          ⚠️ Warning: You are strictly required to update your password immediately upon your first successful login.
+        </p>
       </div>
-      <p style="margin-top: 20px;">If you have any questions, feel free to reach out to the HR department or your assigned mentor.</p>
-      <p>Best regards,<br>Intern Management Team</p>
     `;
   }
 
-  const html = getEmailWrapper('Welcome to Intern Management System!', body);
+  const html = getEmailWrapper('Welcome to InternFlow', body);
   return await sendEmail(email, 'Welcome to Intern Management System', html);
 };
 
@@ -175,18 +324,34 @@ export const sendApplicationConfirmationEmail = async (
   departmentName: string
 ): Promise<boolean> => {
   const body = `
+    <span class="badge badge-info">Registration Success</span>
+    <h2 class="email-title">Application Received!</h2>
     <p>Hi <strong>${name}</strong>,</p>
-    <p>Thank you for submitting your application to join our internship program in the <strong>${departmentName}</strong> department!</p>
-    <p>We have successfully received your registration details. Our HR team is reviewing applications, and we will get back to you soon regarding the next steps of our selection process.</p>
-    <div class="meta-box">
-      <p style="margin: 0; font-size: 14px;"><strong>Application Status:</strong> PENDING SCREENING</p>
-      <p style="margin: 4px 0 0 0; font-size: 14px;"><strong>Selected Track:</strong> ${departmentName}</p>
+    <p>Thank you for submitting your registration request for the internship program inside our <strong>${departmentName}</strong> engineering cohort!</p>
+    <p>Our talent acquisition team has received your academic details and onboarding forms. No further action is required from you at this stage.</p>
+    
+    <div class="meta-box" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+      <p style="margin: 0 0 12px 0; font-size: 13px; font-weight: bold; color: #0f172a; text-transform: uppercase; letter-spacing: 0.05em;">Onboarding Timeline status:</p>
+      
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="padding: 10px 14px; background-color: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 6px;">
+          <p style="margin: 0; font-size: 12px; font-weight: 700; color: #1e3a8a;">[✓] Application Form Submitted</p>
+        </div>
+        <div style="padding: 10px 14px; background-color: #f8fafc; border-left: 4px solid #cbd5e1; border-radius: 6px; opacity: 0.8;">
+          <p style="margin: 0; font-size: 12px; font-weight: 700; color: #64748b;">[ ] Academic Documents Review (In Progress)</p>
+        </div>
+        <div style="padding: 10px 14px; background-color: #f8fafc; border-left: 4px solid #cbd5e1; border-radius: 6px; opacity: 0.8;">
+          <p style="margin: 0; font-size: 12px; font-weight: 700; color: #64748b;">[ ] HR Approval & Account Provisioning</p>
+        </div>
+      </div>
+      
+      <p style="margin: 15px 0 0 0; font-size: 12px; color: #64748b;">
+        <strong>Track Assigned:</strong> ${departmentName} Cohort
+      </p>
     </div>
-    <p style="margin-top: 20px;">No further action is required from your side at the moment.</p>
-    <p>Best regards,<br>Intern Recruitment Team</p>
   `;
 
-  const html = getEmailWrapper('Application Received!', body);
+  const html = getEmailWrapper('Application Received', body);
   return await sendEmail(email, 'Application Received - Intern Management System', html);
 };
 
@@ -201,30 +366,60 @@ export const sendMentorAssignmentEmails = async (
 ): Promise<boolean> => {
   // 1. Send to Intern
   const internBody = `
+    <span class="badge badge-success">milestone assigned</span>
+    <h2 class="email-title">Your Mentor is Assigned!</h2>
     <p>Hi <strong>${internName}</strong>,</p>
-    <p>We are excited to inform you that you have been assigned a mentor for your internship journey!</p>
-    <div class="meta-box">
-      <p style="margin: 0; font-size: 14px;"><strong>Mentor Name:</strong> ${mentorName}</p>
-      <p style="margin: 4px 0 0 0; font-size: 14px;"><strong>Contact Email:</strong> <a href="mailto:${mentorEmail}">${mentorEmail}</a></p>
+    <p>We are thrilled to announce that your corporate coordinator has been assigned to support you through your milestones track!</p>
+    
+    <div class="meta-box" style="padding: 24px; text-align: left; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px;">
+      <p style="margin: 0 0 16px 0; font-size: 12px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Assigned Coordinator Profile:</p>
+      
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <div style="width: 48px; height: 48px; background-color: #4f46e5; color: white; border-radius: 50%; font-size: 20px; font-weight: bold; text-align: center; line-height: 48px;">
+          ${mentorName.charAt(0)}
+        </div>
+        <div>
+          <h4 style="margin: 0; font-size: 16px; font-weight: 800; color: #0f172a;">${mentorName}</h4>
+          <p style="margin: 2px 0 0 0; font-size: 13px; color: #64748b;">Program Coordinator & Mentor</p>
+        </div>
+      </div>
+      <div style="margin-top: 16px; padding-top: 16px; border-top: 1px dashed #e2e8f0;">
+        <p style="margin: 0; font-size: 13px; color: #475569;"><strong>Email Address:</strong> <a href="mailto:${mentorEmail}" style="color: #2563eb; text-decoration: none;">${mentorEmail}</a></p>
+      </div>
     </div>
-    <p style="margin-top: 20px;">Your mentor will guide you through your tasks, review submissions, and provide constant support. Please feel free to reach out to them to introduce yourself.</p>
-    <p>Best regards,<br>Intern Management Team</p>
+    
+    <p style="margin-top: 24px;">Your mentor will oversee task scopes, grade deliverables, and check Daily Standup notes. Reach out immediately to introduce yourself!</p>
   `;
-  const internHtml = getEmailWrapper('Mentor Assigned!', internBody);
+  const internHtml = getEmailWrapper('Mentor Assigned', internBody);
   const sentToIntern = await sendEmail(internEmail, 'Mentor Assigned - Intern Management System', internHtml);
 
   // 2. Send to Mentor
   const mentorBody = `
+    <span class="badge badge-success">intern assigned</span>
+    <h2 class="email-title">New Intern Mentorship!</h2>
     <p>Hi <strong>${mentorName}</strong>,</p>
-    <p>You have been assigned as a mentor for a new intern joining the team under your guidance!</p>
-    <div class="meta-box">
-      <p style="margin: 0; font-size: 14px;"><strong>Intern Name:</strong> ${internName}</p>
-      <p style="margin: 4px 0 0 0; font-size: 14px;"><strong>Contact Email:</strong> <a href="mailto:${internEmail}">${internEmail}</a></p>
+    <p>A new member has been provisioned under your cohort track and assigned to you for direct directives supervision.</p>
+    
+    <div class="meta-box" style="padding: 24px; text-align: left; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px;">
+      <p style="margin: 0 0 16px 0; font-size: 12px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Intern Profile Details:</p>
+      
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <div style="width: 48px; height: 48px; background-color: #06b6d4; color: white; border-radius: 50%; font-size: 20px; font-weight: bold; text-align: center; line-height: 48px;">
+          ${internName.charAt(0)}
+        </div>
+        <div>
+          <h4 style="margin: 0; font-size: 16px; font-weight: 800; color: #0f172a;">${internName}</h4>
+          <p style="margin: 2px 0 0 0; font-size: 13px; color: #64748b;">Cohort Intern Member</p>
+        </div>
+      </div>
+      <div style="margin-top: 16px; padding-top: 16px; border-top: 1px dashed #e2e8f0;">
+        <p style="margin: 0; font-size: 13px; color: #475569;"><strong>Email Address:</strong> <a href="mailto:${internEmail}" style="color: #2563eb; text-decoration: none;">${internEmail}</a></p>
+      </div>
     </div>
-    <p style="margin-top: 20px;">Please reach out to them to align on task assignments, work schedule, and track their performance analytics inside your mentor workspace.</p>
-    <p>Best regards,<br>Intern Management Team</p>
+    
+    <p style="margin-top: 24px;">Please connect with them to outline their initial milestones and task assignments inside your supervisor dashboard.</p>
   `;
-  const mentorHtml = getEmailWrapper('New Intern Assigned!', mentorBody);
+  const mentorHtml = getEmailWrapper('New Intern Assigned', mentorBody);
   const sentToMentor = await sendEmail(mentorEmail, 'New Intern Assigned under your Guidance', mentorHtml);
 
   return sentToIntern && sentToMentor;
@@ -239,17 +434,23 @@ export const sendPerformanceScoreEmail = async (
   score: number
 ): Promise<boolean> => {
   const body = `
+    <span class="badge badge-info">Evaluation Grade</span>
+    <h2 class="email-title">Milestone Rating Updated!</h2>
     <p>Hi <strong>${name}</strong>,</p>
-    <p>Your mentor has updated your performance rating/feedback score in the system.</p>
-    <div class="meta-box" style="text-align: center; padding: 25px 15px;">
-      <p style="margin: 0; font-size: 14px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">New Performance Score</p>
-      <h1 style="margin: 10px 0 0 0; font-size: 48px; color: #4f46e5; font-weight: 800;">${score} <span style="font-size: 18px; color: #94a3b8; font-weight: 500;">/ 100</span></h1>
+    <p>Your program coordinator has submitted a new rating evaluation inside your performance analytics logbook.</p>
+    
+    <div style="margin: 24px 0; padding: 30px; background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border: 1px solid #dbeafe; border-radius: 16px; text-align: center;">
+      <p style="margin: 0; font-size: 11px; font-weight: 800; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.1em;">Aggregated Performance score</p>
+      <h1 style="margin: 12px 0 0 0; font-size: 64px; color: #1d4ed8; font-weight: 900; letter-spacing: -0.04em;">
+        ${score}<span style="font-size: 24px; color: #94a3b8; font-weight: 600; letter-spacing: 0;">%</span>
+      </h1>
+      <p style="margin: 8px 0 0 0; font-size: 13px; color: #64748b; font-weight: 600;">Overall Program Rating</p>
     </div>
-    <p style="margin-top: 20px;">You can log in to your dashboard to view detailed breakdown logs and analytics regarding your grades, attendance, and task scores.</p>
-    <div style="text-align: center;">
-      <a href="${config.frontend.url}/login" class="button">View Dashboard</a>
+    
+    <p>Access your dashboard page to view detailed performance metrics, grade timelines, and feedback comments from your supervisor.</p>
+    <div style="text-align: center; margin-top: 20px;">
+      <a href="${config.frontend.url}/login" class="button">View Performance Portal</a>
     </div>
-    <p>Best regards,<br>Intern Management Team</p>
   `;
 
   const html = getEmailWrapper('Performance Score Update', body);
@@ -269,29 +470,32 @@ export const sendAnnouncementEmail = async (
   if (emails.length === 0) return true;
 
   const priorityColor = priority === 'HIGH' ? '#ef4444' : priority === 'MEDIUM' ? '#f59e0b' : '#3b82f6';
+  const priorityBg = priority === 'HIGH' ? '#fef2f2' : priority === 'MEDIUM' ? '#fffbeb' : '#eff6ff';
 
   const body = `
-    <div style="border-left: 4px solid ${priorityColor}; padding-left: 16px; margin-bottom: 24px;">
-      <h2 style="margin: 0 0 8px 0; color: #1e293b; font-size: 20px;">${title}</h2>
-      <div style="display: flex; gap: 12px; margin-bottom: 16px;">
-        <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: #64748b;">From: ${author}</span>
-        <span style="background: ${priorityColor}20; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: ${priorityColor};">${priority} Priority</span>
-      </div>
-      <div style="color: #475569; font-size: 15px; line-height: 1.6; white-space: pre-wrap;">
-        ${content}
-      </div>
+    <span class="badge" style="background-color: ${priorityBg}; color: ${priorityColor};">${priority} PRIORITY</span>
+    <h2 class="email-title">Important Broadcast Announcement</h2>
+    
+    <div style="border-left: 4px solid ${priorityColor}; padding: 10px 20px; background-color: #f8fafc; border-radius: 0 12px 12px 0; margin-bottom: 24px;">
+      <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 800; color: #0f172a; letter-spacing: -0.015em;">${title}</h3>
+      <p style="margin: 0; font-size: 12px; color: #64748b; font-weight: bold;">Posted by: ${author} · Cohort Broadcast</p>
     </div>
-    <div style="text-align: center; margin-top: 32px;">
-      <a href="${config.frontend.url}/login" class="button">View in Dashboard</a>
+    
+    <div style="color: #475569; font-size: 15px; line-height: 1.7; white-space: pre-wrap; background-color: #ffffff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+      ${content}
+    </div>
+    
+    <div style="text-align: center;">
+      <a href="${config.frontend.url}/login" class="button">Launch Dashboard Portal</a>
     </div>
   `;
 
   const html = getEmailWrapper('New Announcement Broadcast', body);
-  
+
   // To avoid spamming our own server/SMTP at once, we might want to BCC everyone, 
   // but sending individually is better for analytics if we had them.
   // For now, we will just send one email with all recipients in BCC.
-  
+
   if (!transporter) {
     logger.warn('Email transporter not configured. Skipping announcement email send.');
     return false;
@@ -323,41 +527,48 @@ export const sendLoginOtpEmail = async (
   timestamp: string
 ): Promise<boolean> => {
   const body = `
+    <span class="badge badge-info">Identity Verification</span>
+    <h2 class="email-title">Authentication Code Request</h2>
     <p>Hi <strong>${name}</strong>,</p>
-    <p>We received a request to access your account via secure login authorization code. Please enter the following 6-digit verification passcode:</p>
+    <p>A login request was initiated for your InternFlow workspace. Please use the following 6-digit secure authentication passcode to complete access verification:</p>
     
-    <div style="text-align: center; margin: 30px 0;">
-      <div style="display: inline-block; padding: 15px 35px; background-color: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 16px; font-size: 32px; font-weight: 800; color: #2563eb; letter-spacing: 0.15em;">
+    <div style="text-align: center; margin: 32px 0;">
+      <div style="display: inline-block; padding: 18px 45px; background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border: 2px dashed #3b82f6; border-radius: 16px; font-size: 38px; font-weight: 900; color: #1d4ed8; letter-spacing: 0.2em; text-align: center; font-family: 'Courier New', Courier, monospace;">
         ${otpCode}
       </div>
     </div>
     
-    <div class="meta-box" style="margin-top: 20px; font-size: 13px; color: #475569; background-color: #f1f5f9; padding: 15px; border-radius: 12px;">
-      <p style="margin: 0;"><strong>Security Audit Trail Details:</strong></p>
-      <p style="margin: 4px 0 0 0;"><strong>Attempt Time:</strong> ${timestamp}</p>
-      <p style="margin: 4px 0 0 0;"><strong>IP Address:</strong> ${ipAddress}</p>
+    <div class="meta-box" style="margin-top: 24px; font-size: 13px; color: #475569; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+      <p style="margin: 0 0 10px 0; font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Security Audit Log details:</p>
+      <table style="width: 100%; font-size: 13px; color: #475569; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 4px 0; font-weight: bold; color: #64748b;">Attempt Time:</td>
+          <td style="padding: 4px 0; font-weight: 600; color: #0f172a; text-align: right;">${timestamp}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; font-weight: bold; color: #64748b;">IP Address:</td>
+          <td style="padding: 4px 0; font-weight: 600; color: #0f172a; text-align: right;">${ipAddress}</td>
+        </tr>
+      </table>
     </div>
     
-    <p style="margin-top: 25px; font-size: 12px; color: #64748b;">
-      <strong>Security Warning:</strong> This verification code is extremely confidential and will expire in <strong>5 minutes</strong>. If you did not make this login request, please contact our HR administrator immediately and secure your account credentials.
+    <p style="margin-top: 24px; font-size: 12px; color: #94a3b8; line-height: 1.5;">
+      <strong>Confidentiality Advisory:</strong> This passcode is confidential and will expire in <strong>5 minutes</strong>. If you did not initiate this login request, please update your account password immediately to secure your access.
     </p>
   `;
 
   const html = getEmailWrapper('Secure Access Verification Code', body);
-  
+
   // Proactive development fallback: if transporter is disabled or fails, log it clearly so local devs can proceed without working credentials
   if (!transporter) {
     logger.info(`[MOCK EMAIL DELIVERY] OTP for ${email} (${name}) is: ${otpCode}`);
     return true;
   }
 
-  try {
-    await sendEmail(email, 'Secure Access Verification Code - InternFlow', html);
-    return true;
-  } catch (error) {
-    logger.error('SMTP Delivery failed, logging fallback OTP:', error);
+  const success = await sendEmail(email, 'Secure Access Verification Code - InternFlow', html);
+  if (!success) {
+    logger.warn('SMTP Delivery failed, logging fallback OTP for development/debug access.');
     logger.info(`[FALLBACK EMAIL DELIVERY] OTP for ${email} (${name}) is: ${otpCode}`);
-    return true;
   }
+  return true; // Return true so login flow can still proceed using fallback OTP from console
 };
-

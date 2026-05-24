@@ -66,7 +66,7 @@ export const LoginPage: React.FC = () => {
           const userObj = JSON.parse(storedUser);
           const userRole = userObj.role; // maps to 'hr', 'mentor', or 'intern'
           toast.success(`Welcome back, ${userObj.name}! (Trusted Device Recognized)`);
-          navigate(userRole === 'hr' ? '/hr/dashboard' : userRole === 'mentor' ? '/mentor/dashboard' : '/intern/dashboard');
+          navigate(userRole === 'hr' ? '/hr/dashboard' : (userRole === 'mentor' || userRole === 'department_head') ? '/mentor/dashboard' : '/intern/dashboard');
         }
       } else {
         toast.success("Credentials validated! A login verification code has been dispatched.");
@@ -99,7 +99,7 @@ export const LoginPage: React.FC = () => {
         const userObj = JSON.parse(storedUser);
         const userRole = userObj.role; // maps to 'hr', 'mentor', or 'intern'
         toast.success(`Access Authorized! Welcome back, ${userObj.name}!`);
-        navigate(userRole === 'hr' ? '/hr/dashboard' : userRole === 'mentor' ? '/mentor/dashboard' : '/intern/dashboard');
+        navigate(userRole === 'hr' ? '/hr/dashboard' : (userRole === 'mentor' || userRole === 'department_head') ? '/mentor/dashboard' : '/intern/dashboard');
       }
     }
   };
@@ -117,7 +117,7 @@ export const LoginPage: React.FC = () => {
           const userObj = JSON.parse(storedUser);
           const userRole = userObj.role;
           toast.success(`Welcome back, ${userObj.name}! (Trusted Device Recognized)`);
-          navigate(userRole === 'hr' ? '/hr/dashboard' : userRole === 'mentor' ? '/mentor/dashboard' : '/intern/dashboard');
+          navigate(userRole === 'hr' ? '/hr/dashboard' : (userRole === 'mentor' || userRole === 'department_head') ? '/mentor/dashboard' : '/intern/dashboard');
         }
       } else {
         toast.success("A fresh verification passcode has been dispatched!");

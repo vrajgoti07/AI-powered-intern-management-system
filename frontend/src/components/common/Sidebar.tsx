@@ -30,7 +30,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
   const getNavItems = () => {
     if (!user) return [];
 
-    switch (user.role) {
+    switch (user.role.toLowerCase()) {
       case 'hr':
         return [
           { icon: LayoutDashboard, label: "Dashboard", path: "/hr/dashboard" },
@@ -43,6 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
           { icon: Settings, label: "Settings", path: "/hr/settings" }
         ];
       case 'mentor':
+      case 'department_head':
         return [
           { icon: LayoutDashboard, label: "Dashboard", path: "/mentor/dashboard" },
           { icon: MessageSquare, label: "Group Channels", path: "/shared/communication" },

@@ -131,7 +131,7 @@ export const InternDashboard: React.FC = () => {
                 Welcome back, {myName}!
               </h1>
               <p className="text-xs text-slate-500 font-semibold max-w-xl leading-relaxed mt-1">
-                Currently assigned to the <strong className="text-indigo-600 font-bold">{myInternData?.department?.name || 'Engineering'}</strong> department under mentor <strong className="text-slate-700 font-bold">{myInternData?.mentor?.user?.name || 'V Goti'}</strong>. Monitor your milestones, submit daily standup clock-ins, and track your deliverables.
+                Currently assigned to the <strong className="text-indigo-600 font-bold">{myInternData?.department?.name || 'Engineering'}</strong> department {myInternData?.mentor?.user?.name ? <>under mentor <strong className="text-slate-700 font-bold">{myInternData.mentor.user.name}</strong></> : <strong className="text-slate-500 font-bold">(No Mentor Assigned)</strong>}. Monitor your milestones, submit daily standup clock-ins, and track your deliverables.
               </p>
             </div>
             
@@ -272,10 +272,18 @@ export const InternDashboard: React.FC = () => {
                   </div>
                   <div>
                     <span className="text-slate-400 font-bold block mb-0.5">Assigned Mentor</span>
-                    <p className="font-extrabold text-slate-800 text-sm tracking-tight">
-                      {myInternData?.mentor?.user?.name || 'V Goti'}
-                    </p>
-                    <p className="text-[10px] text-slate-400 font-bold mt-0.5">{myInternData?.mentor?.user?.email || 'mentor@company.com'}</p>
+                    {myInternData?.mentor?.user?.name ? (
+                      <>
+                        <p className="font-extrabold text-slate-800 text-sm tracking-tight">
+                          {myInternData.mentor.user.name}
+                        </p>
+                        <p className="text-[10px] text-slate-400 font-bold mt-0.5">{myInternData.mentor.user.email}</p>
+                      </>
+                    ) : (
+                      <p className="font-bold text-slate-400 text-sm tracking-tight italic">
+                        Unassigned
+                      </p>
+                    )}
                   </div>
                   {myInternData?.startDate && (
                     <div>

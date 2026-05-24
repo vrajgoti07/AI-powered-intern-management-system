@@ -133,7 +133,7 @@ export const notificationWorker = new Worker(
     }
   },
   {
-    connection: redis,
+    connection: redis.duplicate(),
   }
 );
 

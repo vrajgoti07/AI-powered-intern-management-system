@@ -46,7 +46,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             const fullUser = res.data.data;
             const mappedUser: User = {
               ...fullUser,
-              role: fullUser.role.toLowerCase()
+              role: fullUser.role.toLowerCase() === 'department_head' ? 'mentor' : fullUser.role.toLowerCase()
             };
             setUser(mappedUser);
             localStorage.setItem('internflow_user', JSON.stringify(mappedUser));
@@ -134,7 +134,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         const mappedUser: User = {
           ...loggedInUser,
-          role: loggedInUser.role.toLowerCase()
+          role: loggedInUser.role.toLowerCase() === 'department_head' ? 'mentor' : loggedInUser.role.toLowerCase()
         };
 
         setUser(mappedUser);
@@ -167,7 +167,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
           const mappedUser: User = {
             ...loggedInUser,
-            role: loggedInUser.role.toLowerCase()
+            role: loggedInUser.role.toLowerCase() === 'department_head' ? 'mentor' : loggedInUser.role.toLowerCase()
           };
 
           setUser(mappedUser);
@@ -202,7 +202,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         const mappedUser: User = {
           ...loggedInUser,
-          role: loggedInUser.role.toLowerCase()
+          role: loggedInUser.role.toLowerCase() === 'department_head' ? 'mentor' : loggedInUser.role.toLowerCase()
         };
 
         setUser(mappedUser);

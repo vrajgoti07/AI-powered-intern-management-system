@@ -18,29 +18,29 @@ interface StrengthResult {
 
 const calcStrength = (pw: string): StrengthResult => {
   let score = 0;
-  if (pw.length >= 8)  score++;
+  if (pw.length >= 8) score++;
   if (pw.length >= 12) score++;
   if (/[A-Z]/.test(pw)) score++;
   if (/[0-9]/.test(pw)) score++;
   if (/[^A-Za-z0-9]/.test(pw)) score++;
   score = Math.min(4, score);
   const map: StrengthResult[] = [
-    { score: 0, label: 'Too Weak',  color: 'text-red-500',    barColor: 'bg-red-500' },
-    { score: 1, label: 'Weak',      color: 'text-orange-500', barColor: 'bg-orange-500' },
-    { score: 2, label: 'Fair',      color: 'text-yellow-500', barColor: 'bg-yellow-500' },
-    { score: 3, label: 'Strong',    color: 'text-emerald-500',barColor: 'bg-emerald-500' },
-    { score: 4, label: 'Very Strong',color: 'text-indigo-400',barColor: 'bg-indigo-500' },
+    { score: 0, label: 'Too Weak', color: 'text-red-500', barColor: 'bg-red-500' },
+    { score: 1, label: 'Weak', color: 'text-orange-500', barColor: 'bg-orange-500' },
+    { score: 2, label: 'Fair', color: 'text-yellow-500', barColor: 'bg-yellow-500' },
+    { score: 3, label: 'Strong', color: 'text-emerald-500', barColor: 'bg-emerald-500' },
+    { score: 4, label: 'Very Strong', color: 'text-indigo-400', barColor: 'bg-indigo-500' },
   ];
   return map[score];
 };
 
 interface Requirement { label: string; met: boolean }
 const getReqs = (pw: string): Requirement[] => [
-  { label: 'At least 8 characters',       met: pw.length >= 8 },
-  { label: 'Uppercase letter (A-Z)',       met: /[A-Z]/.test(pw) },
-  { label: 'Lowercase letter (a-z)',       met: /[a-z]/.test(pw) },
-  { label: 'Number (0-9)',                 met: /[0-9]/.test(pw) },
-  { label: 'Special character (!@#$…)',    met: /[^A-Za-z0-9]/.test(pw) },
+  { label: 'At least 8 characters', met: pw.length >= 8 },
+  { label: 'Uppercase letter (A-Z)', met: /[A-Z]/.test(pw) },
+  { label: 'Lowercase letter (a-z)', met: /[a-z]/.test(pw) },
+  { label: 'Number (0-9)', met: /[0-9]/.test(pw) },
+  { label: 'Special character (!@#$…)', met: /[^A-Za-z0-9]/.test(pw) },
 ];
 
 /* ─── Main Component ──────────────────────────────────────────────────── */
@@ -50,18 +50,18 @@ export const ResetPasswordPage: React.FC = () => {
 
   const token = searchParams.get('token') ?? '';
 
-  const [password, setPassword]         = useState('');
-  const [confirm,  setConfirm]          = useState('');
-  const [showPw,   setShowPw]           = useState(false);
-  const [showCf,   setShowCf]           = useState(false);
-  const [loading,  setLoading]          = useState(false);
-  const [success,  setSuccess]          = useState(false);
-  const [countdown, setCountdown]       = useState(5);
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [showCf, setShowCf] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [countdown, setCountdown] = useState(5);
 
   const strength = calcStrength(password);
-  const reqs     = getReqs(password);
-  const allMet   = reqs.every(r => r.met);
-  const matches  = password === confirm && confirm.length > 0;
+  const reqs = getReqs(password);
+  const allMet = reqs.every(r => r.met);
+  const matches = password === confirm && confirm.length > 0;
 
   /* auto-redirect after success */
   useEffect(() => {
@@ -82,9 +82,9 @@ export const ResetPasswordPage: React.FC = () => {
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token)    { toast.error('Invalid or missing token.'); return; }
-    if (!allMet)   { toast.error('Your password does not meet the requirements.'); return; }
-    if (!matches)  { toast.error('Passwords do not match.'); return; }
+    if (!token) { toast.error('Invalid or missing token.'); return; }
+    if (!allMet) { toast.error('Your password does not meet the requirements.'); return; }
+    if (!matches) { toast.error('Passwords do not match.'); return; }
 
     setLoading(true);
     const loadingToast = toast.loading('Setting your password…');
@@ -177,12 +177,11 @@ export const ResetPasswordPage: React.FC = () => {
                     {password.length > 0 && (
                       <div className="mt-3 space-y-1.5">
                         <div className="flex gap-1">
-                          {[0,1,2,3].map(i => (
+                          {[0, 1, 2, 3].map(i => (
                             <div
                               key={i}
-                              className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${
-                                i < strength.score ? strength.barColor : 'bg-slate-100'
-                              }`}
+                              className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${i < strength.score ? strength.barColor : 'bg-slate-100'
+                                }`}
                             />
                           ))}
                         </div>
@@ -241,7 +240,7 @@ export const ResetPasswordPage: React.FC = () => {
                         <div key={r.label} className="flex items-center gap-2">
                           {r.met
                             ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-                            : <XCircle      className="w-3.5 h-3.5 text-slate-300 flex-shrink-0" />
+                            : <XCircle className="w-3.5 h-3.5 text-slate-300 flex-shrink-0" />
                           }
                           <span className={`text-[11px] font-semibold ${r.met ? 'text-slate-700' : 'text-slate-400'}`}>
                             {r.label}
@@ -323,9 +322,9 @@ export const ResetPasswordPage: React.FC = () => {
         {/* Shifting Gradient Background */}
         <div className="absolute inset-0 z-0">
           <div className="absolute w-[600px] h-[600px] rounded-full bg-indigo-600/15 blur-[160px]"
-               style={{ top: '-10%', left: '20%', animation: 'morphGlow 12s ease-in-out infinite alternate' }} />
+            style={{ top: '-10%', left: '20%', animation: 'morphGlow 12s ease-in-out infinite alternate' }} />
           <div className="absolute w-[500px] h-[500px] rounded-full bg-purple-600/15 blur-[140px]"
-               style={{ bottom: '-10%', right: '10%', animation: 'morphGlow2 15s ease-in-out infinite alternate' }} />
+            style={{ bottom: '-10%', right: '10%', animation: 'morphGlow2 15s ease-in-out infinite alternate' }} />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px]" />
         </div>
 
@@ -335,9 +334,9 @@ export const ResetPasswordPage: React.FC = () => {
           <div className="text-center space-y-4">
             <div className="relative mx-auto w-20 h-20 mb-6 flex items-center justify-center">
               <div className="absolute inset-0 rounded-full border border-dashed border-indigo-400/30"
-                   style={{ animation: 'spinClockwise 25s linear infinite' }} />
+                style={{ animation: 'spinClockwise 25s linear infinite' }} />
               <div className="absolute inset-2 rounded-full border border-purple-500/20"
-                   style={{ animation: 'spinCounterClockwise 18s linear infinite' }} />
+                style={{ animation: 'spinCounterClockwise 18s linear infinite' }} />
               <div className="absolute inset-4 bg-indigo-500/10 backdrop-blur-2xl rounded-full flex items-center justify-center border border-indigo-400/20 shadow-2xl shadow-indigo-950/50">
                 <Lock className="w-7 h-7 text-indigo-400" />
               </div>
@@ -357,8 +356,8 @@ export const ResetPasswordPage: React.FC = () => {
           <div className="w-full space-y-4">
             {[
               { icon: ShieldCheck, color: 'indigo', title: 'End-to-End Encrypted', desc: 'Password never transmitted in plain text' },
-              { icon: KeyRound,    color: 'purple', title: 'Token-Based Activation', desc: 'One-time 24-hour secure setup link' },
-              { icon: Sparkles,    color: 'emerald', title: 'bcrypt Hashing',        desc: 'Military-grade salted password storage' },
+              { icon: KeyRound, color: 'purple', title: 'Token-Based Activation', desc: 'One-time 24-hour secure setup link' },
+              { icon: Sparkles, color: 'emerald', title: 'bcrypt Hashing', desc: 'Military-grade salted password storage' },
             ].map((item, idx) => {
               const Icon = item.icon;
               const colorMap: Record<string, string> = {
@@ -370,7 +369,7 @@ export const ResetPasswordPage: React.FC = () => {
                 <div
                   key={item.title}
                   className="bg-white/5 backdrop-blur-xl border border-white/10 hover:border-indigo-400/30 hover:bg-white/10 rounded-2xl p-5 flex items-center gap-4 transition-all duration-500 shadow-xl shadow-slate-950/80 cursor-default"
-                  style={{ animation: `floatAnim${idx+1} ${6+idx}s ease-in-out infinite` }}
+                  style={{ animation: `floatAnim${idx + 1} ${6 + idx}s ease-in-out infinite` }}
                 >
                   <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 border ${colorMap[item.color]}`}>
                     <Icon className="w-5 h-5" />
