@@ -1,9 +1,11 @@
+import './config/env';
 import http from 'http';
 import createApp from './app';
 import { config } from './config/env';
 import { connectDatabase, disconnectDatabase } from './config/database';
 import { logger } from './utils/logger';
 import { initSocket } from './socket/socket';
+import { initSimpleSocket } from './socket/index';
 import './queues/notification.worker';
 
 /**
@@ -22,6 +24,9 @@ const startServer = async () => {
 
     // Initialize Socket.IO server
     initSocket(server);
+
+    // Initialize simple Socket.IO server
+    initSimpleSocket(server);
 
     // Start listening
     server.listen(config.server.port, () => {

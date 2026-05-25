@@ -8,20 +8,26 @@ dotenv.config();
 const envSchema = z.object({
   // Server
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  PORT: z.string().default('5000'),
+  PORT: z.string().min(1, 'PORT is required'),
   API_VERSION: z.string().default('v1'),
   
   // Database
-  DATABASE_URL: z.string().min(1, 'Database URL is required'),
+  DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
+  
+  // Redis
+  REDIS_URL: z.string().min(1, 'REDIS_URL is required'),
+  REDIS_HOST: z.string().default('127.0.0.1'),
+  REDIS_PORT: z.string().default('6379'),
+  REDIS_PASSWORD: z.string().optional(),
   
   // JWT
-  JWT_ACCESS_SECRET: z.string().min(32, 'JWT Access Secret must be at least 32 characters'),
+  JWT_SECRET: z.string().min(32, 'JWT Secret must be at least 32 characters'),
   JWT_REFRESH_SECRET: z.string().min(32, 'JWT Refresh Secret must be at least 32 characters'),
   JWT_ACCESS_EXPIRY: z.string().default('15m'),
   JWT_REFRESH_EXPIRY: z.string().default('7d'),
   
   // CORS
-  CORS_ORIGIN: z.string().default('http://localhost:5173'),
+  CORS_ORIGIN: z.string().min(1, 'CORS_ORIGIN is required'),
   
   // Email
   SMTP_HOST: z.string().optional(),
@@ -42,13 +48,8 @@ const envSchema = z.object({
   CLOUDINARY_API_KEY: z.string().optional(),
   CLOUDINARY_API_SECRET: z.string().optional(),
   
-  // Redis
-  REDIS_HOST: z.string().default('127.0.0.1'),
-  REDIS_PORT: z.string().default('6379'),
-  REDIS_PASSWORD: z.string().optional(),
-  
   // AI Microservice
-  AI_SERVICE_URL: z.string().default('http://localhost:8000'),
+  AI_SERVICE_URL: z.string().min(1, 'AI_SERVICE_URL is required'),
 });
 
 // Validate and parse environment variables
@@ -82,7 +83,7 @@ export const config = {
     url: env.DATABASE_URL,
   },
   jwt: {
-    accessSecret: env.JWT_ACCESS_SECRET,
+    accessSecret: env.JWT_SECRET,
     refreshSecret: env.JWT_REFRESH_SECRET,
     accessExpiry: env.JWT_ACCESS_EXPIRY as string,
     refreshExpiry: env.JWT_REFRESH_EXPIRY as string,
@@ -110,6 +111,7 @@ export const config = {
     apiSecret: env.CLOUDINARY_API_SECRET || '',
   },
   redis: {
+    url: env.REDIS_URL,
     host: env.REDIS_HOST,
     port: parseInt(env.REDIS_PORT, 10),
     password: env.REDIS_PASSWORD || undefined,

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import analyticsController from '../controllers/analytics.controller';
+import { cacheMiddleware } from '../middleware/cache';
 import { authenticate } from '../middleware/auth.middleware';
 import { validate } from '../middleware/validate.middleware';
 import { analyticsQuerySchema } from '../validations/analytics.validation';
@@ -47,5 +48,13 @@ router.get('/departments', validate(analyticsQuerySchema), analyticsController.g
  * @query   ?internId=&mentorId=&startDate=&endDate=
  */
 router.get('/tasks', validate(analyticsQuerySchema), analyticsController.getTaskAnalytics);
+
+/**
+ * @route   GET /api/v1/analytics/performance
+ * @desc    Get performance analytics trendData and pieData
+ * @access  Authenticated Users
+ * @query   ?range=7d|30d|90d&internId=
+ */
+router.get('/performance', cacheMiddleware(300), analyticsController.getPerformanceAnalytics);
 
 export default router;

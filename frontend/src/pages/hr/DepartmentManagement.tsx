@@ -10,6 +10,8 @@ import { Modal } from '../../components/common/Modal';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import { useQueryClient } from '@tanstack/react-query';
+import { AssignHeadModal } from '../../components/common/AssignHeadModal';
 
 export const DepartmentManagement: React.FC = () => {
   const { state, refreshData } = useApp();
@@ -21,6 +23,32 @@ export const DepartmentManagement: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showAssignHeadModal, setShowAssignHeadModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
+  const [isNewAssignModalOpen, setIsNewAssignModalOpen] = useState(false);
+  const [isSubmittingPatch, setIsSubmittingPatch] = useState(false);
+  const queryClient = useQueryClient();
+
+  const handleAssignHeadPatch = async (userId: string) => {
+    if (!selectedDept) return;
+    setIsSubmittingPatch(true);
+    try {
+      await api.patch(`/departments/${selectedDept.id}/assign-head`, {
+        userId
+      });
+      toast.success(`Executive Head assigned successfully for ${selectedDept.name}!`);
+      setIsNewAssignModalOpen(false);
+      setSelectedDept(null);
+      
+      // Invalidate the departments query so the UI refreshes
+      queryClient.invalidateQueries({ queryKey: ['departments'] });
+      
+      // Call standard refreshData to sync global AppState
+      await refreshData();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to assign head');
+    } finally {
+      setIsSubmittingPatch(false);
+    }
+  };
 
   // Selected Department for actions
   const [selectedDept, setSelectedDept] = useState<any>(null);
@@ -358,13 +386,22 @@ export const DepartmentManagement: React.FC = () => {
                         </div>
                       </div>
                       
-                      <button 
-                        onClick={() => { setSelectedDept(d); setAssignHeadForm({ headId: '' }); setShowAssignHeadModal(true); }}
-                        className={`p-2 hover:bg-slate-50 rounded-xl text-slate-400 ${styles.hoverText} transition-all cursor-pointer border border-slate-100 hover:border-slate-200 bg-white`}
-                        title="Assign Division Head"
-                      >
-                        <Crown className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => { setSelectedDept(d); setIsNewAssignModalOpen(true); }}
+                          className="px-2 py-1 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 text-indigo-600 rounded-lg text-[9px] font-black uppercase tracking-wider cursor-pointer shadow-sm"
+                          title="Assign Head via search"
+                        >
+                          Assign Head
+                        </button>
+                        <button 
+                          onClick={() => { setSelectedDept(d); setAssignHeadForm({ headId: '' }); setShowAssignHeadModal(true); }}
+                          className={`p-2 hover:bg-slate-50 rounded-xl text-slate-400 ${styles.hoverText} transition-all cursor-pointer border border-slate-100 hover:border-slate-200 bg-white`}
+                          title="Assign Division Head"
+                        >
+                          <Crown className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -730,6 +767,22 @@ export const DepartmentManagement: React.FC = () => {
           </div>
         </form>
       </Modal>
+
+      <AssignHeadModal
+        isOpen={isNewAssignModalOpen}
+        onClose={() => {
+          setIsNewAssignModalOpen(false);
+          setSelectedDept(null);
+        }}
+        employees={state.mentors.map(m => ({
+          id: m.id,
+          name: m.name,
+          email: m.email,
+          userId: m.userId || ''
+        }))}
+        onConfirm={handleAssignHeadPatch}
+        isSubmitting={isSubmittingPatch}
+      />
 
     </div>
   );

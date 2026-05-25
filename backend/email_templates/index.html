@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InternFlow - Enterprise Email Template Explorer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+
+  <!-- HEADER -->
+  <header class="border-b border-slate-800 bg-slate-950 px-6 py-4 flex items-center justify-between shadow-lg">
+    <div class="flex items-center space-x-3">
+      <div class="bg-indigo-600 rounded-lg p-2 font-black text-white text-xs tracking-tight">
+        IF
+      </div>
+      <div>
+        <h1 class="text-sm font-extrabold tracking-tight">InternFlow</h1>
+        <p class="text-[10px] font-semibold text-slate-400 tracking-wider uppercase">Enterprise Email Templates</p>
+      </div>
+    </div>
+    <div class="flex items-center space-x-2">
+      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 animate-pulse">
+        <span class="w-1.5 h-1.5 mr-1.5 bg-emerald-400 rounded-full"></span>
+        Outlook & Gmail Certified
+      </span>
+    </div>
+  </header>
+
+  <!-- MAIN EXPLORER GRID -->
+  <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
+    
+    <!-- SIDEBAR: List of Templates -->
+    <aside class="w-full md:w-64 border-r border-slate-800 bg-slate-950/50 p-4 flex flex-col gap-4 overflow-y-auto">
+      <div>
+        <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2 mb-2">Available Templates</h3>
+        <nav class="space-y-1" id="template-nav">
+          <!-- Welcome Email -->
+          <button onclick="selectTemplate('welcome')" id="btn-welcome" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between bg-indigo-600 text-white shadow-md">
+            <span>Welcome Email</span>
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-indigo-700 text-indigo-200">Onboarding</span>
+          </button>
+          
+          <!-- Task Assignment -->
+          <button onclick="selectTemplate('task_assignment')" id="btn-task_assignment" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+            <span>Task Assignment</span>
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Milestone</span>
+          </button>
+
+          <!-- Attendance Alert -->
+          <button onclick="selectTemplate('attendance_alert')" id="btn-attendance_alert" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+            <span>Attendance Alert</span>
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">Alert</span>
+          </button>
+
+          <!-- Password Reset -->
+          <button onclick="selectTemplate('password_reset')" id="btn-password_reset" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+            <span>Password Reset</span>
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Security</span>
+          </button>
+
+          <!-- Internship Offer -->
+          <button onclick="selectTemplate('internship_offer')" id="btn-internship_offer" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+            <span>Internship Offer</span>
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Offer</span>
+          </button>
+
+          <!-- Mentor Assignment -->
+          <button onclick="selectTemplate('mentor_assignment')" id="btn-mentor_assignment" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+            <span>Mentor Assignment</span>
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Mentorship</span>
+          </button>
+
+          <!-- Notification -->
+          <button onclick="selectTemplate('notification')" id="btn-notification" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+            <span>Notification Email</span>
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Activity</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- TEMPLATE HIGHLIGHTS -->
+      <div class="mt-auto bg-slate-900/50 border border-slate-800 rounded-2xl p-4 space-y-3">
+        <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Design Highlights</h4>
+        <ul class="text-[11px] text-slate-400 space-y-2 font-medium">
+          <li class="flex items-center"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full mr-2"></span> GitHub / Stripe Clean Aesthetic</li>
+          <li class="flex items-center"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full mr-2"></span> Fully Responsive Layout</li>
+          <li class="flex items-center"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full mr-2"></span> System Fonts & Inline CSS</li>
+          <li class="flex items-center"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full mr-2"></span> Soft Borders & Shadow Cards</li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- MAIN INTERACTIVE PORTAL -->
+    <main class="flex-1 flex flex-col overflow-hidden bg-slate-900/20">
+      
+      <!-- TOOLBAR: Toggles for Layout Width -->
+      <div class="border-b border-slate-800 bg-slate-950/20 px-6 py-3 flex items-center justify-between flex-wrap gap-3">
+        <div class="flex items-center space-x-2">
+          <span class="text-xs font-bold text-slate-300">Preview Mode:</span>
+          <div class="bg-slate-800 rounded-lg p-0.5 inline-flex">
+            <button onclick="setView('desktop')" id="view-desktop-btn" class="px-3 py-1 text-xs font-bold rounded-md bg-indigo-600 text-white shadow-sm transition-all">
+              Desktop View (600px)
+            </button>
+            <button onclick="setView('mobile')" id="view-mobile-btn" class="px-3 py-1 text-xs font-semibold rounded-md text-slate-400 hover:text-slate-200 transition-all">
+              Mobile View (375px)
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button onclick="copySource()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-extrabold text-slate-200 rounded-xl transition-all flex items-center space-x-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+            </svg>
+            <span id="copy-btn-text">Copy HTML</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- VIEWPORT AREA -->
+      <div class="flex-1 flex overflow-hidden">
+        
+        <!-- Render IFrame -->
+        <div class="flex-1 flex items-center justify-center p-4 bg-slate-900 overflow-y-auto">
+          <div id="iframe-wrapper" class="w-full max-w-[600px] h-full max-h-[85vh] bg-white rounded-3xl border border-slate-800/80 shadow-2xl overflow-hidden transition-all duration-300">
+            <iframe id="preview-iframe" class="w-full h-full border-0 bg-[#fafafa]" src="welcome.html"></iframe>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-slate-800 bg-slate-950 px-6 py-3 text-center text-[11px] text-slate-500">
+    InternFlow Developer Experience Toolkit • Open and double-click files in <code class="bg-slate-900 border border-slate-800 px-1 py-0.5 rounded text-indigo-400 font-mono">backend/email_templates/</code> directly inside any browser.
+  </footer>
+
+  <script>
+    let activeTemplate = 'welcome';
+    let activeView = 'desktop';
+
+    const templates = {
+      welcome: 'welcome.html',
+      task_assignment: 'task_assignment.html',
+      attendance_alert: 'attendance_alert.html',
+      password_reset: 'password_reset.html',
+      internship_offer: 'internship_offer.html',
+      mentor_assignment: 'mentor_assignment.html',
+      notification: 'notification.html'
+    };
+
+    function selectTemplate(name) {
+      activeTemplate = name;
+      
+      // Update UI button states
+      const navButtons = document.querySelectorAll('#template-nav button');
+      navButtons.forEach(btn => {
+        btn.className = "w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all flex items-center justify-between";
+      });
+
+      const activeBtn = document.getElementById(`btn-${name}`);
+      activeBtn.className = "w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between bg-indigo-600 text-white shadow-md";
+
+      // Update iframe source
+      document.getElementById('preview-iframe').src = templates[name];
+    }
+
+    function setView(view) {
+      activeView = view;
+      const wrapper = document.getElementById('iframe-wrapper');
+      const deskBtn = document.getElementById('view-desktop-btn');
+      const mobBtn = document.getElementById('view-mobile-btn');
+
+      if (view === 'desktop') {
+        wrapper.style.maxWidth = '600px';
+        deskBtn.className = "px-3 py-1 text-xs font-bold rounded-md bg-indigo-600 text-white shadow-sm transition-all";
+        mobBtn.className = "px-3 py-1 text-xs font-semibold rounded-md text-slate-400 hover:text-slate-200 transition-all";
+      } else {
+        wrapper.style.maxWidth = '375px';
+        mobBtn.className = "px-3 py-1 text-xs font-bold rounded-md bg-indigo-600 text-white shadow-sm transition-all";
+        deskBtn.className = "px-3 py-1 text-xs font-semibold rounded-md text-slate-400 hover:text-slate-200 transition-all";
+      }
+    }
+
+    async function copySource() {
+      const copyBtnText = document.getElementById('copy-btn-text');
+      const fileUrl = templates[activeTemplate];
+
+      try {
+        const response = await fetch(fileUrl);
+        const text = await response.text();
+        await navigator.clipboard.writeText(text);
+
+        copyBtnText.innerText = "Copied!";
+        setTimeout(() => {
+          copyBtnText.innerText = "Copy HTML";
+        }, 2000);
+      } catch (err) {
+        console.error('Failed to copy HTML code:', err);
+        copyBtnText.innerText = "Copy Failed";
+        setTimeout(() => {
+          copyBtnText.innerText = "Copy HTML";
+        }, 2000);
+      }
+    }
+  </script>
+</body>
+</html>

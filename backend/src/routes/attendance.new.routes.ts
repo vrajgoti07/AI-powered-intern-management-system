@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import attendanceNewController from '../controllers/attendance.new.controller';
+import { cacheMiddleware } from '../middleware/cache';
 import { authenticate } from '../middleware/auth.middleware';
 import { authorize } from '../middleware/role.middleware';
 
@@ -22,7 +23,7 @@ router.get('/me', authorize('INTERN'), attendanceNewController.getMe);
 router.get('/team', authorize('MENTOR'), attendanceNewController.getTeam);
 router.get('/all', authorize('HR'), attendanceNewController.getAll);
 router.put('/override', authorize('HR'), attendanceNewController.override);
-router.get('/analytics', attendanceNewController.getAttendanceAnalytics);
+router.get('/analytics', cacheMiddleware(300), attendanceNewController.getAttendanceAnalytics);
 
 // Holiday Configuration Endpoints
 router.get('/holidays', attendanceNewController.getHolidays);

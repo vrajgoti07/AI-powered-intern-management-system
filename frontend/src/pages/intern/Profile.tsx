@@ -1,4 +1,6 @@
 import React, { useState, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import api from '../../services/api';
 import { useApp } from '../../hooks/useApp';
 import { useAuth } from '../../hooks/useAuth';
 import { Sidebar } from '../../components/common/Sidebar';
@@ -24,15 +26,24 @@ export const Profile: React.FC = () => {
   
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Fetch user profile from GET /api/users/me
+  const { data: userProfile, isLoading: isProfileLoading } = useQuery({
+    queryKey: ['userProfileMe'],
+    queryFn: async () => {
+      const { data } = await api.get('/users/me');
+      return data.data;
+    }
+  });
   
-  const rawIntern = (user as any)?.intern;
-  const internDetail = rawIntern || state.interns.find(i => i.email === user?.email);
+  const rawIntern = userProfile?.intern || (user as any)?.intern;
+  const internDetail = rawIntern || state.interns.find((i: any) => i.email === userProfile?.email || i.email === user?.email);
 
   // Use the intern profile embedded in the user object
   const myInternData = internDetail ? {
     id: internDetail.id,
-    name: user?.name || '',
-    email: user?.email || '',
+    name: userProfile?.name || user?.name || '',
+    email: userProfile?.email || user?.email || '',
     college: internDetail.college,
     dept: internDetail.department?.name || '',
     mentor: internDetail.mentor?.user?.name || 'Unassigned',
@@ -86,7 +97,7 @@ export const Profile: React.FC = () => {
     emergencyRelation: myInternData?.emergencyRelation || '',
   });
 
-  const myName = user?.name || "Intern User";
+  const myName = userProfile?.name || user?.name || "Intern User";
 
   // OTP State
   const [otp, setOtp] = useState(['', '', '', '']);
@@ -537,90 +548,104 @@ export const Profile: React.FC = () => {
                       </div>
 
                       {/* Info Dashboard Tile Grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Email */}
-                        <div className="bg-slate-50/50 border border-slate-100/80 rounded-2xl p-4 flex items-start gap-4 hover:border-slate-200 transition-all group">
-                          <div className="w-10 h-10 bg-white text-[#2563eb] rounded-xl flex items-center justify-center shadow-sm border border-slate-100 group-hover:scale-105 transition-transform">
-                            <Mail className="w-5 h-5" />
-                          </div>
-                          <div className="space-y-1 flex-1">
-                            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Email Address</span>
-                            <span className="text-slate-800 font-extrabold text-xs block leading-snug break-all">{myInternData?.email || user?.email || "Not Provided"}</span>
-                          </div>
-                        </div>
-
-                        {/* Contact Number */}
-                        <div className="bg-slate-50/50 border border-slate-100/80 rounded-2xl p-4 flex items-start gap-4 hover:border-slate-200 transition-all group">
-                          <div className="w-10 h-10 bg-white text-[#2563eb] rounded-xl flex items-center justify-center shadow-sm border border-slate-100 group-hover:scale-105 transition-transform">
-                            <Phone className="w-5 h-5" />
-                          </div>
-                          <div className="space-y-1 flex-1">
-                            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Contact Number</span>
-                            {isEditing ? (
-                              <input type="text" className="w-full text-xs font-semibold px-3 py-1.5 border border-slate-200 focus:border-blue-500 rounded-lg outline-none bg-white transition-all focus:ring-2 focus:ring-blue-100" value={editForm.phone} onChange={e => setEditForm({...editForm, phone: e.target.value})} placeholder="+1 234 567 8900" />
-                            ) : (
-                              <span className="text-slate-800 font-extrabold text-xs block leading-snug">{myInternData?.phone || "Not Provided"}</span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Degree & Branch */}
-                        <div className="bg-slate-50/50 border border-slate-100/80 rounded-2xl p-4 flex items-start gap-4 hover:border-slate-200 transition-all group">
-                          <div className="w-10 h-10 bg-white text-[#2563eb] rounded-xl flex items-center justify-center shadow-sm border border-slate-100 group-hover:scale-105 transition-transform">
-                            <BookOpen className="w-5 h-5" />
-                          </div>
-                          <div className="space-y-1 flex-1">
-                            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Degree & Branch</span>
-                            {isEditing ? (
-                              <div className="flex gap-2">
-                                <input type="text" className="w-1/2 text-xs font-semibold px-3 py-1.5 border border-slate-200 focus:border-blue-500 rounded-lg outline-none bg-white transition-all focus:ring-2 focus:ring-blue-100" value={editForm.degree} onChange={e => setEditForm({...editForm, degree: e.target.value})} placeholder="B.Tech" />
-                                <input type="text" className="w-1/2 text-xs font-semibold px-3 py-1.5 border border-slate-200 focus:border-blue-500 rounded-lg outline-none bg-white transition-all focus:ring-2 focus:ring-blue-100" value={editForm.branch} onChange={e => setEditForm({...editForm, branch: e.target.value})} placeholder="CS" />
+                      {isProfileLoading ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-pulse">
+                          {[1, 2, 3, 4, 5, 6].map((n) => (
+                            <div key={n} className="bg-slate-50/50 border border-slate-100/80 rounded-2xl p-4 flex items-start gap-4 h-20">
+                              <div className="w-10 h-10 bg-slate-200 rounded-xl flex-shrink-0"></div>
+                              <div className="space-y-2 flex-1 pt-1">
+                                <div className="h-2.5 w-1/3 bg-slate-200 rounded"></div>
+                                <div className="h-4 w-3/4 bg-slate-200 rounded"></div>
                               </div>
-                            ) : (
-                              <span className="text-slate-800 font-extrabold text-xs block leading-snug">
-                                {myInternData?.degree ? `${myInternData.degree} in ${myInternData.branch || "N/A"}` : "Not Provided"}
-                              </span>
-                            )}
-                          </div>
+                            </div>
+                          ))}
                         </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Email */}
+                          <div className="bg-slate-50/50 border border-slate-100/80 rounded-2xl p-4 flex items-start gap-4 hover:border-slate-200 transition-all group">
+                            <div className="w-10 h-10 bg-white text-[#2563eb] rounded-xl flex items-center justify-center shadow-sm border border-slate-100 group-hover:scale-105 transition-transform">
+                              <Mail className="w-5 h-5" />
+                            </div>
+                            <div className="space-y-1 flex-1">
+                              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Email Address</span>
+                              <span className="text-slate-800 font-extrabold text-xs block leading-snug break-all">{myInternData?.email || user?.email || "Not Provided"}</span>
+                            </div>
+                          </div>
 
-                        {/* CGPA */}
-                        <div className="bg-slate-50/50 border border-slate-100/80 rounded-2xl p-4 flex items-start gap-4 hover:border-slate-200 transition-all group">
-                          <div className="w-10 h-10 bg-white text-[#2563eb] rounded-xl flex items-center justify-center shadow-sm border border-slate-100 group-hover:scale-105 transition-transform">
-                            <Award className="w-5 h-5" />
+                          {/* Contact Number */}
+                          <div className="bg-slate-50/50 border border-slate-100/80 rounded-2xl p-4 flex items-start gap-4 hover:border-slate-200 transition-all group">
+                            <div className="w-10 h-10 bg-white text-[#2563eb] rounded-xl flex items-center justify-center shadow-sm border border-slate-100 group-hover:scale-105 transition-transform">
+                              <Phone className="w-5 h-5" />
+                            </div>
+                            <div className="space-y-1 flex-1">
+                              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Contact Number</span>
+                              {isEditing ? (
+                                <input type="text" className="w-full text-xs font-semibold px-3 py-1.5 border border-slate-200 focus:border-blue-500 rounded-lg outline-none bg-white transition-all focus:ring-2 focus:ring-blue-100" value={editForm.phone} onChange={e => setEditForm({...editForm, phone: e.target.value})} placeholder="+1 234 567 8900" />
+                              ) : (
+                                <span className="text-slate-800 font-extrabold text-xs block leading-snug">{myInternData?.phone || "Not Provided"}</span>
+                              )}
+                            </div>
                           </div>
-                          <div className="space-y-1 flex-1">
-                            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Academic CGPA</span>
-                            {isEditing ? (
-                              <input type="number" step="0.1" max="10" min="0" className="w-full text-xs font-semibold px-3 py-1.5 border border-slate-200 focus:border-blue-500 rounded-lg outline-none bg-white transition-all focus:ring-2 focus:ring-blue-100" value={editForm.cgpa} onChange={e => setEditForm({...editForm, cgpa: parseFloat(e.target.value) || 0})} placeholder="9.5" />
-                            ) : (
-                              <span className="text-slate-800 font-extrabold text-xs block leading-snug">{myInternData?.cgpa ? `${myInternData.cgpa} / 10` : "N/A"}</span>
-                            )}
-                          </div>
-                        </div>
 
-                        {/* Joined Date */}
-                        <div className="bg-slate-50/50 border border-slate-100/80 rounded-2xl p-4 flex items-start gap-4 hover:border-slate-200 transition-all group">
-                          <div className="w-10 h-10 bg-white text-[#2563eb] rounded-xl flex items-center justify-center shadow-sm border border-slate-100 group-hover:scale-105 transition-transform">
-                            <Calendar className="w-5 h-5" />
+                          {/* Degree & Branch */}
+                          <div className="bg-slate-50/50 border border-slate-100/80 rounded-2xl p-4 flex items-start gap-4 hover:border-slate-200 transition-all group">
+                            <div className="w-10 h-10 bg-white text-[#2563eb] rounded-xl flex items-center justify-center shadow-sm border border-slate-100 group-hover:scale-105 transition-transform">
+                              <BookOpen className="w-5 h-5" />
+                            </div>
+                            <div className="space-y-1 flex-1">
+                              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Degree & Branch</span>
+                              {isEditing ? (
+                                <div className="flex gap-2">
+                                  <input type="text" className="w-1/2 text-xs font-semibold px-3 py-1.5 border border-slate-200 focus:border-blue-500 rounded-lg outline-none bg-white transition-all focus:ring-2 focus:ring-blue-100" value={editForm.degree} onChange={e => setEditForm({...editForm, degree: e.target.value})} placeholder="B.Tech" />
+                                  <input type="text" className="w-1/2 text-xs font-semibold px-3 py-1.5 border border-slate-200 focus:border-blue-500 rounded-lg outline-none bg-white transition-all focus:ring-2 focus:ring-blue-100" value={editForm.branch} onChange={e => setEditForm({...editForm, branch: e.target.value})} placeholder="CS" />
+                                </div>
+                              ) : (
+                                <span className="text-slate-800 font-extrabold text-xs block leading-snug">
+                                  {myInternData?.degree ? `${myInternData.degree} in ${myInternData.branch || "N/A"}` : "Not Provided"}
+                                </span>
+                              )}
+                            </div>
                           </div>
-                          <div className="space-y-1 flex-1">
-                            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Joined Date</span>
-                            <span className="text-slate-800 font-extrabold text-xs block leading-snug">{myInternData?.joined || "Not Available"}</span>
-                          </div>
-                        </div>
 
-                        {/* Mentor */}
-                        <div className="bg-slate-50/50 border border-slate-100/80 rounded-2xl p-4 flex items-start gap-4 hover:border-slate-200 transition-all group">
-                          <div className="w-10 h-10 bg-white text-[#2563eb] rounded-xl flex items-center justify-center shadow-sm border border-slate-100 group-hover:scale-105 transition-transform">
-                            <User className="w-5 h-5" />
+                          {/* CGPA */}
+                          <div className="bg-slate-50/50 border border-slate-100/80 rounded-2xl p-4 flex items-start gap-4 hover:border-slate-200 transition-all group">
+                            <div className="w-10 h-10 bg-white text-[#2563eb] rounded-xl flex items-center justify-center shadow-sm border border-slate-100 group-hover:scale-105 transition-transform">
+                              <Award className="w-5 h-5" />
+                            </div>
+                            <div className="space-y-1 flex-1">
+                              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Academic CGPA</span>
+                              {isEditing ? (
+                                <input type="number" step="0.1" max="10" min="0" className="w-full text-xs font-semibold px-3 py-1.5 border border-slate-200 focus:border-blue-500 rounded-lg outline-none bg-white transition-all focus:ring-2 focus:ring-blue-100" value={editForm.cgpa} onChange={e => setEditForm({...editForm, cgpa: parseFloat(e.target.value) || 0})} placeholder="9.5" />
+                              ) : (
+                                <span className="text-slate-800 font-extrabold text-xs block leading-snug">{myInternData?.cgpa ? `${myInternData.cgpa} / 10` : "N/A"}</span>
+                              )}
+                            </div>
                           </div>
-                          <div className="space-y-1 flex-1">
-                            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Mentor Supervisor</span>
-                            <span className="text-slate-800 font-extrabold text-xs block leading-snug">{myInternData?.mentor || "Unassigned"}</span>
+
+                          {/* Joined Date */}
+                          <div className="bg-slate-50/50 border border-slate-100/80 rounded-2xl p-4 flex items-start gap-4 hover:border-slate-200 transition-all group">
+                            <div className="w-10 h-10 bg-white text-[#2563eb] rounded-xl flex items-center justify-center shadow-sm border border-slate-100 group-hover:scale-105 transition-transform">
+                              <Calendar className="w-5 h-5" />
+                            </div>
+                            <div className="space-y-1 flex-1">
+                              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Joined Date</span>
+                              <span className="text-slate-800 font-extrabold text-xs block leading-snug">{myInternData?.joined || "Not Available"}</span>
+                            </div>
+                          </div>
+
+                          {/* Mentor */}
+                          <div className="bg-slate-50/50 border border-slate-100/80 rounded-2xl p-4 flex items-start gap-4 hover:border-slate-200 transition-all group">
+                            <div className="w-10 h-10 bg-white text-[#2563eb] rounded-xl flex items-center justify-center shadow-sm border border-slate-100 group-hover:scale-105 transition-transform">
+                              <User className="w-5 h-5" />
+                            </div>
+                            <div className="space-y-1 flex-1">
+                              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Mentor Supervisor</span>
+                              <span className="text-slate-800 font-extrabold text-xs block leading-snug">{myInternData?.mentor || "Unassigned"}</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      )}
 
                       {/* Skills Registry */}
                       <div className="pt-5 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center gap-3">

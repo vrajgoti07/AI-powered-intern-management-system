@@ -15,6 +15,7 @@ import {
   ResetPasswordInput,
   RefreshTokenInput,
 } from '../validations/auth.validation';
+import { logAction } from '../services/auditLog.service';
 
 /**
  * Register new user
@@ -37,6 +38,8 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 
   const result = await authService.loginUser(email, password);
 
+  await logAction(result.user.id, 'LOGIN', 'User', result.user.id, { method: 'DIRECT' }, req);
+
   successResponse(res, 'Login successful', result);
 });
 
@@ -48,6 +51,8 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user!.id;
 
   await authService.logoutUser(userId);
+
+  await logAction(userId, 'LOGOUT', 'User', userId, {}, req);
 
   successResponse(res, 'Logout successful');
 });
@@ -209,6 +214,8 @@ export const sendOtp = asyncHandler(async (req: Request, res: Response) => {
             ipAddress: String(ipAddress)
           }
         });
+
+        await logAction(user.id, 'LOGIN', 'User', user.id, { method: 'TRUSTED_SESSION' }, req);
 
         const { password: _, refreshToken: __, ...safeUser } = user as any;
 
@@ -389,6 +396,8 @@ export const verifyOtp = asyncHandler(async (req: Request, res: Response) => {
       ipAddress: String(ipAddress)
     }
   });
+
+  await logAction(user.id, 'LOGIN', 'User', user.id, { method: 'OTP' }, req);
 
   // Sanitize and return User details
   const { password: _, refreshToken: __, ...safeUser } = user as any;

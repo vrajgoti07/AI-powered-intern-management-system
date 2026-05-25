@@ -261,7 +261,8 @@ export const deleteUser = async (userId: string): Promise<void> => {
   }
 
   // Delete user (cascade will handle related records)
-  await prisma.user.delete({
+  await prisma.user.update({
     where: { id: userId },
+    data: { deletedAt: new Date() },
   });
 };

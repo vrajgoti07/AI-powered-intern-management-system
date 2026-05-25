@@ -2,6 +2,7 @@ import prisma from '../config/database';
 import { AppError } from '../middleware/error.middleware';
 import { PaginatedResponse } from '../types';
 import { Department, Prisma, UserRole } from '@prisma/client';
+import { paginate } from '../utils/paginate';
 
 /**
  * Detailed Department with relations type
@@ -140,8 +141,6 @@ export const getAllDepartments = async (
     sortOrder = 'asc',
   } = options;
 
-  const skip = (page - 1) * limit;
-
   // Build where clause
   const where: Prisma.DepartmentWhereInput = {
     ...(search && {
@@ -153,14 +152,10 @@ export const getAllDepartments = async (
     }),
   };
 
-  // Get total count
-  const total = await prisma.department.count({ where });
-
-  // Get departments
-  const departments = await prisma.department.findMany({
+  const result = await paginate({
+    page,
+    limit,
     where,
-    skip,
-    take: limit,
     orderBy: { [sortBy]: sortOrder },
     include: {
       head: {
@@ -211,19 +206,18 @@ export const getAllDepartments = async (
         },
       },
     },
+    prismaModel: prisma.department
   });
 
-  const totalPages = Math.ceil(total / limit);
-
   return {
-    data: departments as any[],
+    data: result.data,
     pagination: {
-      page,
-      limit,
-      total,
-      totalPages,
-      hasNext: page < totalPages,
-      hasPrev: page > 1,
+      page: result.currentPage,
+      limit: Number(limit),
+      total: result.totalCount,
+      totalPages: result.totalPages,
+      hasNext: result.currentPage < result.totalPages,
+      hasPrev: result.currentPage > 1,
     },
   };
 };
@@ -402,8 +396,9 @@ export const deleteDepartment = async (id: string): Promise<void> => {
     });
   }
 
-  await prisma.department.delete({
+  await prisma.department.update({
     where: { id },
+    data: { deletedAt: new Date() },
   });
 };
 

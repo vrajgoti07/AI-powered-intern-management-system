@@ -1,12 +1,14 @@
 import Redis from "ioredis";
 import { config } from "./env";
 
-const redis = new Redis({
-  host: config.redis.host,
-  port: config.redis.port,
-  password: config.redis.password,
-  maxRetriesPerRequest: null, // Required by BullMQ
-});
+const redis = config.redis.url
+  ? new Redis(config.redis.url, { maxRetriesPerRequest: null })
+  : new Redis({
+      host: config.redis.host,
+      port: config.redis.port,
+      password: config.redis.password,
+      maxRetriesPerRequest: null, // Required by BullMQ
+    });
 
 redis.on("connect", () => {
   console.log("✅ Redis Connected");

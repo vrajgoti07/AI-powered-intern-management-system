@@ -27,7 +27,12 @@ export const getAllInterns = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const result = await internService.getAllInterns(req.query);
+    const { page = 1, limit = 20 } = req.query;
+    const result = await internService.getAllInterns({
+      ...req.query,
+      page: Number(page),
+      limit: Number(limit),
+    });
     successResponse(res, 'Interns retrieved successfully', result);
   } catch (error) {
     next(error);

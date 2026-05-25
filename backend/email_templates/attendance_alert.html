@@ -1,0 +1,214 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Attendance Alert - InternFlow</title>
+  <style type="text/css">
+    /* Fonts and Core Reset */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    body {
+      margin: 0;
+      padding: 0;
+      min-width: 100%;
+      background-color: #fafafa;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    /* Client-Specific Styles */
+    #outlook a { padding: 0; }
+    .ReadMsgBody { width: 100%; }
+    .ExternalClass { width: 100%; }
+    .ExternalClass, .ExternalClass p, .ExternalClass span, .ExternalClass font, .ExternalClass td, .ExternalClass div { line-height: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; }
+    img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+    
+    /* Responsive Grid */
+    @media only screen and (max-width: 620px) {
+      .container {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 0px !important;
+        border-left: none !important;
+        border-right: none !important;
+      }
+      .content-padding {
+        padding: 32px 20px !important;
+      }
+      .col-label {
+        width: 100% !important;
+        display: block !important;
+        padding-bottom: 4px !important;
+      }
+      .col-val {
+        width: 100% !important;
+        display: block !important;
+        padding-bottom: 12px !important;
+      }
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #fafafa;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #fafafa; table-layout: fixed;">
+    <tr>
+      <td align="center" style="padding: 40px 0 60px 0;">
+        <!--[if (gte mso 9)|(IE)]>
+        <table width="600" align="center" border="0" cellspacing="0" cellpadding="0">
+          <tr>
+            <td>
+        <![endif]-->
+        
+        <table class="container" width="100%" max-width="600" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; background-color: #ffffff; border: 1px solid #eef0f2; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01); overflow: hidden;">
+          
+          <!-- BRAND ACCENT LINE -->
+          <tr>
+            <td height="4" style="background-color: #ef4444; font-size: 1px; line-height: 1px;">&nbsp;</td>
+          </tr>
+          
+          <!-- LOGO HEADER -->
+          <tr>
+            <td align="left" style="padding: 32px 40px 24px 40px; border-bottom: 1px solid #f6f8fa;">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="left" style="font-size: 15px; font-weight: 700; color: #111827; font-family: 'Inter', sans-serif;">
+                    <table border="0" cellspacing="0" cellpadding="0" style="display: inline-block; vertical-align: middle; margin-right: 8px;">
+                      <tr>
+                        <td bgcolor="#ef4444" style="border-radius: 6px; padding: 6px 10px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 800; color: #ffffff; line-height: 13px;">
+                          IF
+                        </td>
+                      </tr>
+                    </table>
+                    <span style="vertical-align: middle; letter-spacing: -0.02em;">InternFlow</span>
+                  </td>
+                  <td align="right" style="font-size: 11px; font-weight: 600; color: #ef4444; font-family: 'Inter', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">
+                    Attendance Alert
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- CONTENT CONTAINER -->
+          <tr>
+            <td class="content-padding" align="left" style="padding: 40px 40px;">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <!-- GREETING -->
+                <tr>
+                  <td style="font-size: 15px; font-weight: 600; color: #111827; font-family: 'Inter', sans-serif; padding-bottom: 16px;">
+                    Hi Vraj,
+                  </td>
+                </tr>
+                
+                <!-- MAIN MESSAGE -->
+                <tr>
+                  <td style="font-size: 14px; line-height: 24px; color: #4b5563; font-family: 'Inter', sans-serif; padding-bottom: 24px;">
+                    Our automated check-in registry shows that you have missed checking in for today's daily standup checkpoint. Maintaining a consistent attendance log is vital to your program progress. Please check in or submit a leave exception form if this was an excused absence.
+                  </td>
+                </tr>
+                
+                <!-- INFO CARD -->
+                <tr>
+                  <td style="padding-bottom: 32px;">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #fef2f2; border: 1px solid #fee2e2; border-radius: 8px; padding: 20px;">
+                      <tr>
+                        <td>
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+                              <td class="col-label" width="140" style="font-size: 11px; font-weight: 600; color: #b91c1c; font-family: 'Inter', sans-serif; text-transform: uppercase; letter-spacing: 0.05em; padding-bottom: 10px;">
+                                Date of Alert
+                              </td>
+                              <td class="col-val" style="font-size: 13px; font-weight: 500; color: #7f1d1d; font-family: 'Inter', sans-serif; padding-bottom: 10px;">
+                                May 25, 2026
+                              </td>
+                            </tr>
+                            <tr>
+                              <td class="col-label" width="140" style="font-size: 11px; font-weight: 600; color: #b91c1c; font-family: 'Inter', sans-serif; text-transform: uppercase; letter-spacing: 0.05em; padding-bottom: 10px;">
+                                Check-in Standard
+                              </td>
+                              <td class="col-val" style="font-size: 13px; font-weight: 500; color: #7f1d1d; font-family: 'Inter', sans-serif; padding-bottom: 10px;">
+                                Daily Standup (9:00 AM - 9:30 AM)
+                              </td>
+                            </tr>
+                            <tr>
+                              <td class="col-label" width="140" style="font-size: 11px; font-weight: 600; color: #b91c1c; font-family: 'Inter', sans-serif; text-transform: uppercase; letter-spacing: 0.05em; padding-bottom: 10px;">
+                                Status Recorded
+                              </td>
+                              <td class="col-val" style="font-size: 13px; font-weight: 600; color: #b91c1c; font-family: 'Inter', sans-serif; padding-bottom: 10px;">
+                                Missing / Absent
+                              </td>
+                            </tr>
+                            <tr>
+                              <td class="col-label" width="140" style="font-size: 11px; font-weight: 600; color: #b91c1c; font-family: 'Inter', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">
+                                Action Required
+                              </td>
+                              <td class="col-val" style="font-size: 13px; font-weight: 500; color: #7f1d1d; font-family: 'Inter', sans-serif;">
+                                Submit Check-in or Log Exception
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                
+                <!-- CTA BUTTON -->
+                <tr>
+                  <td align="center" style="padding-bottom: 36px;">
+                    <table border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td align="center" bgcolor="#ef4444" style="border-radius: 6px;">
+                          <a href="https://internflow.com/attendance" target="_blank" style="font-size: 13px; font-family: 'Inter', sans-serif; font-weight: 600; color: #ffffff; text-decoration: none; display: inline-block; padding: 12px 24px; border: 1px solid #ef4444; border-radius: 6px; letter-spacing: -0.01em;">
+                            Access Attendance Portal
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                
+                <!-- SIGN-OFF -->
+                <tr>
+                  <td style="font-size: 13px; line-height: 20px; color: #8a94a6; font-family: 'Inter', sans-serif; padding-top: 12px; border-top: 1px solid #f6f8fa;">
+                    Best regards,<br />
+                    <span style="font-weight: 600; color: #1f2937;">The InternFlow Team</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- FOOTER -->
+          <tr>
+            <td align="center" style="padding: 32px 40px; background-color: #fafbfc; border-top: 1px solid #eef0f2;">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="text-align: center;">
+                <tr>
+                  <td style="font-size: 12px; font-weight: 500; color: #8a94a6; font-family: 'Inter', sans-serif; padding-bottom: 12px;">
+                    Questions? Reach out to <a href="mailto:support@internflow.com" style="color: #ef4444; text-decoration: none; font-weight: 600;">support@internflow.com</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="font-size: 11px; line-height: 18px; color: #b2bbc9; font-family: 'Inter', sans-serif;">
+                    © 2026 InternFlow Inc. All rights reserved.<br />
+                    One Hacker Way, Palo Alto, CA 94304, USA
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+        </table>
+        
+        <!--[if (gte mso 9)|(IE)]>
+            </td>
+          </tr>
+        </table>
+        <![endif]-->
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

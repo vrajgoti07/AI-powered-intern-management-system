@@ -39,6 +39,8 @@ model User {
   mentorDepartment         Department?             @relation("DepartmentMentors", fields: [mentorDepartmentId], references: [id])
   conversations            Conversation[]          @relation("ConversationParticipants")
   readMessages             Message[]               @relation("MessageReadBy")
+  chatRooms                ChatRoom[]              @relation("ChatRoomMembers")
+  deletedAt                DateTime?
 
   @@index([email])
   @@index([role])
@@ -63,6 +65,7 @@ model Department {
   projects       Project[]
   interns        User[]               @relation("DepartmentInterns")
   mentors        User[]               @relation("DepartmentMentors")
+  deletedAt      DateTime?
 
   @@map("departments")
 }
@@ -118,6 +121,7 @@ model Intern {
   leaves              Leave[]
   onboardingProgress  OnboardingProgress?
   tasks               Task[]
+  deletedAt           DateTime?
 
   @@index([userId])
   @@index([departmentId])
@@ -237,6 +241,7 @@ model Task {
   updatedAt       DateTime     @updatedAt
   intern          Intern       @relation(fields: [internId], references: [id], onDelete: Cascade)
   mentor          Mentor       @relation(fields: [mentorId], references: [id])
+  deletedAt       DateTime?
 
   @@index([internId])
   @@index([mentorId])
@@ -649,4 +654,50 @@ enum ApplicationStatus {
   INTERVIEWED
   OFFERED
   REJECTED
+}
+
+model ChatRoom {
+  id        String   @id @default(uuid())
+  name      String?
+  createdAt DateTime @default(now())
+  members   User[]   @relation("ChatRoomMembers")
+
+  @@map("chat_rooms")
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  roomId    String
+  senderId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  @@map("chat_messages")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String
+  metadata  Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+model AIRecommendation {
+  id         String   @id @default(uuid())
+  internId   String
+  mentorId   String
+  matchScore Float
+  confidence String
+  reasons    Json
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("ai_recommendations")
 }

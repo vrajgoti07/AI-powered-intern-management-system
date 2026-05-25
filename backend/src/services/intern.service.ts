@@ -5,6 +5,7 @@ import { Intern, InternStatus, Prisma, UserRole } from '@prisma/client';
 import { hashPassword, generateResetToken, hashResetToken } from '../utils/password';
 import { safeAddJob } from '../queues/notification.queue';
 import { logger } from '../utils/logger';
+import { paginate } from '../utils/paginate';
 
 /**
  * Intern with relations type
@@ -175,7 +176,6 @@ export const getAllInterns = async (
     sortOrder = 'desc',
   } = options;
 
-  const skip = (page - 1) * limit;
 
   // Build where clause
   const where: Prisma.InternWhereInput = {
@@ -192,14 +192,10 @@ export const getAllInterns = async (
     }),
   };
 
-  // Get total count
-  const total = await prisma.intern.count({ where });
-
-  // Get interns
-  const interns = await prisma.intern.findMany({
+  const result = await paginate({
+    page,
+    limit,
     where,
-    skip,
-    take: limit,
     orderBy: { [sortBy]: sortOrder },
     include: {
       user: {
@@ -225,19 +221,18 @@ export const getAllInterns = async (
         },
       },
     },
+    prismaModel: prisma.intern
   });
 
-  const totalPages = Math.ceil(total / limit);
-
   return {
-    data: interns,
+    data: result.data,
     pagination: {
-      page,
-      limit,
-      total,
-      totalPages,
-      hasNext: page < totalPages,
-      hasPrev: page > 1,
+      page: result.currentPage,
+      limit: Number(limit),
+      total: result.totalCount,
+      totalPages: result.totalPages,
+      hasNext: result.currentPage < result.totalPages,
+      hasPrev: result.currentPage > 1,
     },
   };
 };
@@ -440,8 +435,13 @@ export const deleteIntern = async (id: string): Promise<void> => {
 
   // Delete the underlying User. The database schema has 'onDelete: Cascade' 
   // on the Intern side, so deleting the User will automatically delete the Intern.
-  await prisma.user.delete({
+  await prisma.user.update({
     where: { id: intern.userId },
+    data: { deletedAt: new Date() },
+  });
+  await prisma.intern.update({
+    where: { id },
+    data: { deletedAt: new Date() },
   });
 };
 

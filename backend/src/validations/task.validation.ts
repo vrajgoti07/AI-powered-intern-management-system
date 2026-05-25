@@ -63,5 +63,7 @@ export const taskQuerySchema = z.object({
     status: z.nativeEnum(TaskStatus).optional(),
     priority: z.nativeEnum(TaskPriority).optional(),
     search: z.string().optional(),
+    assignedTo: z.string().optional(),
+    departmentId: z.string().uuid().optional(),
   }),
 });

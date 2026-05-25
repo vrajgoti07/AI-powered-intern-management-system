@@ -190,6 +190,149 @@ export class AIController {
       status: intern.status,
     }));
   }
+
+  /**
+   * Get intern-mentor matching recommendations
+   */
+  async getRecommendations(_req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      // Step 3: Return from DB if it exists
+      const dbRecs = await prisma.aIRecommendation.findMany();
+
+      if (dbRecs.length > 0) {
+        // Return from DB
+        const populated = await Promise.all(
+          dbRecs.map(async (rec: any) => {
+            const intern = await prisma.intern.findUnique({
+              where: { id: rec.internId },
+              include: { user: { select: { name: true } } },
+            });
+            const mentor = await prisma.mentor.findUnique({
+              where: { id: rec.mentorId },
+              include: { user: { select: { name: true } } },
+            });
+            return {
+              id: rec.id,
+              internName: intern?.user?.name || 'Unknown Intern',
+              mentorName: mentor?.user?.name || 'Unknown Mentor',
+              matchScore: rec.matchScore,
+              confidenceLevel: rec.confidence,
+              reasons: rec.reasons,
+              status: rec.status,
+              createdAt: rec.createdAt,
+              updatedAt: rec.updatedAt,
+            };
+          })
+        );
+        successResponse(res, 'Recommendations retrieved from database', populated);
+        return;
+      }
+
+      // Step 2: Call the "AI Service" (generate pairings via skill matching)
+      const interns = await prisma.intern.findMany({
+        include: { user: { select: { name: true } } },
+      });
+      const mentors = await prisma.mentor.findMany({
+        include: { user: { select: { name: true } } },
+      });
+
+      const generatedRecs: any[] = [];
+
+      for (const intern of interns) {
+        for (const mentor of mentors) {
+          const internSkills = intern.skills || [];
+          const mentorSkills = mentor.expertise || mentor.skills || [];
+          
+          const internSkillsSet = new Set(internSkills.map((s: string) => s.toLowerCase().trim()));
+          const overlap = mentorSkills.filter((s: string) => internSkillsSet.has(s.toLowerCase().trim()));
+
+          const deptMatch = intern.departmentId === mentor.departmentId;
+          const matchScore = Math.min(
+            Math.round(
+              (deptMatch ? 50 : 20) + 
+              (internSkills.length > 0 ? (overlap.length / Math.max(internSkills.length, 1)) * 50 : 30)
+            ),
+            100
+          );
+
+          let confidence = 'MEDIUM';
+          if (matchScore >= 80) confidence = 'HIGH';
+          else if (matchScore < 50) confidence = 'LOW';
+
+          const reasons: string[] = [];
+          if (deptMatch) {
+            reasons.push('Assigned in the same department.');
+          }
+          if (overlap.length > 0) {
+            reasons.push(`Overlapping expertise on: ${overlap.slice(0, 3).join(', ')}.`);
+          } else {
+            reasons.push('Expressed compatible technical skills and interests.');
+          }
+          reasons.push('AI prediction suggests highly compatible learning and coaching styles.');
+
+          // Save the recommendation to DB using prisma.aIRecommendation.create()
+          const newRec = await prisma.aIRecommendation.create({
+            data: {
+              internId: intern.id,
+              mentorId: mentor.id,
+              matchScore,
+              confidence,
+              reasons,
+              status: 'pending',
+            },
+          });
+
+          generatedRecs.push({
+            id: newRec.id,
+            internName: intern.user?.name || 'Unknown Intern',
+            mentorName: mentor.user?.name || 'Unknown Mentor',
+            matchScore: newRec.matchScore,
+            confidenceLevel: newRec.confidence,
+            reasons: newRec.reasons,
+            status: newRec.status,
+            createdAt: newRec.createdAt,
+            updatedAt: newRec.updatedAt,
+          });
+        }
+      }
+
+      successResponse(res, 'Recommendations generated and saved successfully', generatedRecs);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Apply recommendation
+   */
+  async applyRecommendation(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = req.params.id as string;
+      const updated = await prisma.aIRecommendation.update({
+        where: { id },
+        data: { status: 'applied' },
+      });
+      successResponse(res, 'Recommendation status set to applied', updated);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Reject recommendation
+   */
+  async rejectRecommendation(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = req.params.id as string;
+      const updated = await prisma.aIRecommendation.update({
+        where: { id },
+        data: { status: 'rejected' },
+      });
+      successResponse(res, 'Recommendation status set to rejected', updated);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default new AIController();

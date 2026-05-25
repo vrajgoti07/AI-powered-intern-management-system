@@ -153,7 +153,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return false;
     } catch (err: any) {
       console.error('Login request failed:', err);
-      const errMsg = err.response?.data?.message || 'Failed to authenticate.';
+      const errMsg = err.message || err.response?.data?.message || 'Failed to authenticate.';
       toast.error(errMsg);
       return false;
     }
@@ -190,7 +190,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return { success: false };
     } catch (err: any) {
       console.error('OTP request failed:', err);
-      const errMsg = err.response?.data?.message || 'Failed to request verification code.';
+      const errMsg = err.message || err.response?.data?.message || 'Failed to request verification code.';
       toast.error(errMsg);
       return { success: false };
     }
@@ -225,7 +225,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return false;
     } catch (err: any) {
       console.error('OTP verification failed:', err);
-      const errMsg = err.response?.data?.message || 'Invalid verification passcode.';
+      const errMsg = err.message || err.response?.data?.message || 'Invalid verification passcode.';
       toast.error(errMsg);
       return false;
     }
@@ -259,7 +259,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return false;
     } catch (err: any) {
       console.error('Logout all devices failed:', err);
-      const errMsg = err.response?.data?.message || 'Failed to logout from all devices.';
+      const errMsg = err.message || err.response?.data?.message || 'Failed to logout from all devices.';
       toast.error(errMsg);
       return false;
     }

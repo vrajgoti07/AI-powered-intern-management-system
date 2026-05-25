@@ -13,6 +13,7 @@ import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, 
   LineChart, Line, PieChart, Pie, Cell, Legend 
 } from 'recharts';
+import { useQuery } from '@tanstack/react-query';
 
 export const DepartmentDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,63 +22,63 @@ export const DepartmentDetails: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'directory' | 'analytics' | 'leaves' | 'activities'>('overview');
   
   // Data States
-  const [department, setDepartment] = useState<any>(null);
   const [analytics, setAnalytics] = useState<any>(null);
   const [activities, setActivities] = useState<any[]>([]);
   const [pendingLeaves, setPendingLeaves] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchAllData = async () => {
-    setIsLoading(true);
-    setError(null);
+  // useQuery hook for core department fetching
+  const { data: departmentData, isLoading: isDeptLoading, error: deptError, refetch: refetchDept } = useQuery({
+    queryKey: ['department', id],
+    queryFn: async () => {
+      const res = await api.get(`/departments/${id}`);
+      if (!res.data.success) throw new Error('Failed to load department details');
+      return res.data.data;
+    },
+    enabled: !!id,
+  });
+
+  const department = departmentData || {};
+
+  const fetchSecondaryData = async () => {
+    if (!id) return;
     try {
-      // 1. Fetch core department details
-      const deptRes = await api.get(`/departments/${id}`);
-      if (!deptRes.data.success) throw new Error('Failed to load department details');
-      setDepartment(deptRes.data.data);
-
-      // 2. Fetch analytics
+      // Fetch analytics
       const analyticsRes = await api.get(`/departments/${id}/analytics`);
       if (analyticsRes.data.success) {
         setAnalytics(analyticsRes.data.data.statistics);
       }
 
-      // 3. Fetch activity history
+      // Fetch activity history
       const activitiesRes = await api.get(`/departments/${id}/activity-logs`);
       if (activitiesRes.data.success) {
         setActivities(activitiesRes.data.data || []);
       }
 
-      // 4. Fetch all leave requests to filter for this department
+      // Fetch leaves
       const leavesRes = await api.get('/leave');
       if (leavesRes.data.success) {
         const rawLeaves = leavesRes.data.data.data || [];
-        // Filter leave requests belonging to users in this department
-        const deptUserIds = new Set((deptRes.data.data.interns || []).map((u: any) => u.id));
+        const deptUserIds = new Set((departmentData?.interns || []).map((u: any) => u.id));
         const filteredLeaves = rawLeaves.filter((l: any) => deptUserIds.has(l.userId));
         setPendingLeaves(filteredLeaves);
       }
-
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setError(err.message || 'Error occurred while loading corporate structure.');
-    } finally {
-      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     if (id) {
-      fetchAllData();
+      fetchSecondaryData();
     }
-  }, [id]);
+  }, [id, departmentData]);
 
   const handleApproveLeave = async (leaveId: string) => {
     try {
       await api.put(`/leave/${leaveId}/approve`);
       toast.success('Leave request approved successfully!');
-      fetchAllData();
+      refetchDept();
+      fetchSecondaryData();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to approve leave request.');
     }
@@ -89,52 +90,12 @@ export const DepartmentDetails: React.FC = () => {
         rejectReason: 'Rejected by Executive HR Division Head'
       });
       toast.success('Leave request declined.');
-      fetchAllData();
+      refetchDept();
+      fetchSecondaryData();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to reject leave request.');
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
-        <Sidebar collapsed={sidebarCollapsed} />
-        <main className="flex-1 flex flex-col overflow-hidden">
-          <Navbar onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} title="Loading Division Profile..." />
-          <div className="flex-1 flex items-center justify-center">
-            <div className="flex flex-col items-center gap-3">
-              <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-              <p className="text-xs font-black text-slate-500 tracking-wider uppercase">Fetching Corporate Registry...</p>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  if (error || !department) {
-    return (
-      <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
-        <Sidebar collapsed={sidebarCollapsed} />
-        <main className="flex-1 flex flex-col overflow-hidden">
-          <Navbar onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} title="Division Error" />
-          <div className="flex-1 flex items-center justify-center p-6">
-            <div className="max-w-md bg-white border border-red-100 rounded-3xl p-8 text-center shadow-lg space-y-4">
-              <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
-              <h3 className="text-lg font-black text-slate-800">Failed to Retrieve Division Details</h3>
-              <p className="text-xs text-slate-400 font-bold leading-relaxed">{error || 'The requested department was not found in our directory database.'}</p>
-              <button 
-                onClick={() => navigate('/hr/departments')}
-                className="flex items-center justify-center gap-2 mx-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
-              >
-                <ArrowLeft className="w-4 h-4" /> Back to Registry
-              </button>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
 
   // Generate dynamic mock analytics for Recharts if there are no interns or mock details
   const taskChartData = [
@@ -161,7 +122,7 @@ export const DepartmentDetails: React.FC = () => {
       <Sidebar collapsed={sidebarCollapsed} />
       
       <main className="flex-1 flex flex-col overflow-hidden">
-        <Navbar onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} title={`Division: ${department.name}`} />
+        <Navbar onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} title={isDeptLoading ? 'Loading Division...' : `Division: ${department.name || ''}`} />
 
         <div className="flex-1 p-6 overflow-y-auto space-y-6">
           
@@ -175,13 +136,34 @@ export const DepartmentDetails: React.FC = () => {
                 <ArrowLeft className="w-5 h-5" />
               </button>
               <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-black text-slate-800 tracking-tight">{department.name}</h2>
-                  <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 uppercase tracking-widest border border-slate-200">
-                    {department.code}
-                  </span>
-                </div>
-                <p className="text-xs font-semibold text-slate-400">Head of Department: <span className="text-slate-700 font-bold">{department.head?.name || 'Unassigned'}</span></p>
+                {deptError ? (
+                  <div className="flex items-center gap-2 text-xs font-semibold text-rose-600 bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-100 animate-pulse">
+                    <span>Failed to load department data.</span>
+                    <button 
+                      onClick={() => refetchDept()}
+                      className="underline text-indigo-600 hover:text-indigo-800 font-black cursor-pointer bg-transparent border-none p-0"
+                    >
+                      Retry.
+                    </button>
+                  </div>
+                ) : isDeptLoading ? (
+                  <div className="space-y-2 animate-pulse">
+                    <div className="h-6 w-32 bg-slate-200 rounded"></div>
+                    <div className="h-3.5 w-48 bg-slate-200 rounded"></div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-xl font-black text-slate-800 tracking-tight">{department.name}</h2>
+                      {department.code && (
+                        <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 uppercase tracking-widest border border-slate-200">
+                          {department.code}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs font-semibold text-slate-400">Head of Department: <span className="text-slate-700 font-bold">{department.head?.name || 'Unassigned'}</span></p>
+                  </>
+                )}
               </div>
             </div>
 
@@ -218,22 +200,30 @@ export const DepartmentDetails: React.FC = () => {
               {/* Telemetry Cards Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
-                  <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
+                  <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center animate-pulse-slow">
                     <Users className="w-6 h-6" />
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Interns</p>
-                    <p className="text-xl font-black text-slate-800">{analytics?.totalInterns || 0}</p>
+                    {isDeptLoading ? (
+                      <div className="h-6 w-10 bg-slate-200 animate-pulse rounded mt-1"></div>
+                    ) : (
+                      <p className="text-xl font-black text-slate-800">{department.internCount || 0}</p>
+                    )}
                   </div>
                 </div>
 
                 <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
-                  <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
+                  <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center animate-pulse-slow">
                     <UserCheck className="w-6 h-6" />
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Mentors</p>
-                    <p className="text-xl font-black text-slate-800">{analytics?.totalMentors || 0}</p>
+                    {isDeptLoading ? (
+                      <div className="h-6 w-10 bg-slate-200 animate-pulse rounded mt-1"></div>
+                    ) : (
+                      <p className="text-xl font-black text-slate-800">{department.mentorCount || 0}</p>
+                    )}
                   </div>
                 </div>
 
@@ -287,7 +277,18 @@ export const DepartmentDetails: React.FC = () => {
                     <h3 className="font-extrabold text-slate-800 text-sm">Executive Head</h3>
                   </div>
 
-                  {department.head ? (
+                  {isDeptLoading ? (
+                    <div className="space-y-4 animate-pulse">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-slate-200"></div>
+                        <div className="space-y-2">
+                          <div className="h-4 w-24 bg-slate-200 rounded"></div>
+                          <div className="h-3 w-32 bg-slate-200 rounded"></div>
+                        </div>
+                      </div>
+                      <div className="h-8 bg-slate-100 rounded-2xl"></div>
+                    </div>
+                  ) : department.head ? (
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center font-black text-base text-slate-700 border border-slate-200 shadow-sm">

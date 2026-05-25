@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../hooks/useApp';
+import { Pagination } from '../../components/Pagination';
 import { Sidebar } from '../../components/common/Sidebar';
 import { Navbar } from '../../components/common/Navbar';
 import { StatusBadge } from '../../components/common/StatusBadge';
@@ -24,6 +25,9 @@ export const InternManagement: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedIntern, setSelectedIntern] = useState<any>(null);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
   // Filters calculation
   const filteredInterns = state.interns.filter(i => {
     const matchesSearch = i.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -32,6 +36,16 @@ export const InternManagement: React.FC = () => {
     const matchesStatus = statusFilter === 'All' || i.status.toLowerCase() === statusFilter.toLowerCase();
     return matchesSearch && matchesDept && matchesStatus;
   });
+
+  const totalPages = Math.ceil(filteredInterns.length / itemsPerPage);
+  const paginatedInterns = filteredInterns.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, deptFilter, statusFilter]);
 
   const handleAddIntern = async (internData: any) => {
     try {
@@ -208,7 +222,7 @@ export const InternManagement: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
-                    {filteredInterns.map((intern) => (
+                    {paginatedInterns.map((intern) => (
                       <tr key={intern.id} className="hover:bg-slate-50/40 transition-colors">
                         <td className="px-6 py-3.5">
                           <div className="flex items-center gap-3">
@@ -287,6 +301,13 @@ export const InternManagement: React.FC = () => {
                 </div>
               )}
             </div>
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            )}
           </div>
         </div>
       </main>

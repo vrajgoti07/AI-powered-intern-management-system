@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import reportController from '../controllers/report.controller';
+import { cacheMiddleware } from '../middleware/cache';
 import { authenticate } from '../middleware/auth.middleware';
 import { validate } from '../middleware/validate.middleware';
 import {
@@ -19,7 +20,7 @@ router.use(authenticate);
  * @access  Authenticated Users
  * @query   ?internId= (required)
  */
-router.get('/performance', validate(reportQuerySchema), reportController.getPerformanceReport);
+router.get('/performance', cacheMiddleware(3600), validate(reportQuerySchema), reportController.getPerformanceReport);
 
 /**
  * @route   GET /api/v1/reports/attendance
@@ -27,7 +28,7 @@ router.get('/performance', validate(reportQuerySchema), reportController.getPerf
  * @access  Authenticated Users
  * @query   ?internId= (required) &startDate= &endDate=
  */
-router.get('/attendance', validate(reportQuerySchema), reportController.getAttendanceReport);
+router.get('/attendance', cacheMiddleware(3600), validate(reportQuerySchema), reportController.getAttendanceReport);
 
 /**
  * @route   GET /api/v1/reports/internship-summary
@@ -35,7 +36,7 @@ router.get('/attendance', validate(reportQuerySchema), reportController.getAtten
  * @access  Authenticated Users
  * @query   ?internId= (required)
  */
-router.get('/internship-summary', validate(reportQuerySchema), reportController.getInternshipSummary);
+router.get('/internship-summary', cacheMiddleware(3600), validate(reportQuerySchema), reportController.getInternshipSummary);
 
 /**
  * @route   GET /api/v1/reports/export-pdf
@@ -43,7 +44,7 @@ router.get('/internship-summary', validate(reportQuerySchema), reportController.
  * @access  Authenticated Users
  * @query   ?type=attendance|performance|completion|summary &internId= &startDate= &endDate=
  */
-router.get('/export-pdf', validate(exportPdfQuerySchema), reportController.exportPDF);
+router.get('/export-pdf', cacheMiddleware(3600), validate(exportPdfQuerySchema), reportController.exportPDF);
 
 /**
  * @route   GET /api/v1/reports/export-excel
@@ -51,6 +52,6 @@ router.get('/export-pdf', validate(exportPdfQuerySchema), reportController.expor
  * @access  Authenticated Users
  * @query   ?type=attendance|tasks|departments &internId= &departmentId= &startDate= &endDate=
  */
-router.get('/export-excel', validate(exportExcelQuerySchema), reportController.exportExcel);
+router.get('/export-excel', cacheMiddleware(3600), validate(exportExcelQuerySchema), reportController.exportExcel);
 
 export default router;

@@ -1,7 +1,4 @@
 import { Router } from 'express';
-import multer from 'multer';
-import { CloudinaryStorage } from 'multer-storage-cloudinary';
-import { v2 as cloudinaryV2 } from 'cloudinary';
 import * as mentorDetailsController from '../controllers/mentorDetails.controller';
 import { authenticate } from '../middleware/auth.middleware';
 import { authorize } from '../middleware/role.middleware';
@@ -11,27 +8,13 @@ import {
   assignInternToMentorSchema,
   activityQuerySchema,
 } from '../validations/mentorDetails.validation';
+import { uploadValidation } from '../middleware/uploadValidation';
 
 const router = Router();
 
 // All routes require HR authentication
 router.use(authenticate);
 router.use(authorize('HR', 'SUPER_ADMIN'));
-
-// Cloudinary multer storage for mentor documents
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinaryV2,
-  params: {
-    folder: 'mentor-documents',
-    allowed_formats: ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'],
-    resource_type: 'auto',
-  } as any,
-});
-
-const upload = multer({
-  storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-});
 
 /**
  * @route   GET /api/v1/hr/mentors/:id/details
@@ -115,7 +98,7 @@ router.get('/:id/documents', mentorDetailsController.getMentorDocuments);
  */
 router.post(
   '/:id/documents',
-  upload.single('file'),
+  uploadValidation,
   mentorDetailsController.uploadMentorDocument
 );
 

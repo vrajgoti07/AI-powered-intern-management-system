@@ -74,12 +74,12 @@ export class TaskController {
    */
   async getTasks(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { page, limit, sortBy, sortOrder, internId, mentorId, status, priority, search, departmentId } = req.query;
+      const { page, limit, sortBy, sortOrder, internId, mentorId, status, priority, search, departmentId, assignedTo } = req.query;
 
       // Build filters based on user role
       const filters: any = {};
 
-      if (req.user?.role === 'INTERN') {
+      if (req.user?.role === 'INTERN' || assignedTo === 'me') {
         filters.internId = req.user.intern?.id;
       } else if (req.user?.role === 'MENTOR') {
         filters.mentorId = req.user.mentor?.id;
@@ -98,8 +98,8 @@ export class TaskController {
       if (search) filters.search = search as string;
 
       const result = await taskService.getTasks(filters, {
-        page: page ? parseInt(page as string) : 1,
-        limit: limit ? parseInt(limit as string) : 10,
+        page: page ? parseInt(page as string, 10) : 1,
+        limit: limit ? parseInt(limit as string, 10) : 20,
         sortBy: (sortBy as string) || 'createdAt',
         sortOrder: (sortOrder as 'asc' | 'desc') || 'desc',
       });

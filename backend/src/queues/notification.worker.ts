@@ -5,6 +5,7 @@ import prisma from '../config/database';
 import { sendEmail, sendWelcomeEmail, sendApplicationConfirmationEmail, sendMentorAssignmentEmails, sendPerformanceScoreEmail } from '../utils/email';
 import { logger } from '../utils/logger';
 import { getSocketIO } from '../socket/socket';
+import { getSimpleSocketIO } from '../socket/index';
 
 // Initialize the worker to process notification jobs
 export const notificationWorker = new Worker(
@@ -33,7 +34,14 @@ export const notificationWorker = new Worker(
           // 2. Dispatch real-time WebSocket alert if the user is connected
           if (io) {
             io.to(`user:${userId}`).emit('notification', notification);
+            io.to(`user:${userId}`).emit('new-notification', notification);
             logger.info(`Dispatched real-time socket notification to user:${userId}`);
+          }
+
+          const simpleIo = getSimpleSocketIO();
+          if (simpleIo) {
+            simpleIo.emit('new-notification', notification);
+            logger.info(`Dispatched simple socket notification to all connected clients`);
           }
 
           // 3. Trigger SMTP Email in the background if requested
@@ -88,8 +96,17 @@ export const notificationWorker = new Worker(
           if (io) {
             notifications.forEach((notif) => {
               io.to(`user:${notif.userId}`).emit('notification', notif);
+              io.to(`user:${notif.userId}`).emit('new-notification', notif);
             });
             logger.info(`Dispatched bulk socket notifications to ${notifications.length} users`);
+          }
+
+          const simpleIo = getSimpleSocketIO();
+          if (simpleIo) {
+            notifications.forEach((notif) => {
+              simpleIo.emit('new-notification', notif);
+            });
+            logger.info(`Dispatched bulk simple socket notifications to all connected clients`);
           }
           break;
         }

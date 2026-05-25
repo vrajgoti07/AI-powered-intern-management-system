@@ -22,6 +22,7 @@ router.get('/', validate(getNotificationsQuerySchema), notificationController.ge
  * @access  Authenticated Users
  */
 router.put('/:id/read', notificationController.markAsRead);
+router.patch('/:id/read', notificationController.markAsRead);
 
 /**
  * @route   PUT /api/v1/notifications/read-all

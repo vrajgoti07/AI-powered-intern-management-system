@@ -1,6 +1,8 @@
 import nodemailer from 'nodemailer';
 import { config } from '../config/env';
 import { logger } from './logger';
+import fs from 'fs';
+import path from 'path';
 
 /**
  * Create email transporter
@@ -97,7 +99,7 @@ const getEmailWrapper = (title: string, bodyContent: string) => `
       }
       .brand-accent {
         height: 6px;
-        background: linear-gradient(90deg, #2563eb 0%, #4f46e5 50%, #7c3aed 100%);
+        background: #4f46e5;
       }
       .header { 
         padding: 35px 40px 25px 40px; 
@@ -113,7 +115,7 @@ const getEmailWrapper = (title: string, bodyContent: string) => `
         align-items: center;
       }
       .logo-dot {
-        color: #2563eb;
+        color: #4f46e5;
         font-size: 24px;
         line-height: 0;
         margin-left: 2px;
@@ -132,7 +134,7 @@ const getEmailWrapper = (title: string, bodyContent: string) => `
       .button { 
         display: inline-block; 
         padding: 14px 32px; 
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); 
+        background: #4f46e5; 
         color: #ffffff !important; 
         text-decoration: none !important; 
         border-radius: 12px; 
@@ -140,9 +142,7 @@ const getEmailWrapper = (title: string, bodyContent: string) => `
         text-align: center; 
         font-size: 14px;
         letter-spacing: -0.01em;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
         margin: 24px 0;
-        transition: all 0.2s ease;
       }
       .footer { 
         text-align: center; 
@@ -157,31 +157,6 @@ const getEmailWrapper = (title: string, bodyContent: string) => `
         background-color: #e2e8f0;
         margin: 20px 0;
       }
-      .meta-box { 
-        margin-top: 24px; 
-        padding: 20px; 
-        background-color: #f8fafc; 
-        border-radius: 12px; 
-        border: 1px solid #e2e8f0; 
-      }
-      .badge {
-        display: inline-block;
-        padding: 6px 12px;
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        border-radius: 6px;
-        margin-bottom: 12px;
-      }
-      .badge-info {
-        background-color: #eff6ff;
-        color: #1e40af;
-      }
-      .badge-success {
-        background-color: #ecfdf5;
-        color: #065f46;
-      }
       p { 
         margin: 0 0 16px 0; 
         color: #475569; 
@@ -190,13 +165,6 @@ const getEmailWrapper = (title: string, bodyContent: string) => `
       }
       strong { 
         color: #0f172a; 
-      }
-      .grid-card {
-        padding: 16px;
-        background-color: #ffffff;
-        border: 1px solid #f1f5f9;
-        border-radius: 10px;
-        margin-bottom: 12px;
       }
     </style>
   </head>
@@ -228,6 +196,32 @@ const getEmailWrapper = (title: string, bodyContent: string) => `
 `;
 
 /**
+ * Robust email template loader and compiler
+ */
+const compileTemplate = (filename: string, replacements: Record<string, string>): string => {
+  try {
+    const filePath = path.join(process.cwd(), 'email_templates', filename);
+    if (fs.existsSync(filePath)) {
+      let html = fs.readFileSync(filePath, 'utf8');
+      Object.entries(replacements).forEach(([key, val]) => {
+        // Safe regex escape
+        const escapedKey = key.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+        const regex = new RegExp(escapedKey, 'g');
+        html = html.replace(regex, val);
+      });
+      return html;
+    } else {
+      logger.warn(`Email template not found at: ${filePath}. Falling back to default layout.`);
+    }
+  } catch (error) {
+    logger.error(`Failed to compile email template ${filename}:`, error);
+  }
+  
+  // Safe fallback to getEmailWrapper if template file is missing
+  return getEmailWrapper(filename.replace('.html', '').toUpperCase(), replacements['{{MAIN_MESSAGE}}'] || '');
+};
+
+/**
  * Send password reset email
  */
 export const sendPasswordResetEmail = async (
@@ -237,25 +231,13 @@ export const sendPasswordResetEmail = async (
 ): Promise<boolean> => {
   const resetUrl = `${config.frontend.url}/reset-password?token=${resetToken}`;
 
-  const body = `
-    <span class="badge badge-info">Security Notice</span>
-    <h2 class="email-title">Password Reset Requested</h2>
-    <p>Hi <strong>${name}</strong>,</p>
-    <p>We received an authorized request to establish a new credential password for your secure InternFlow workspace.</p>
-    <p>Please use the verification gateway button below to set up your new credentials:</p>
-    <div style="text-align: center;">
-      <a href="${resetUrl}" class="button">Configure New Password</a>
-    </div>
-    <div class="meta-box">
-      <p style="margin: 0 0 10px 0; font-size: 13px; font-weight: bold; color: #0f172a;">Gateway Link Details:</p>
-      <p style="margin: 0 0 8px 0; font-size: 13px; color: #2563eb; word-break: break-all;"><a href="${resetUrl}" style="color: #2563eb; text-decoration: none;">${resetUrl}</a></p>
-      <p style="margin: 12px 0 0 0; font-size: 11px; color: #64748b; font-weight: 500; border-t: 1px dashed #e2e8f0; padding-top: 10px;">
-        <strong>Notice:</strong> This security token is highly confidential and will automatically expire in <strong>1 hour</strong>. If you did not issue this password reset directive, please report this access attempt to security@internflow.com.
-      </p>
-    </div>
-  `;
+  const html = compileTemplate('password_reset.html', {
+    'Hi Vraj,': `Hi ${name},`,
+    'We received an authorized request to establish a new password credential for your secure InternFlow workspace. If you did not make this request, you can safely ignore this email. Your current password will remain active.': `We received an authorized request to establish a new password credential for your secure InternFlow workspace. Click the button below to complete password verification.`,
+    'Chrome on Windows (103.42.5.12)': 'Active Session Verification',
+    'https://internflow.com/reset-password?token=a8f90c7d2b': resetUrl
+  });
 
-  const html = getEmailWrapper('Password Reset Request', body);
   return await sendEmail(email, 'Password Reset Request', html);
 };
 
@@ -268,50 +250,17 @@ export const sendWelcomeEmail = async (
   role: string,
   resetToken?: string
 ): Promise<boolean> => {
-  let body = '';
+  const setupUrl = resetToken 
+    ? `${config.frontend.url}/reset-password?token=${resetToken}`
+    : `${config.frontend.url}/login`;
 
-  if (resetToken) {
-    const setupUrl = `${config.frontend.url}/reset-password?token=${resetToken}`;
-    body = `
-      <span class="badge badge-success">Onboarding Invitation</span>
-      <h2 class="email-title">Welcome to InternFlow!</h2>
-      <p>Hi <strong>${name}</strong>,</p>
-      <p>Congratulations! Your corporate profile has been successfully provisioned as a registered <strong>${role.toUpperCase()}</strong> on the InternFlow management portal.</p>
-      <p>To initialize your secure workspace access, you must establish a personal account password. Click the verification button below to set up your credential:</p>
-      <div style="text-align: center;">
-        <a href="${setupUrl}" class="button">Initialize Account Password</a>
-      </div>
-      <div class="meta-box">
-        <p style="margin: 0 0 8px 0; font-size: 13px; font-weight: bold; color: #0f172a;">Activation Details:</p>
-        <p style="margin: 0 0 8px 0; font-size: 13px; color: #2563eb; word-break: break-all;"><a href="${setupUrl}" style="color: #2563eb; text-decoration: none;">${setupUrl}</a></p>
-        <p style="margin: 12px 0 0 0; font-size: 11px; color: #64748b; font-weight: 500; border-t: 1px dashed #e2e8f0; padding-top: 10px;">
-          <strong>Security Note:</strong> This activation gateway is highly sensitive and will expire in <strong>24 hours</strong>. Please configure your password immediately to prevent configuration suspension.
-        </p>
-      </div>
-    `;
-  } else {
-    body = `
-      <span class="badge badge-success">Account Provisioned</span>
-      <h2 class="email-title">Account Successfully Created!</h2>
-      <p>Hi <strong>${name}</strong>,</p>
-      <p>Your platform profile is active as a registered <strong>${role.toUpperCase()}</strong>. You are cleared to log in, customize your settings, and access the daily milestones tracker.</p>
-      <div style="text-align: center;">
-        <a href="${config.frontend.url}/login" class="button">Access Platform</a>
-      </div>
-      <div class="meta-box">
-        <p style="margin: 0 0 10px 0; font-size: 13px; font-weight: bold; color: #0f172a;">Workspace Details:</p>
-        <div class="grid-card">
-          <p style="margin: 0 0 6px 0; font-size: 13px; color: #64748b;"><strong>Portal Address:</strong> <a href="${config.frontend.url}" style="color: #2563eb; text-decoration: none;">${config.frontend.url}</a></p>
-          <p style="margin: 0; font-size: 13px; color: #64748b;"><strong>Default Password:</strong> <code style="background-color: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #0f172a; font-weight: bold;">InternPass123!</code></p>
-        </div>
-        <p style="margin: 10px 0 0 0; font-size: 11px; color: #ef4444; font-weight: bold;">
-          ⚠️ Warning: You are strictly required to update your password immediately upon your first successful login.
-        </p>
-      </div>
-    `;
-  }
+  const html = compileTemplate('welcome.html', {
+    'Hi Vraj,': `Hi ${name},`,
+    'Engineering Intern': role.toUpperCase(),
+    'vrajgoti@internflow.com': email,
+    'https://internflow.com/login': setupUrl
+  });
 
-  const html = getEmailWrapper('Welcome to InternFlow', body);
   return await sendEmail(email, 'Welcome to Intern Management System', html);
 };
 
@@ -323,35 +272,16 @@ export const sendApplicationConfirmationEmail = async (
   name: string,
   departmentName: string
 ): Promise<boolean> => {
-  const body = `
-    <span class="badge badge-info">Registration Success</span>
-    <h2 class="email-title">Application Received!</h2>
-    <p>Hi <strong>${name}</strong>,</p>
-    <p>Thank you for submitting your registration request for the internship program inside our <strong>${departmentName}</strong> engineering cohort!</p>
-    <p>Our talent acquisition team has received your academic details and onboarding forms. No further action is required from you at this stage.</p>
-    
-    <div class="meta-box" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
-      <p style="margin: 0 0 12px 0; font-size: 13px; font-weight: bold; color: #0f172a; text-transform: uppercase; letter-spacing: 0.05em;">Onboarding Timeline status:</p>
-      
-      <div style="display: flex; flex-direction: column; gap: 10px;">
-        <div style="padding: 10px 14px; background-color: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 6px;">
-          <p style="margin: 0; font-size: 12px; font-weight: 700; color: #1e3a8a;">[✓] Application Form Submitted</p>
-        </div>
-        <div style="padding: 10px 14px; background-color: #f8fafc; border-left: 4px solid #cbd5e1; border-radius: 6px; opacity: 0.8;">
-          <p style="margin: 0; font-size: 12px; font-weight: 700; color: #64748b;">[ ] Academic Documents Review (In Progress)</p>
-        </div>
-        <div style="padding: 10px 14px; background-color: #f8fafc; border-left: 4px solid #cbd5e1; border-radius: 6px; opacity: 0.8;">
-          <p style="margin: 0; font-size: 12px; font-weight: 700; color: #64748b;">[ ] HR Approval & Account Provisioning</p>
-        </div>
-      </div>
-      
-      <p style="margin: 15px 0 0 0; font-size: 12px; color: #64748b;">
-        <strong>Track Assigned:</strong> ${departmentName} Cohort
-      </p>
-    </div>
-  `;
+  const html = compileTemplate('notification.html', {
+    'Hi Vraj,': `Hi ${name},`,
+    'You have received a new operational notification regarding your InternFlow workspace status. An administrator has updated the shared cohort resources folder with the Q2 engineering onboarding guidelines.': `Thank you for submitting your registration request for the internship program inside our ${departmentName} engineering cohort! Our talent acquisition team has successfully received your academic details and onboarding forms.`,
+    'Platform / Operational Announcement': 'Registration Success',
+    'HR Operations Team': 'Talent Acquisition Team',
+    'Documentation Update': `${departmentName} Cohort`,
+    'https://internflow.com/notifications': `${config.frontend.url}/login`,
+    'View Workspace Notification': 'Access Workspace'
+  });
 
-  const html = getEmailWrapper('Application Received', body);
   return await sendEmail(email, 'Application Received - Intern Management System', html);
 };
 
@@ -365,61 +295,27 @@ export const sendMentorAssignmentEmails = async (
   mentorName: string
 ): Promise<boolean> => {
   // 1. Send to Intern
-  const internBody = `
-    <span class="badge badge-success">milestone assigned</span>
-    <h2 class="email-title">Your Mentor is Assigned!</h2>
-    <p>Hi <strong>${internName}</strong>,</p>
-    <p>We are thrilled to announce that your corporate coordinator has been assigned to support you through your milestones track!</p>
-    
-    <div class="meta-box" style="padding: 24px; text-align: left; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px;">
-      <p style="margin: 0 0 16px 0; font-size: 12px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Assigned Coordinator Profile:</p>
-      
-      <div style="display: flex; align-items: center; gap: 16px;">
-        <div style="width: 48px; height: 48px; background-color: #4f46e5; color: white; border-radius: 50%; font-size: 20px; font-weight: bold; text-align: center; line-height: 48px;">
-          ${mentorName.charAt(0)}
-        </div>
-        <div>
-          <h4 style="margin: 0; font-size: 16px; font-weight: 800; color: #0f172a;">${mentorName}</h4>
-          <p style="margin: 2px 0 0 0; font-size: 13px; color: #64748b;">Program Coordinator & Mentor</p>
-        </div>
-      </div>
-      <div style="margin-top: 16px; padding-top: 16px; border-top: 1px dashed #e2e8f0;">
-        <p style="margin: 0; font-size: 13px; color: #475569;"><strong>Email Address:</strong> <a href="mailto:${mentorEmail}" style="color: #2563eb; text-decoration: none;">${mentorEmail}</a></p>
-      </div>
-    </div>
-    
-    <p style="margin-top: 24px;">Your mentor will oversee task scopes, grade deliverables, and check Daily Standup notes. Reach out immediately to introduce yourself!</p>
-  `;
-  const internHtml = getEmailWrapper('Mentor Assigned', internBody);
+  const internHtml = compileTemplate('mentor_assignment.html', {
+    'Hi Vraj,': `Hi ${internName},`,
+    'Sarah Jenkins (Senior Staff Engineer)': mentorName,
+    'Software Development (Backend)': 'Program Coordinator & Mentor',
+    'sarah.jenkins@internflow.com': mentorEmail,
+    'mailto:sarah.jenkins@internflow.com': `mailto:${mentorEmail}`,
+    'https://internflow.com/mentor': `${config.frontend.url}/login`
+  });
   const sentToIntern = await sendEmail(internEmail, 'Mentor Assigned - Intern Management System', internHtml);
 
   // 2. Send to Mentor
-  const mentorBody = `
-    <span class="badge badge-success">intern assigned</span>
-    <h2 class="email-title">New Intern Mentorship!</h2>
-    <p>Hi <strong>${mentorName}</strong>,</p>
-    <p>A new member has been provisioned under your cohort track and assigned to you for direct directives supervision.</p>
-    
-    <div class="meta-box" style="padding: 24px; text-align: left; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px;">
-      <p style="margin: 0 0 16px 0; font-size: 12px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Intern Profile Details:</p>
-      
-      <div style="display: flex; align-items: center; gap: 16px;">
-        <div style="width: 48px; height: 48px; background-color: #06b6d4; color: white; border-radius: 50%; font-size: 20px; font-weight: bold; text-align: center; line-height: 48px;">
-          ${internName.charAt(0)}
-        </div>
-        <div>
-          <h4 style="margin: 0; font-size: 16px; font-weight: 800; color: #0f172a;">${internName}</h4>
-          <p style="margin: 2px 0 0 0; font-size: 13px; color: #64748b;">Cohort Intern Member</p>
-        </div>
-      </div>
-      <div style="margin-top: 16px; padding-top: 16px; border-top: 1px dashed #e2e8f0;">
-        <p style="margin: 0; font-size: 13px; color: #475569;"><strong>Email Address:</strong> <a href="mailto:${internEmail}" style="color: #2563eb; text-decoration: none;">${internEmail}</a></p>
-      </div>
-    </div>
-    
-    <p style="margin-top: 24px;">Please connect with them to outline their initial milestones and task assignments inside your supervisor dashboard.</p>
-  `;
-  const mentorHtml = getEmailWrapper('New Intern Assigned', mentorBody);
+  const mentorHtml = compileTemplate('mentor_assignment.html', {
+    'Hi Vraj,': `Hi ${mentorName},`,
+    'Mentor Assignment': 'Intern Assigned',
+    'We are pleased to inform you that your industry mentor has been assigned for the duration of your internship program. Your mentor will guide you through project scopes, review milestone submissions, and support your professional growth.': `A new member has been provisioned under your cohort track and assigned to you for direct directives supervision.`,
+    'Sarah Jenkins (Senior Staff Engineer)': internName,
+    'Software Development (Backend)': 'Cohort Intern Member',
+    'sarah.jenkins@internflow.com': internEmail,
+    'mailto:sarah.jenkins@internflow.com': `mailto:${internEmail}`,
+    'https://internflow.com/mentor': `${config.frontend.url}/login`
+  });
   const sentToMentor = await sendEmail(mentorEmail, 'New Intern Assigned under your Guidance', mentorHtml);
 
   return sentToIntern && sentToMentor;
@@ -433,27 +329,16 @@ export const sendPerformanceScoreEmail = async (
   name: string,
   score: number
 ): Promise<boolean> => {
-  const body = `
-    <span class="badge badge-info">Evaluation Grade</span>
-    <h2 class="email-title">Milestone Rating Updated!</h2>
-    <p>Hi <strong>${name}</strong>,</p>
-    <p>Your program coordinator has submitted a new rating evaluation inside your performance analytics logbook.</p>
-    
-    <div style="margin: 24px 0; padding: 30px; background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border: 1px solid #dbeafe; border-radius: 16px; text-align: center;">
-      <p style="margin: 0; font-size: 11px; font-weight: 800; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.1em;">Aggregated Performance score</p>
-      <h1 style="margin: 12px 0 0 0; font-size: 64px; color: #1d4ed8; font-weight: 900; letter-spacing: -0.04em;">
-        ${score}<span style="font-size: 24px; color: #94a3b8; font-weight: 600; letter-spacing: 0;">%</span>
-      </h1>
-      <p style="margin: 8px 0 0 0; font-size: 13px; color: #64748b; font-weight: 600;">Overall Program Rating</p>
-    </div>
-    
-    <p>Access your dashboard page to view detailed performance metrics, grade timelines, and feedback comments from your supervisor.</p>
-    <div style="text-align: center; margin-top: 20px;">
-      <a href="${config.frontend.url}/login" class="button">View Performance Portal</a>
-    </div>
-  `;
+  const html = compileTemplate('notification.html', {
+    'Hi Vraj,': `Hi ${name},`,
+    'You have received a new operational notification regarding your InternFlow workspace status. An administrator has updated the shared cohort resources folder with the Q2 engineering onboarding guidelines.': `Your program coordinator has submitted a new rating evaluation inside your performance analytics logbook. Your aggregated performance score is currently evaluated at ${score}%.`,
+    'Platform / Operational Announcement': 'Evaluation Grade',
+    'HR Operations Team': 'Program Coordinator',
+    'Documentation Update': `Score Rating: ${score}%`,
+    'https://internflow.com/notifications': `${config.frontend.url}/login`,
+    'View Workspace Notification': 'View Performance Portal'
+  });
 
-  const html = getEmailWrapper('Performance Score Update', body);
   return await sendEmail(email, 'Performance Evaluation Score Updated', html);
 };
 
@@ -469,32 +354,15 @@ export const sendAnnouncementEmail = async (
 ): Promise<boolean> => {
   if (emails.length === 0) return true;
 
-  const priorityColor = priority === 'HIGH' ? '#ef4444' : priority === 'MEDIUM' ? '#f59e0b' : '#3b82f6';
-  const priorityBg = priority === 'HIGH' ? '#fef2f2' : priority === 'MEDIUM' ? '#fffbeb' : '#eff6ff';
-
-  const body = `
-    <span class="badge" style="background-color: ${priorityBg}; color: ${priorityColor};">${priority} PRIORITY</span>
-    <h2 class="email-title">Important Broadcast Announcement</h2>
-    
-    <div style="border-left: 4px solid ${priorityColor}; padding: 10px 20px; background-color: #f8fafc; border-radius: 0 12px 12px 0; margin-bottom: 24px;">
-      <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 800; color: #0f172a; letter-spacing: -0.015em;">${title}</h3>
-      <p style="margin: 0; font-size: 12px; color: #64748b; font-weight: bold;">Posted by: ${author} · Cohort Broadcast</p>
-    </div>
-    
-    <div style="color: #475569; font-size: 15px; line-height: 1.7; white-space: pre-wrap; background-color: #ffffff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-      ${content}
-    </div>
-    
-    <div style="text-align: center;">
-      <a href="${config.frontend.url}/login" class="button">Launch Dashboard Portal</a>
-    </div>
-  `;
-
-  const html = getEmailWrapper('New Announcement Broadcast', body);
-
-  // To avoid spamming our own server/SMTP at once, we might want to BCC everyone, 
-  // but sending individually is better for analytics if we had them.
-  // For now, we will just send one email with all recipients in BCC.
+  const html = compileTemplate('notification.html', {
+    'Hi Vraj,': `Hi Intern,`,
+    'You have received a new operational notification regarding your InternFlow workspace status. An administrator has updated the shared cohort resources folder with the Q2 engineering onboarding guidelines.': `An administrator has broadcasted a new cohort announcement: "${title}". Description: ${content}`,
+    'Platform / Operational Announcement': `${priority} PRIORITY`,
+    'HR Operations Team': author,
+    'Documentation Update': 'Cohort Broadcast',
+    'https://internflow.com/notifications': `${config.frontend.url}/login`,
+    'View Workspace Notification': 'Launch Dashboard Portal'
+  });
 
   if (!transporter) {
     logger.warn('Email transporter not configured. Skipping announcement email send.');
@@ -504,7 +372,7 @@ export const sendAnnouncementEmail = async (
   try {
     await transporter.sendMail({
       from: config.email.from || config.email.user,
-      bcc: emails, // Use BCC to hide other recipients
+      bcc: emails,
       subject: `[${priority} Priority] ${title}`,
       html,
     });
@@ -526,40 +394,16 @@ export const sendLoginOtpEmail = async (
   ipAddress: string,
   timestamp: string
 ): Promise<boolean> => {
-  const body = `
-    <span class="badge badge-info">Identity Verification</span>
-    <h2 class="email-title">Authentication Code Request</h2>
-    <p>Hi <strong>${name}</strong>,</p>
-    <p>A login request was initiated for your InternFlow workspace. Please use the following 6-digit secure authentication passcode to complete access verification:</p>
-    
-    <div style="text-align: center; margin: 32px 0;">
-      <div style="display: inline-block; padding: 18px 45px; background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border: 2px dashed #3b82f6; border-radius: 16px; font-size: 38px; font-weight: 900; color: #1d4ed8; letter-spacing: 0.2em; text-align: center; font-family: 'Courier New', Courier, monospace;">
-        ${otpCode}
-      </div>
-    </div>
-    
-    <div class="meta-box" style="margin-top: 24px; font-size: 13px; color: #475569; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
-      <p style="margin: 0 0 10px 0; font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Security Audit Log details:</p>
-      <table style="width: 100%; font-size: 13px; color: #475569; border-collapse: collapse;">
-        <tr>
-          <td style="padding: 4px 0; font-weight: bold; color: #64748b;">Attempt Time:</td>
-          <td style="padding: 4px 0; font-weight: 600; color: #0f172a; text-align: right;">${timestamp}</td>
-        </tr>
-        <tr>
-          <td style="padding: 4px 0; font-weight: bold; color: #64748b;">IP Address:</td>
-          <td style="padding: 4px 0; font-weight: 600; color: #0f172a; text-align: right;">${ipAddress}</td>
-        </tr>
-      </table>
-    </div>
-    
-    <p style="margin-top: 24px; font-size: 12px; color: #94a3b8; line-height: 1.5;">
-      <strong>Confidentiality Advisory:</strong> This passcode is confidential and will expire in <strong>5 minutes</strong>. If you did not initiate this login request, please update your account password immediately to secure your access.
-    </p>
-  `;
+  const html = compileTemplate('notification.html', {
+    'Hi Vraj,': `Hi ${name},`,
+    'You have received a new operational notification regarding your InternFlow workspace status. An administrator has updated the shared cohort resources folder with the Q2 engineering onboarding guidelines.': `A login request was initiated for your InternFlow workspace. Please use the following 6-digit secure authentication passcode to complete access verification: ${otpCode}`,
+    'Platform / Operational Announcement': 'Identity Verification',
+    'HR Operations Team': 'Authentication Service',
+    'Documentation Update': `IP: ${ipAddress} · Time: ${timestamp}`,
+    'https://internflow.com/notifications': `${config.frontend.url}/login`,
+    'View Workspace Notification': `Code: ${otpCode}`
+  });
 
-  const html = getEmailWrapper('Secure Access Verification Code', body);
-
-  // Proactive development fallback: if transporter is disabled or fails, log it clearly so local devs can proceed without working credentials
   if (!transporter) {
     logger.info(`[MOCK EMAIL DELIVERY] OTP for ${email} (${name}) is: ${otpCode}`);
     return true;
@@ -570,5 +414,5 @@ export const sendLoginOtpEmail = async (
     logger.warn('SMTP Delivery failed, logging fallback OTP for development/debug access.');
     logger.info(`[FALLBACK EMAIL DELIVERY] OTP for ${email} (${name}) is: ${otpCode}`);
   }
-  return true; // Return true so login flow can still proceed using fallback OTP from console
+  return true;
 };

@@ -42,4 +42,25 @@ router.post('/sentiment-analysis', validate(sentimentAnalysisSchema), aiControll
  */
 router.post('/chatbot', validate(chatbotSchema), aiController.chatbot);
 
+/**
+ * @route   GET /api/ai/recommendations
+ * @desc    Get intern-mentor matching recommendations
+ * @access  Authenticated Users (HR, Admin)
+ */
+router.get('/recommendations', aiController.getRecommendations);
+
+/**
+ * @route   PATCH /api/ai/recommendations/:id/apply
+ * @desc    Apply matching recommendation
+ * @access  Authenticated Users (HR, Admin)
+ */
+router.patch('/recommendations/:id/apply', aiController.applyRecommendation);
+
+/**
+ * @route   PATCH /api/ai/recommendations/:id/reject
+ * @desc    Reject matching recommendation
+ * @access  Authenticated Users (HR, Admin)
+ */
+router.patch('/recommendations/:id/reject', aiController.rejectRecommendation);
+
 export default router;

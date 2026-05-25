@@ -2,56 +2,61 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { AppProvider } from './context/AppContext';
+import { NotificationProvider } from './context/NotificationContext';
 import { Toaster } from 'react-hot-toast';
 
 // Public Pages
-import { LandingPage } from './pages/public/LandingPage';
-import { LoginPage } from './pages/public/LoginPage';
-import { ApplyPage } from './pages/public/ApplyPage';
-import { ForgotPasswordPage } from './pages/public/ForgotPasswordPage';
-import { ResetPasswordPage } from './pages/public/ResetPasswordPage';
-import { RegisterPage } from './pages/public/RegisterPage';
+const LandingPage = React.lazy(() => import('./pages/public/LandingPage').then(m => ({ default: m.LandingPage })));
+const LoginPage = React.lazy(() => import('./pages/public/LoginPage').then(m => ({ default: m.LoginPage })));
+const ApplyPage = React.lazy(() => import('./pages/public/ApplyPage').then(m => ({ default: m.ApplyPage })));
+const ForgotPasswordPage = React.lazy(() => import('./pages/public/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
+const ResetPasswordPage = React.lazy(() => import('./pages/public/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
+const RegisterPage = React.lazy(() => import('./pages/public/RegisterPage').then(m => ({ default: m.RegisterPage })));
 
 // HR Admin Pages
-import { HRDashboard } from './pages/hr/HRDashboard';
-import { InternManagement } from './pages/hr/InternManagement';
-import { MentorManagement } from './pages/hr/MentorManagement';
-import { DepartmentManagement } from './pages/hr/DepartmentManagement';
-import { DepartmentDetails } from './pages/hr/DepartmentDetails';
-import { ReportsAnalytics } from './pages/hr/ReportsAnalytics';
-import { Announcements } from './pages/hr/Announcements';
-import { OnboardingVerification } from './pages/hr/OnboardingVerification';
-import { MentorDetailsPage } from './pages/hr/mentor-details/MentorDetailsPage';
+const HRDashboard = React.lazy(() => import('./pages/hr/HRDashboard').then(m => ({ default: m.HRDashboard })));
+const InternManagement = React.lazy(() => import('./pages/hr/InternManagement').then(m => ({ default: m.InternManagement })));
+const MentorManagement = React.lazy(() => import('./pages/hr/MentorManagement').then(m => ({ default: m.MentorManagement })));
+const DepartmentManagement = React.lazy(() => import('./pages/hr/DepartmentManagement').then(m => ({ default: m.DepartmentManagement })));
+const DepartmentDetails = React.lazy(() => import('./pages/hr/DepartmentDetails').then(m => ({ default: m.DepartmentDetails })));
+const ReportsAnalytics = React.lazy(() => import('./pages/hr/ReportsAnalytics').then(m => ({ default: m.ReportsAnalytics })));
+const Announcements = React.lazy(() => import('./pages/hr/Announcements').then(m => ({ default: m.Announcements })));
+const OnboardingVerification = React.lazy(() => import('./pages/hr/OnboardingVerification').then(m => ({ default: m.OnboardingVerification })));
+const MentorDetailsPage = React.lazy(() => import('./pages/hr/mentor-details/MentorDetailsPage').then(m => ({ default: m.MentorDetailsPage })));
+const AIRecommendations = React.lazy(() => import('./pages/hr/AIRecommendations').then(m => ({ default: m.AIRecommendations })));
+const AuditLogs = React.lazy(() => import('./pages/admin/AuditLogs').then(m => ({ default: m.AuditLogs })));
 
 // Mentor Pages
-import { MentorDashboard } from './pages/mentor/MentorDashboard';
-import { TaskManagement } from './pages/mentor/TaskManagement';
-import { InternPerformance } from './pages/mentor/InternPerformance';
-import { SubmissionReview } from './pages/mentor/SubmissionReview';
+const MentorDashboard = React.lazy(() => import('./pages/mentor/MentorDashboard').then(m => ({ default: m.MentorDashboard })));
+const TaskManagement = React.lazy(() => import('./pages/mentor/TaskManagement').then(m => ({ default: m.TaskManagement })));
+const InternPerformance = React.lazy(() => import('./pages/mentor/InternPerformance').then(m => ({ default: m.InternPerformance })));
+const SubmissionReview = React.lazy(() => import('./pages/mentor/SubmissionReview').then(m => ({ default: m.SubmissionReview })));
 
 // Intern Pages
-import { InternDashboard } from './pages/intern/InternDashboard';
-import { MyTasks } from './pages/intern/MyTasks';
-import { Attendance } from './pages/intern/Attendance';
-import { Settings } from './pages/shared/Settings';
-import { AIChatbot } from './pages/intern/AIChatbot';
-import { OnboardingWorkflow } from './pages/intern/onboarding/OnboardingWorkflow';
-import { TaskLifecycle } from './pages/intern/TaskLifecycle';
-import { PortfolioDashboard } from './pages/intern/PortfolioDashboard';
+const InternDashboard = React.lazy(() => import('./pages/intern/InternDashboard').then(m => ({ default: m.InternDashboard })));
+const MyTasks = React.lazy(() => import('./pages/intern/MyTasks').then(m => ({ default: m.MyTasks })));
+const Attendance = React.lazy(() => import('./pages/intern/Attendance').then(m => ({ default: m.Attendance })));
+const Settings = React.lazy(() => import('./pages/shared/Settings').then(m => ({ default: m.Settings })));
+const AIChatbot = React.lazy(() => import('./pages/intern/AIChatbot').then(m => ({ default: m.AIChatbot })));
+const OnboardingWorkflow = React.lazy(() => import('./pages/intern/onboarding/OnboardingWorkflow').then(m => ({ default: m.OnboardingWorkflow })));
+const TaskLifecycle = React.lazy(() => import('./pages/intern/TaskLifecycle').then(m => ({ default: m.TaskLifecycle })));
+const PortfolioDashboard = React.lazy(() => import('./pages/intern/PortfolioDashboard').then(m => ({ default: m.PortfolioDashboard })));
 
 // Shared Pages across portals
-import { AIMatching } from './pages/ai-matching/AIMatching';
-import { TaskCalendarView } from './pages/shared/TaskCalendarView';
-import { PerformanceAnalytics } from './pages/shared/PerformanceAnalytics';
-import { AIFeedback } from './pages/shared/feedback/AIFeedback';
-import { CommunicationSystem } from './pages/shared/chat/CommunicationSystem';
-import { AttendanceLeave } from './pages/shared/attendance/AttendanceLeave';
-import { ReportsCertificates } from './pages/shared/reports/ReportsCertificates';
-import { LifecycleTimeline } from './pages/shared/lifecycle/LifecycleTimeline';
-import { SecurityPortal } from './pages/public/SecurityPortal';
+const AIMatching = React.lazy(() => import('./pages/ai-matching/AIMatching').then(m => ({ default: m.AIMatching })));
+const TaskCalendarView = React.lazy(() => import('./pages/shared/TaskCalendarView').then(m => ({ default: m.TaskCalendarView })));
+const PerformanceAnalytics = React.lazy(() => import('./pages/shared/PerformanceAnalytics').then(m => ({ default: m.PerformanceAnalytics })));
+const AIFeedback = React.lazy(() => import('./pages/shared/feedback/AIFeedback').then(m => ({ default: m.AIFeedback })));
+const CommunicationSystem = React.lazy(() => import('./pages/shared/chat/CommunicationSystem').then(m => ({ default: m.CommunicationSystem })));
+const AttendanceLeave = React.lazy(() => import('./pages/shared/attendance/AttendanceLeave').then(m => ({ default: m.AttendanceLeave })));
+const ReportsCertificates = React.lazy(() => import('./pages/shared/reports/ReportsCertificates').then(m => ({ default: m.ReportsCertificates })));
+const LifecycleTimeline = React.lazy(() => import('./pages/shared/lifecycle/LifecycleTimeline').then(m => ({ default: m.LifecycleTimeline })));
+const SecurityPortal = React.lazy(() => import('./pages/public/SecurityPortal').then(m => ({ default: m.SecurityPortal })));
 
 // Super Admin Pages
-import { SuperAdmin } from './pages/admin/SuperAdmin';
+const SuperAdmin = React.lazy(() => import('./pages/admin/SuperAdmin').then(m => ({ default: m.SuperAdmin })));
+
+import { PageLoader } from './components/PageLoader';
 
 import { useAuth } from './hooks/useAuth';
 import { useInternByUser } from './hooks/queries';
@@ -124,15 +129,17 @@ const App: React.FC = () => {
   return (
     <Router>
       <AuthProvider>
-        <AppProvider>
-          <Toaster 
-            position="top-right" 
-            toastOptions={{
-              className: 'text-xs font-bold text-slate-800 bg-white border border-slate-100 rounded-2xl shadow-xl',
-              duration: 3000,
-            }} 
-          />
-          <Routes>
+        <NotificationProvider>
+          <AppProvider>
+            <Toaster 
+              position="top-right" 
+              toastOptions={{
+                className: 'text-xs font-bold text-slate-800 bg-white border border-slate-100 rounded-2xl shadow-xl',
+                duration: 3000,
+              }} 
+            />
+            <React.Suspense fallback={<PageLoader />}>
+              <Routes>
             {/* Public Access */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
@@ -199,6 +206,14 @@ const App: React.FC = () => {
               } 
             />
             <Route 
+              path="/hr/ai-recommendations" 
+              element={
+                <ProtectedRoute allowedRole="hr">
+                  <AIRecommendations />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/hr/reports" 
               element={
                 <ProtectedRoute allowedRole="hr">
@@ -219,6 +234,14 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute allowedRole="hr">
                   <Settings />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/audit-logs" 
+              element={
+                <ProtectedRoute allowedRole="hr">
+                  <AuditLogs />
                 </ProtectedRoute>
               } 
             />
@@ -388,10 +411,12 @@ const App: React.FC = () => {
             {/* Fallback Redirects */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+        </React.Suspense>
         </AppProvider>
-      </AuthProvider>
-    </Router>
-  );
+      </NotificationProvider>
+    </AuthProvider>
+  </Router>
+);
 };
 
 export default App;

@@ -27,7 +27,12 @@ export const getAllDepartments = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const result = await departmentService.getAllDepartments(req.query);
+    const { page = 1, limit = 20 } = req.query;
+    const result = await departmentService.getAllDepartments({
+      ...req.query,
+      page: Number(page),
+      limit: Number(limit),
+    });
     successResponse(res, 'Departments retrieved successfully', result);
   } catch (error) {
     next(error);
@@ -50,9 +55,6 @@ export const getAllDepartmentsList = async (
   }
 };
 
-/**
- * Get department by ID
- */
 export const getDepartmentById = async (
   req: Request,
   res: Response,
@@ -60,7 +62,45 @@ export const getDepartmentById = async (
 ): Promise<void> => {
   try {
     const department = await departmentService.getDepartmentById(req.params.id as string);
-    successResponse(res, 'Department retrieved successfully', department);
+    
+    const formatted = {
+      id: department.id,
+      name: department.name,
+      code: department.code,
+      description: department.description,
+      colorTheme: department.colorTheme,
+      head: department.head ? {
+        id: department.head.id,
+        name: department.head.name,
+        email: department.head.email,
+        avatar: department.head.avatarUrl,
+      } : null,
+      memberCount: department.interns.length + department.mentors.length,
+      internCount: department.interns.length,
+      mentorCount: department.mentors.length,
+      interns: department.interns,
+      mentors: department.mentors,
+      members: [
+        ...department.mentors.map((m: any) => ({
+          id: m.id,
+          name: m.name,
+          email: m.email,
+          avatar: m.avatarUrl,
+          role: 'MENTOR',
+          mentor: m.mentor,
+        })),
+        ...department.interns.map((i: any) => ({
+          id: i.id,
+          name: i.name,
+          email: i.email,
+          avatar: i.avatarUrl,
+          role: 'INTERN',
+          intern: i.intern,
+        })),
+      ],
+    };
+
+    successResponse(res, 'Department retrieved successfully', formatted);
   } catch (error) {
     next(error);
   }
@@ -129,6 +169,26 @@ export const assignHead = async (
     const department = await departmentService.assignDepartmentHead(
       req.params.id as string,
       req.body.headId as string,
+      (req as any).user?.name || 'HR Admin'
+    );
+    successResponse(res, 'Department head assigned successfully', department);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Assign Department Head Patch Method
+ */
+export const assignHeadPatch = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const department = await departmentService.assignDepartmentHead(
+      req.params.id as string,
+      req.body.userId as string,
       (req as any).user?.name || 'HR Admin'
     );
     successResponse(res, 'Department head assigned successfully', department);

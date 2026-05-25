@@ -1,7 +1,7 @@
-import { PrismaClient, TaskStatus, TaskPriority } from '@prisma/client';
+import { TaskStatus, TaskPriority } from '@prisma/client';
 import { PaginationQuery, PaginatedResponse } from '../types';
-
-const prisma = new PrismaClient();
+import { paginate } from '../utils/paginate';
+import prisma from '../config/database';
 
 interface CreateTaskData {
   title: string;
@@ -85,7 +85,6 @@ export class TaskService {
     pagination: PaginationQuery
   ): Promise<PaginatedResponse<any>> {
     const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = pagination;
-    const skip = (page - 1) * limit;
 
     // Build where clause
     const where: any = {};
@@ -119,14 +118,10 @@ export class TaskService {
       ];
     }
 
-    // Get total count
-    const total = await prisma.task.count({ where });
-
-    // Get tasks
-    const tasks = await prisma.task.findMany({
+    const result = await paginate({
+      page,
+      limit,
       where,
-      skip,
-      take: limit,
       orderBy: { [sortBy]: sortOrder },
       include: {
         intern: {
@@ -153,17 +148,18 @@ export class TaskService {
           },
         },
       },
+      prismaModel: prisma.task
     });
 
     return {
-      data: tasks,
+      data: result.data,
       pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-        hasNext: page * limit < total,
-        hasPrev: page > 1,
+        page: result.currentPage,
+        limit: Number(limit),
+        total: result.totalCount,
+        totalPages: result.totalPages,
+        hasNext: result.currentPage < result.totalPages,
+        hasPrev: result.currentPage > 1,
       },
     };
   }
@@ -254,8 +250,9 @@ export class TaskService {
     });
 
     // Delete the task
-    await prisma.task.delete({
+    await prisma.task.update({
       where: { id: taskId },
+      data: { deletedAt: new Date() },
     });
 
     return { message: 'Task deleted successfully' };

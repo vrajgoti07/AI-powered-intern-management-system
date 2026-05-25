@@ -4,9 +4,45 @@ import {
   GraduationCap, ArrowRight, Brain, Shield, BarChart3,
   Clock, Zap, CheckCircle2, Star, Globe, Heart
 } from 'lucide-react';
+import { useSocket } from '../../hooks/useSocket';
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+  const socket = useSocket();
+  const [pingCount, setPingCount] = React.useState(0);
+  const [pongCount, setPongCount] = React.useState(0);
+  const [lastPongTime, setLastPongTime] = React.useState<string | null>(null);
+  const [isConnected, setIsConnected] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!socket) return;
+
+    const handleConnect = () => setIsConnected(true);
+    const handleDisconnect = () => setIsConnected(false);
+    const handlePong = () => {
+      setPongCount((prev) => prev + 1);
+      setLastPongTime(new Date().toLocaleTimeString());
+    };
+
+    setIsConnected(socket.connected);
+
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+    socket.on('pong', handlePong);
+
+    return () => {
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
+      socket.off('pong', handlePong);
+    };
+  }, [socket]);
+
+  const sendPing = () => {
+    if (socket && isConnected) {
+      setPingCount((prev) => prev + 1);
+      socket.emit('ping');
+    }
+  };
 
   return (
     <div className="bg-slate-50 min-h-screen text-slate-800 flex flex-col font-sans overflow-x-hidden selection:bg-blue-600 selection:text-white">
@@ -516,6 +552,51 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      {/* Floating Socket.IO Test Control Widget */}
+      <div className="fixed bottom-6 right-6 z-50 w-72 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-[0_10px_30px_rgba(15,23,42,0.08)] p-4 flex flex-col gap-3 font-sans transition-all duration-300 hover:shadow-[0_15px_35px_rgba(37,99,235,0.12)]">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-rose-400'} opacity-75`}></span>
+              <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isConnected ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
+            </span>
+            <span className="text-[10px] font-extrabold text-slate-700 uppercase tracking-wider">Socket.IO Live Status</span>
+          </div>
+          <span className="text-[9px] font-extrabold text-slate-400">
+            {isConnected ? 'Connected' : 'Disconnected'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-center text-xs">
+          <div className="bg-slate-50 border border-slate-100 rounded-xl p-2">
+            <p className="text-[8px] font-extrabold text-slate-400 uppercase">Pings Sent</p>
+            <p className="text-sm font-extrabold text-slate-700 mt-0.5">{pingCount}</p>
+          </div>
+          <div className="bg-slate-50 border border-slate-100 rounded-xl p-2">
+            <p className="text-[8px] font-extrabold text-slate-400 uppercase">Pongs Recv</p>
+            <p className="text-sm font-extrabold text-blue-600 mt-0.5">{pongCount}</p>
+          </div>
+        </div>
+
+        {lastPongTime && (
+          <p className="text-[9px] font-bold text-slate-400 text-center">
+            Last Pong: <span className="text-slate-600 font-extrabold">{lastPongTime}</span>
+          </p>
+        )}
+
+        <button
+          onClick={sendPing}
+          disabled={!isConnected}
+          className={`w-full py-2 px-4 rounded-xl text-xs font-bold text-white transition-all transform hover:-translate-y-0.5 cursor-pointer shadow-md ${
+            isConnected
+              ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-100 hover:shadow-blue-200'
+              : 'bg-slate-300 cursor-not-allowed shadow-none'
+          }`}
+        >
+          Send Ping
+        </button>
+      </div>
 
       {/* Embedded High-Fidelity Custom Animation Styles */}
       <style>{`

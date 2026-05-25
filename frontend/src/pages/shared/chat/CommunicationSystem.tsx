@@ -15,6 +15,7 @@ import { useAuth } from '../../../hooks/useAuth';
 import { useApp } from '../../../hooks/useApp';
 import { useInternByUser, useTasks, useInterns } from '../../../hooks/queries';
 import api from '../../../services/api';
+import { useSocket } from '../../../hooks/useSocket';
 
 const EMOJIS = [
   { char: '😀', name: 'grinning face', cat: 'smileys' },
@@ -463,8 +464,54 @@ export const CommunicationSystem: React.FC = () => {
       console.error(err);
     }
   };
-  const [isChatTyping, setIsChatTyping] = useState(false);
+  const [typingUser, setTypingUser] = useState<string | null>(null);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+
+  const socket = useSocket();
+
+  useEffect(() => {
+    if (!socket || !activeConversationId) return;
+
+    socket.emit('join-room', { roomId: activeConversationId, name: user?.name });
+
+    const handleReceiveMessage = (message: any) => {
+      console.log('[Socket] Received message:', message);
+      const formattedMsg = {
+        id: message.id,
+        senderId: message.senderId,
+        sender: message.senderName ? `${message.senderName} (${message.senderId === user?.id ? 'You' : 'Member'})` : 'Member',
+        role: message.senderId === user?.id ? 'user' : 'member',
+        text: message.content,
+        time: new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+
+      setChatMessages((prev) => {
+        const currentList = prev[chatChannel] || [];
+        if (currentList.some((m) => m.id === message.id)) return prev;
+        return {
+          ...prev,
+          [chatChannel]: [...currentList, formattedMsg],
+        };
+      });
+    };
+
+    const handleUserTyping = (data: { name: string; isTyping: boolean }) => {
+      if (data.isTyping) {
+        setTypingUser(data.name);
+      } else {
+        setTypingUser(null);
+      }
+    };
+
+    socket.on('receive-message', handleReceiveMessage);
+    socket.on('user-typing', handleUserTyping);
+
+    return () => {
+      socket.emit('leave-room', { roomId: activeConversationId, name: user?.name });
+      socket.off('receive-message', handleReceiveMessage);
+      socket.off('user-typing', handleUserTyping);
+    };
+  }, [socket, activeConversationId, chatChannel, user]);
 
   // WhatsApp Chat rich states
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
@@ -732,6 +779,23 @@ export const CommunicationSystem: React.FC = () => {
           ...prev,
           [chatChannel]: [...(prev[chatChannel] || []), formattedMsg]
         }));
+
+        // Emit socket message for real-time delivery
+        if (socket && activeConversationId) {
+          socket.emit('send-message', {
+            roomId: activeConversationId,
+            senderId: user?.id || '',
+            senderName: user?.name || 'User',
+            content: messageText,
+          });
+
+          // Stop typing state on send
+          socket.emit('typing', {
+            roomId: activeConversationId,
+            name: user?.name || 'User',
+            isTyping: false,
+          });
+        }
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -1607,12 +1671,12 @@ export const CommunicationSystem: React.FC = () => {
                           </div>
                         ))}
 
-                        {isChatTyping && (
+                        {typingUser && (
                           <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold pl-11">
                             <span className="animate-bounce">●</span>
                             <span className="animate-bounce delay-100">●</span>
                             <span className="animate-bounce delay-200">●</span>
-                            <span>{mentorName} is typing...</span>
+                            <span>{typingUser} is typing...</span>
                           </div>
                         )}
                       </div>
@@ -1931,7 +1995,16 @@ export const CommunicationSystem: React.FC = () => {
                                 type="text" 
                                 placeholder="Type a message"
                                 value={chatText}
-                                onChange={(e) => setChatText(e.target.value)}
+                                onChange={(e) => {
+                                  setChatText(e.target.value);
+                                  if (socket && activeConversationId && user) {
+                                    socket.emit('typing', {
+                                      roomId: activeConversationId,
+                                      name: user.name,
+                                      isTyping: e.target.value.length > 0,
+                                    });
+                                  }
+                                }}
                                 className="flex-1 text-[12px] font-semibold bg-transparent focus:outline-none border-none outline-none text-slate-800 placeholder-slate-400 py-1 px-1" 
                               />
                             </div>

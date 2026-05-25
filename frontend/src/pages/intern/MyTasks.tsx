@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTasks } from '../../hooks/queries';
+import { Pagination } from '../../components/Pagination';
 import { useAuth } from '../../hooks/useAuth';
 import { Sidebar } from '../../components/common/Sidebar';
 import { Navbar } from '../../components/common/Navbar';
@@ -18,7 +19,7 @@ import api from '../../services/api';
 const MotionDiv = motion.div as any;
 
 export const MyTasks: React.FC = () => {
-  const { data: tasks = [], refetch } = useTasks();
+  const { data: tasks = [], isLoading: isTasksLoading, refetch } = useTasks({ assignedTo: 'me' });
   const { user } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -45,10 +46,16 @@ export const MyTasks: React.FC = () => {
   // Calendar Tab State
   const [currentDate, setCurrentDate] = useState(new Date(2026, 4, 1)); // May 2026 default
 
+  const [taskPage, setTaskPage] = useState(1);
+  const tasksPerPage = 5;
+
   // Filter tasks for this intern
   const internId = (user as any)?.intern?.id;
   const myName = user?.name || "Intern";
   const myTasks = tasks.filter((t: any) => t.intern?.user?.name === myName || t.internId === internId);
+
+  const totalTaskPages = Math.ceil(myTasks.length / tasksPerPage);
+  const paginatedTasks = myTasks.slice((taskPage - 1) * tasksPerPage, taskPage * tasksPerPage);
 
   // Auto-select first task for discussions if none selected
   React.useEffect(() => {
@@ -433,62 +440,80 @@ export const MyTasks: React.FC = () => {
 
                     {/* Column tasks scroll list */}
                     <div className="flex-1 overflow-y-auto min-h-[450px] max-h-[calc(100vh-320px)] space-y-4 pr-1.5 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
-                      <AnimatePresence mode="popLayout">
-                        {colTasks.map((t: any) => {
-                          const isUrgent = new Date(t.dueDate).getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000 && t.status !== 'COMPLETED';
-                          const accentColor = col.status === 'COMPLETED' ? 'border-l-emerald-500 shadow-emerald-50/30' : 
-                                              col.status === 'REVIEW' ? 'border-l-purple-500 shadow-purple-50/30' : 
-                                              col.status === 'IN_PROGRESS' ? 'border-l-blue-500 shadow-blue-50/30' : 
-                                              'border-l-slate-300 shadow-slate-50/30';
+                      {isTasksLoading ? (
+                        <div className="space-y-3.5 animate-pulse">
+                          {[1, 2].map((n) => (
+                            <div key={n} className="bg-slate-100 p-4 border border-slate-200 rounded-2xl space-y-3 h-28 flex flex-col justify-between">
+                              <div className="flex justify-between items-center">
+                                <div className="h-3 w-2/3 bg-slate-200 rounded"></div>
+                                <div className="h-4 w-12 bg-slate-200 rounded"></div>
+                              </div>
+                              <div className="space-y-1.5">
+                                <div className="h-2 w-full bg-slate-200 rounded"></div>
+                                <div className="h-2 w-5/6 bg-slate-200 rounded"></div>
+                              </div>
+                              <div className="h-2.5 w-1/3 bg-slate-200 rounded"></div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <AnimatePresence mode="popLayout">
+                          {colTasks.map((t: any) => {
+                            const isUrgent = new Date(t.dueDate).getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000 && t.status !== 'COMPLETED';
+                            const accentColor = col.status === 'COMPLETED' ? 'border-l-emerald-500 shadow-emerald-50/30' : 
+                                                col.status === 'REVIEW' ? 'border-l-purple-500 shadow-purple-50/30' : 
+                                                col.status === 'IN_PROGRESS' ? 'border-l-blue-500 shadow-blue-50/30' : 
+                                                'border-l-slate-300 shadow-slate-50/30';
 
-                          return (
-                            <MotionDiv
-                              key={t.id}
-                              layoutId={t.id}
-                              initial={{ opacity: 0, y: 12 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, scale: 0.95 }}
-                              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-                              {...{
-                                draggable: t.status !== 'COMPLETED',
-                                onDragStart: (e: React.DragEvent) => handleDragStart(e, t.id, t.status),
-                                onDragEnd: handleDragEnd
-                              }}
-                              onClick={() => setSelectedTask(t)}
-                              className={`bg-white hover:bg-slate-50/40 p-4 border border-slate-200 rounded-2xl text-left cursor-pointer transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.015] space-y-3.5 shadow-sm hover:shadow-[0_12px_30px_rgba(0,0,0,0.04)] border-l-4 ${accentColor} ${
-                                t.status !== 'COMPLETED' ? 'cursor-grab active:cursor-grabbing' : ''
-                              } ${isDragging ? 'opacity-50' : ''}`}
-                            >
-                              <div className="flex items-start justify-between gap-2.5">
-                                <div className="flex items-start gap-1.5 flex-1 min-w-0">
-                                  {t.status !== 'COMPLETED' && (
-                                    <GripVertical className="w-3.5 h-3.5 text-slate-300 flex-shrink-0 mt-0.5" />
-                                  )}
-                                  <span className="font-extrabold text-slate-800 text-xs leading-snug line-clamp-2">{t.title}</span>
+                            return (
+                              <MotionDiv
+                                key={t.id}
+                                layoutId={t.id}
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+                                {...{
+                                  draggable: t.status !== 'COMPLETED',
+                                  onDragStart: (e: React.DragEvent) => handleDragStart(e, t.id, t.status),
+                                  onDragEnd: handleDragEnd
+                                }}
+                                onClick={() => setSelectedTask(t)}
+                                className={`bg-white hover:bg-slate-50/40 p-4 border border-slate-200 rounded-2xl text-left cursor-pointer transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.015] space-y-3.5 shadow-sm hover:shadow-[0_12px_30px_rgba(0,0,0,0.04)] border-l-4 ${accentColor} ${
+                                  t.status !== 'COMPLETED' ? 'cursor-grab active:cursor-grabbing' : ''
+                                } ${isDragging ? 'opacity-50' : ''}`}
+                              >
+                                <div className="flex items-start justify-between gap-2.5">
+                                  <div className="flex items-start gap-1.5 flex-1 min-w-0">
+                                    {t.status !== 'COMPLETED' && (
+                                      <GripVertical className="w-3.5 h-3.5 text-slate-300 flex-shrink-0 mt-0.5" />
+                                    )}
+                                    <span className="font-extrabold text-slate-800 text-xs leading-snug line-clamp-2">{t.title}</span>
+                                  </div>
+                                  <StatusBadge type="priority" value={t.priority} />
                                 </div>
-                                <StatusBadge type="priority" value={t.priority} />
-                              </div>
-                              
-                              <p className="text-[10.5px] text-slate-600 font-semibold line-clamp-2 leading-relaxed">
-                                {t.description}
-                              </p>
-                              
-                              <div className="flex items-center justify-between pt-3 border-t border-slate-100/85 text-[10px] font-bold">
-                                <div className={`flex items-center gap-1.5 ${isUrgent ? 'text-rose-500 animate-pulse' : 'text-slate-400'}`}>
-                                  <Calendar className="w-3.5 h-3.5" />
-                                  <span>Due: {new Date(t.dueDate).toLocaleDateString()}</span>
+                                
+                                <p className="text-[10.5px] text-slate-600 font-semibold line-clamp-2 leading-relaxed">
+                                  {t.description}
+                                </p>
+                                
+                                <div className="flex items-center justify-between pt-3 border-t border-slate-100/85 text-[10px] font-bold">
+                                  <div className={`flex items-center gap-1.5 ${isUrgent ? 'text-rose-500 animate-pulse' : 'text-slate-400'}`}>
+                                    <Calendar className="w-3.5 h-3.5" />
+                                    <span>Due: {new Date(t.dueDate).toLocaleDateString()}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5 text-slate-500 bg-slate-50 border border-slate-200/60 rounded-lg px-2 py-0.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                                    <span className="truncate max-w-[80px]">
+                                      @{t.mentor?.user?.name?.split(' ')[0] || "Supervisor"}
+                                    </span>
+                                  </div>
                                 </div>
-                                <div className="flex items-center gap-1.5 text-slate-500 bg-slate-50 border border-slate-200/60 rounded-lg px-2 py-0.5">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
-                                  <span className="truncate max-w-[80px]">
-                                    @{t.mentor?.user?.name?.split(' ')[0] || "Supervisor"}
-                                  </span>
-                                </div>
-                              </div>
-                            </MotionDiv>
-                          );
-                        })}
-                      </AnimatePresence>
+                              </MotionDiv>
+                            );
+                          })}
+                        </AnimatePresence>
+                      )}
 
                       {/* Empty State visual */}
                       {colTasks.length === 0 && (
@@ -538,32 +563,41 @@ export const MyTasks: React.FC = () => {
                     <ClipboardCheck className="w-4 h-4 text-[#2563eb]" /> Select Milestone Task
                   </h3>
                 </div>
-                <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                  {myTasks.length === 0 ? (
-                    <div className="text-center p-6 text-slate-400 text-xs font-semibold">No tasks assigned yet.</div>
-                  ) : (
-                    myTasks.map((t: any) => (
-                      <div 
-                        key={t.id}
-                        onClick={() => setDiscussionsSelectedTask(t)}
-                        className={`p-3.5 rounded-2xl cursor-pointer border transition-all text-left ${
-                          discussionsSelectedTask?.id === t.id 
-                            ? 'bg-blue-50 border-blue-200 shadow-sm scale-[1.02]' 
-                            : 'bg-white border-slate-100 hover:bg-slate-50'
-                        }`}
-                      >
-                        <div className="flex justify-between items-start gap-2 mb-1.5">
-                          <h4 className={`font-extrabold text-xs line-clamp-1 ${discussionsSelectedTask?.id === t.id ? 'text-blue-900' : 'text-slate-700'}`}>{t.title}</h4>
-                          <span className={`text-[8.5px] font-extrabold px-1.5 py-0.5 rounded border uppercase ${
-                            t.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                            t.status === 'REVIEW' ? 'bg-purple-50 text-purple-750 border-purple-100' :
-                            t.status === 'IN_PROGRESS' ? 'bg-blue-50 text-blue-700 border-blue-100' :
-                            'bg-slate-50 text-slate-500 border-slate-200'
-                          }`}>{t.status}</span>
+                <div className="flex-1 overflow-y-auto p-3 space-y-2 flex flex-col justify-between">
+                  <div>
+                    {paginatedTasks.length === 0 ? (
+                      <div className="text-center p-6 text-slate-400 text-xs font-semibold">No tasks assigned yet.</div>
+                    ) : (
+                      paginatedTasks.map((t: any) => (
+                        <div 
+                          key={t.id}
+                          onClick={() => setDiscussionsSelectedTask(t)}
+                          className={`p-3.5 rounded-2xl cursor-pointer border transition-all text-left mb-2 last:mb-0 ${
+                            discussionsSelectedTask?.id === t.id 
+                              ? 'bg-blue-50 border-blue-200 shadow-sm scale-[1.02]' 
+                              : 'bg-white border-slate-100 hover:bg-slate-50'
+                          }`}
+                        >
+                          <div className="flex justify-between items-start gap-2 mb-1.5">
+                            <h4 className={`font-extrabold text-xs line-clamp-1 ${discussionsSelectedTask?.id === t.id ? 'text-blue-900' : 'text-slate-700'}`}>{t.title}</h4>
+                            <span className={`text-[8.5px] font-extrabold px-1.5 py-0.5 rounded border uppercase ${
+                              t.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                              t.status === 'REVIEW' ? 'bg-purple-50 text-purple-750 border-purple-100' :
+                              t.status === 'IN_PROGRESS' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                              'bg-slate-50 text-slate-500 border-slate-200'
+                            }`}>{t.status}</span>
+                          </div>
+                          <span className="text-[9px] text-slate-400 font-bold">Due {new Date(t.dueDate).toLocaleDateString()}</span>
                         </div>
-                        <span className="text-[9px] text-slate-400 font-bold">Due {new Date(t.dueDate).toLocaleDateString()}</span>
-                      </div>
-                    ))
+                      ))
+                    )}
+                  </div>
+                  {totalTaskPages > 1 && (
+                    <Pagination 
+                      currentPage={taskPage}
+                      totalPages={totalTaskPages}
+                      onPageChange={setTaskPage}
+                    />
                   )}
                 </div>
               </div>

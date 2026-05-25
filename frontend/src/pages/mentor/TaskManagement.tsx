@@ -12,7 +12,7 @@ import { useAuth } from '../../hooks/useAuth';
 
 export const TaskManagement: React.FC = () => {
   const { user } = useAuth();
-  const { data: tasks = [], refetch: refreshTasks } = useTasks();
+  const { data: tasks = [], isLoading: isTasksLoading, refetch: refreshTasks } = useTasks();
   const isMentor = user?.role === 'mentor';
   const resolvedDeptId = (user as any)?.mentor?.departmentId || (user as any)?.headedDepartment?.id;
   const { data: interns = [] } = useInterns(
@@ -121,7 +121,23 @@ export const TaskManagement: React.FC = () => {
 
                 {/* Column content */}
                 <div className="flex-1 overflow-y-auto space-y-3 pr-1 flex flex-col justify-start">
-                  {colTasks.length === 0 ? (
+                  {isTasksLoading ? (
+                    <div className="space-y-3 animate-pulse">
+                      {[1, 2].map((n) => (
+                        <div key={n} className="bg-slate-50 p-4 border border-slate-200/50 rounded-2xl space-y-3 h-28 flex flex-col justify-between">
+                          <div className="flex justify-between items-center">
+                            <div className="h-3 w-2/3 bg-slate-200 rounded"></div>
+                            <div className="h-4 w-12 bg-slate-200 rounded"></div>
+                          </div>
+                          <div className="space-y-1.5">
+                            <div className="h-2 w-full bg-slate-200 rounded"></div>
+                            <div className="h-2 w-5/6 bg-slate-200 rounded"></div>
+                          </div>
+                          <div className="h-2.5 w-1/3 bg-slate-200 rounded"></div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : colTasks.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center border border-dashed border-slate-200/60 rounded-3xl p-4 text-center text-slate-350 min-h-[140px] bg-slate-50/20">
                       <span className="text-[10px] text-slate-400 font-bold">No tasks here</span>
                     </div>

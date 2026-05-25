@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, 
@@ -49,6 +50,24 @@ export const PerformanceAnalytics: React.FC = () => {
   const { data: selectedIntern } = useIntern(selectedInternId);
   const { data: internTasks } = useTasks(selectedInternId ? { internId: selectedInternId } : undefined);
 
+  // Date range state
+  const [range, setRange] = useState<'7d' | '30d' | '90d'>('30d');
+
+  // Fetch performance analytics via react query
+  const { data: performanceAnalytics, isLoading: isPerformanceLoading } = useQuery({
+    queryKey: ['performanceAnalytics', selectedInternId, range],
+    queryFn: async () => {
+      const { data } = await api.get(`/analytics/performance`, {
+        params: {
+          internId: selectedInternId,
+          range,
+        },
+      });
+      return data.data;
+    },
+    enabled: !!selectedInternId,
+  });
+
   // Active intern details helper
   const activeInternName = selectedIntern?.user?.name || userName;
 
@@ -84,7 +103,10 @@ export const PerformanceAnalytics: React.FC = () => {
   const reviewCount = Array.isArray(internTasks) ? internTasks.filter((t: any) => t.status === 'REVIEW' || t.status === 'IN_PROGRESS').length : 2;
   const todoCount = Array.isArray(internTasks) ? internTasks.filter((t: any) => t.status === 'TODO').length : 3;
 
-  const pieData = totalTasks > 0 ? [
+  const scorePercent = selectedIntern?.score ? selectedIntern.score * 20 : 88;
+  const attendanceValNum = selectedIntern?.attendance || 96;
+
+  const pieData = performanceAnalytics?.pieData || (totalTasks > 0 ? [
     { name: 'Completed', value: completedCount, color: '#10b981' },
     { name: 'In Review', value: reviewCount, color: '#f59e0b' },
     { name: 'Todo', value: todoCount, color: '#6366f1' }
@@ -92,12 +114,9 @@ export const PerformanceAnalytics: React.FC = () => {
     { name: 'Completed', value: 8, color: '#10b981' },
     { name: 'In Review', value: 2, color: '#f59e0b' },
     { name: 'Todo', value: 3, color: '#6366f1' }
-  ];
+  ]);
 
-  const scorePercent = selectedIntern?.score ? selectedIntern.score * 20 : 88;
-  const attendanceValNum = selectedIntern?.attendance || 96;
-  
-  const trendData = [
+  const trendData = performanceAnalytics?.trendData || [
     { week: 'Wk 1', codeOutput: Math.max(50, Math.round(scorePercent - 20)), speed: Math.max(45, Math.round(attendanceValNum - 30)), feedback: 75 },
     { week: 'Wk 2', codeOutput: Math.max(60, Math.round(scorePercent - 12)), speed: Math.max(55, Math.round(attendanceValNum - 20)), feedback: 82 },
     { week: 'Wk 3', codeOutput: Math.max(70, Math.round(scorePercent - 5)), speed: Math.max(70, Math.round(attendanceValNum - 10)), feedback: 80 },
@@ -494,6 +513,32 @@ export const PerformanceAnalytics: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Date Range Selector */}
+                  <div className="flex justify-between items-center bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex-wrap gap-4">
+                    <div className="text-left">
+                      <h4 className="text-sm font-black text-slate-800 tracking-tight">Performance Analytics Range</h4>
+                      <p className="text-[10px] text-slate-400 font-bold">Select a date range cutoff for the productivity indexes below</p>
+                    </div>
+                    <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200/50 w-full sm:w-auto overflow-x-auto gap-1">
+                      {(['7d', '30d', '90d'] as const).map((r) => {
+                        const active = range === r;
+                        return (
+                          <button
+                            key={r}
+                            onClick={() => setRange(r)}
+                            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all duration-300 whitespace-nowrap cursor-pointer
+                              ${active 
+                                ? 'bg-white text-[#2563eb] shadow-sm border border-slate-200/40' 
+                                : 'text-slate-500 hover:text-slate-800'
+                              }`}
+                          >
+                            {r.toUpperCase()}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                   {/* Core Analytics Widgets */}
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
                     <div className="lg:col-span-2 bg-white rounded-3xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between space-y-4">
@@ -509,7 +554,12 @@ export const PerformanceAnalytics: React.FC = () => {
                           </div>
                         </div>
 
-                        <div className="w-full h-[280px] mt-4">
+                        <div className="w-full h-[280px] mt-4 relative">
+                          {isPerformanceLoading && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[1px] z-10 rounded-2xl">
+                              <div className="w-8 h-8 border-4 border-[#2563eb] border-t-transparent rounded-full animate-spin"></div>
+                            </div>
+                          )}
                           <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={trendData}>
                               <defs>
@@ -540,7 +590,12 @@ export const PerformanceAnalytics: React.FC = () => {
                           <Award className="w-5 h-5 text-[#2563eb]" /> Milestone Completion Ratio
                         </h3>
                         
-                        <div className="w-full h-[190px] mt-4 flex items-center justify-center">
+                        <div className="w-full h-[190px] mt-4 relative flex items-center justify-center">
+                          {isPerformanceLoading && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[1px] z-10 rounded-2xl">
+                              <div className="w-8 h-8 border-4 border-[#2563eb] border-t-transparent rounded-full animate-spin"></div>
+                            </div>
+                          )}
                           <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                               <Pie
@@ -552,7 +607,7 @@ export const PerformanceAnalytics: React.FC = () => {
                                 paddingAngle={4}
                                 dataKey="value"
                               >
-                                {pieData.map((entry, index) => (
+                                {pieData.map((entry: any, index: number) => (
                                   <Cell key={`cell-${index}`} fill={entry.color} />
                                 ))}
                               </Pie>

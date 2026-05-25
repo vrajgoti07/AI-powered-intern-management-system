@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Sparkles, MessageSquare, BrainCircuit, Heart, 
@@ -17,6 +17,33 @@ export const AIFeedback: React.FC = () => {
   const [text, setText] = useState('');
   const [rating, setRating] = useState(5);
   const [loading, setLoading] = useState(false);
+
+  // New state variables for complete submission and history flow
+  const [sentimentResult, setSentimentResult] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [history, setHistory] = useState<any[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const fetchHistory = async () => {
+    setHistoryLoading(true);
+    try {
+      const res = await api.get('/ai/feedback/history');
+      if (res.data.success) {
+        const rawData = res.data.data?.data || res.data.data || [];
+        setHistory(Array.isArray(rawData) ? rawData : []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch feedback history", err);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'mentor' || activeTab === 'intern') {
+      fetchHistory();
+    }
+  }, [activeTab]);
   
   const submitFeedbackMutation = useSubmitFeedback();
   
@@ -50,51 +77,31 @@ export const AIFeedback: React.FC = () => {
       return;
     }
     setLoading(true);
+    setSubmitError(null);
+    setSentimentResult(null);
     try {
-      const response = await api.post('/ai/sentiment-analysis', { feedbackText: text });
-      const data = response.data.data;
-
-      // Extract details flexibly to handle both AI Service and Fallback responses
-      const positive = data.positivePercentage || (data.sentiment === 'POSITIVE' ? 85 : data.sentiment === 'NEUTRAL' ? 30 : 10);
-      const negative = data.negativePercentage || (data.sentiment === 'NEGATIVE' ? 85 : data.sentiment === 'NEUTRAL' ? 20 : 5);
-      const neutral = 100 - positive - negative;
-
-      const keywords = data.keywords || data.strongSkills || [];
-      const suggestions = data.improvementSuggestions || data.extractedSuggestions || [];
-      const actions = suggestions.map((s: string) => ({ text: s, completed: false }));
-      
-      let summary = "Feedback analyzed successfully.";
-      if (data.sentiment) summary = `Sentiment Analysis Result: ${data.sentiment}. Confidence: ${data.confidenceScore}`;
-      if (data.weakAreas?.length) summary += ` Weak areas identified: ${data.weakAreas.join(', ')}.`;
-
-      setSentiment({
-        positive,
-        neutral: neutral < 0 ? 0 : neutral,
-        negative,
-        keywords: keywords.length ? keywords : ["Feedback", "Evaluation"],
-        summary,
-        actions: actions.length > 0 ? actions : [{ text: "Review feedback details with intern", completed: false }]
+      const response = await api.post('/ai/feedback', {
+        rating,
+        text,
+        comment: text
       });
+      const data = response.data.data || response.data;
+      
+      const resolvedSentiment = data.sentiment || data.label || 'NEUTRAL';
+      setSentimentResult(resolvedSentiment);
+      toast.success("Feedback submitted and sentiment analyzed!");
 
-      // If it's mentor feedback, also submit it to the backend HR dashboard
-      if (activeTab === 'mentor') {
-        try {
-          await submitFeedbackMutation.mutateAsync({
-            rating,
-            comment: text,
-            category: "General Evaluation"
-          });
-        } catch (e) {
-          console.error("Failed to save feedback to HR dashboard", e);
-        }
-      }
-
-      toast.success("AI Sentiment analysis updated!");
-      setActiveTab('insights');
+      // Clear input fields
       setText('');
       setRating(5);
+
+      // Refresh history
+      fetchHistory();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to analyze feedback");
+      console.error(error);
+      const errMsg = error.response?.data?.message || error.message || "Failed to analyze feedback";
+      setSubmitError(errMsg);
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }
@@ -253,15 +260,6 @@ export const AIFeedback: React.FC = () => {
                   exit={{ opacity: 0 }}
                   className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm relative min-h-[350px]"
                 >
-                  {loading && (
-                    <div className="absolute inset-0 bg-white/70 backdrop-blur-sm z-30 flex items-center justify-center rounded-3xl">
-                      <div className="flex flex-col items-center gap-2">
-                        <Sparkles className="w-8 h-8 text-indigo-600 animate-spin" />
-                        <span className="text-xs font-bold text-slate-600">Analyzing feedback vectors using AI...</span>
-                      </div>
-                    </div>
-                  )}
-
                   <div className="max-w-xl space-y-5">
                     <div>
                       <h3 className="font-extrabold text-slate-800 text-base tracking-tight">
@@ -301,11 +299,71 @@ export const AIFeedback: React.FC = () => {
 
                       <button 
                         type="submit"
-                        className="flex items-center justify-center gap-1.5 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-colors cursor-pointer"
+                        disabled={loading}
+                        className="flex items-center justify-center gap-1.5 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-colors cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed"
                       >
-                        Submit & Analyze Sentiment <Send className="w-4 h-4" />
+                        {loading ? (
+                          <>
+                            <span className="animate-spin rounded-full h-4.5 w-4.5 border-2 border-white border-t-transparent inline-block mr-1"></span>
+                            Analyzing...
+                          </>
+                        ) : (
+                          <>
+                            Submit & Analyze Sentiment <Send className="w-4 h-4" />
+                          </>
+                        )}
                       </button>
+
+                      {submitError && (
+                        <p className="text-rose-500 font-bold text-xs mt-2">{submitError}</p>
+                      )}
+
+                      {sentimentResult && (
+                        <div className="mt-4 pt-3 border-t border-slate-100">
+                          <span className={`inline-block text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider ${
+                            sentimentResult.toLowerCase() === 'positive' 
+                              ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' 
+                              : sentimentResult.toLowerCase() === 'negative' 
+                              ? 'bg-rose-50 text-rose-600 border border-rose-100' 
+                              : 'bg-amber-50 text-amber-600 border border-amber-100'
+                          }`}>
+                            AI Sentiment: {sentimentResult}
+                          </span>
+                        </div>
+                      )}
                     </form>
+
+                    {/* History Section */}
+                    <div className="pt-6 border-t border-slate-100 mt-6 space-y-3">
+                      <h4 className="font-extrabold text-slate-800 text-xs uppercase tracking-wider">Feedback History (Last 5)</h4>
+                      {historyLoading ? (
+                        <div className="text-xs text-slate-400 font-bold animate-pulse">Loading feedback history...</div>
+                      ) : history.length > 0 ? (
+                        <div className="space-y-2">
+                          {history.slice(0, 5).map((h: any, idx: number) => (
+                            <div key={h.id || idx} className="p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between text-xs gap-4">
+                              <div className="space-y-1">
+                                <p className="text-[10px] text-slate-400 font-extrabold">{new Date(h.createdAt || h.date).toLocaleDateString()}</p>
+                                <p className="text-slate-600 font-semibold" title={h.text || h.comment}>
+                                  {(h.text || h.comment || '').substring(0, 60)}{(h.text || h.comment || '').length > 60 ? '...' : ''}
+                                </p>
+                              </div>
+                              <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                                (h.sentiment || '').toLowerCase() === 'positive'
+                                  ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                  : (h.sentiment || '').toLowerCase() === 'negative'
+                                  ? 'bg-rose-50 text-rose-600 border border-rose-100'
+                                  : 'bg-amber-50 text-amber-600 border border-amber-100'
+                              }`}>
+                                {h.sentiment || 'NEUTRAL'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-400 italic">No feedback history found.</p>
+                      )}
+                    </div>
                   </div>
                 </motion.div>
               )}

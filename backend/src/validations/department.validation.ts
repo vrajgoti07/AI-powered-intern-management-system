@@ -37,6 +37,15 @@ export const assignHeadSchema = z.object({
 });
 
 /**
+ * Assign Department Head Patch Schema
+ */
+export const assignHeadPatchSchema = z.object({
+  body: z.object({
+    userId: z.string().uuid('Invalid Department Head user ID'),
+  }),
+});
+
+/**
  * Assign Mentor Schema
  */
 export const assignMentorSchema = z.object({

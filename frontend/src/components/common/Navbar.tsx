@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu, Search, Bell, X, Calendar, CheckCircle } from 'lucide-react';
+import { Pagination } from '../Pagination';
 import { useAuth } from '../../hooks/useAuth';
 import { Avatar } from './Avatar';
 import { useNotifications, useMarkAllNotificationsRead, useInternByUser, useMarkNotificationRead } from '../../hooks/queries';
+import { useNotificationContext } from '../../context/NotificationContext';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 
@@ -15,24 +17,34 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, title }) => {
   const { user } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   
-  const { data: notifications = [] } = useNotifications();
-  const markAllAsReadMutation = useMarkAllNotificationsRead();
-  const markReadMutation = useMarkNotificationRead();
+  const { unreadNotifications, markAsRead, markAllAsRead: contextMarkAllAsRead } = useNotificationContext();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  const totalPages = Math.ceil(unreadNotifications.length / itemsPerPage);
+  const paginatedNotifications = unreadNotifications.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [showNotifications, unreadNotifications.length]);
   const navigate = useNavigate();
   const { data: myInternData } = useInternByUser(user?.id || '');
   const mentorName = myInternData?.mentor?.user?.name || '';
 
-  const unreadCount = notifications.filter((n: any) => !n.isRead).length;
+  const unreadCount = unreadNotifications.length;
 
   const markAllAsRead = () => {
     if (unreadCount > 0) {
-      markAllAsReadMutation.mutate();
+      contextMarkAllAsRead();
     }
   };
 
   const handleNotificationClick = async (n: any) => {
     if (!n.isRead) {
-      await markReadMutation.mutateAsync(n.id);
+      await markAsRead(n.id);
     }
     
     setShowNotifications(false);
@@ -196,7 +208,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, title }) => {
                   {unreadCount > 0 && (
                     <button 
                       onClick={markAllAsRead}
-                      disabled={markAllAsReadMutation.isPending}
+                      disabled={unreadCount === 0}
                       className="text-[10px] text-[#2563eb] font-bold hover:text-blue-800 flex items-center gap-1 hover:underline cursor-pointer disabled:opacity-50"
                     >
                       <CheckCircle className="w-3.5 h-3.5" /> Mark read
@@ -204,8 +216,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, title }) => {
                   )}
                 </div>
                 <div className="divide-y divide-slate-50 max-h-80 overflow-y-auto">
-                  {notifications.length > 0 ? (
-                    notifications.map((n: any) => (
+                  {paginatedNotifications.length > 0 ? (
+                    paginatedNotifications.map((n: any) => (
                       <div 
                         key={n.id} 
                         onClick={() => handleNotificationClick(n)}
@@ -244,6 +256,15 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, title }) => {
                     </div>
                   )}
                 </div>
+                {totalPages > 1 && (
+                  <div className="border-t border-slate-100 bg-slate-50/50">
+                    <Pagination 
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={setCurrentPage}
+                    />
+                  </div>
+                )}
               </div>
             </>
           )}

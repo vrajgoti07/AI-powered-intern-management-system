@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import attendanceService from '../services/attendance.service';
+import redis from '../config/redis';
 import holidayService from '../services/holiday.service';
 import { successResponse } from '../utils/response';
 import prisma from '../config/database';
@@ -24,6 +25,7 @@ export class AttendanceNewController {
       const ipAddress = req.ip || '127.0.0.1';
 
       const record = await attendanceService.checkIn(internId, notes, deviceInfo, ipAddress);
+      redis.keys('cache:/api/attendance/analytics*').then(keys => { if (keys.length > 0) redis.del(keys); }).catch(err => console.error('Redis cache clear failed:', err));
 
       // Emit Socket event for real-time dashboard notifications
       try {

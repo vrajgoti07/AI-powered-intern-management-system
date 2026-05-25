@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useInternByUser, useTasks } from '../../hooks/queries';
 import { useAuth } from '../../hooks/useAuth';
+import { useQuery } from '@tanstack/react-query';
 import { Sidebar } from '../../components/common/Sidebar';
 import { Navbar } from '../../components/common/Navbar';
 import { KPICard } from '../../components/common/KPICard';
@@ -69,28 +70,61 @@ export const InternDashboard: React.FC = () => {
     }
   };
 
-  const avgScore = myInternData?.score !== undefined && myInternData?.score !== null
-    ? `${myInternData.score}%`
-    : 'N/A';
-  const attendanceVal = myInternData?.attendance !== undefined && myInternData?.attendance !== null
-    ? `${myInternData.attendance}%`
-    : 'N/A';
+  const { data: statsData, isLoading, isError } = useQuery({
+    queryKey: ['intern-dashboard-stats'],
+    queryFn: async () => {
+      const response = await api.get('/intern/dashboard-stats');
+      return response.data.data;
+    },
+  });
+
+  const pendingTasksVal = isLoading ? (
+    <span className="inline-block w-8 h-5 bg-slate-200 animate-pulse rounded" />
+  ) : isError ? (
+    <span className="text-[10px] text-red-500 font-bold">Error</span>
+  ) : statsData ? (
+    (statsData.taskCount - statsData.completedTasks).toString()
+  ) : '0';
+
+  const completedTasksVal = isLoading ? (
+    <span className="inline-block w-8 h-5 bg-slate-200 animate-pulse rounded" />
+  ) : isError ? (
+    <span className="text-[10px] text-red-500 font-bold">Error</span>
+  ) : statsData ? (
+    statsData.completedTasks.toString()
+  ) : '0';
+
+  const avgScoreVal = isLoading ? (
+    <span className="inline-block w-8 h-5 bg-slate-200 animate-pulse rounded" />
+  ) : isError ? (
+    <span className="text-[10px] text-red-500 font-bold">Error</span>
+  ) : statsData && statsData.performanceScore !== undefined && statsData.performanceScore !== null ? (
+    `${statsData.performanceScore}%`
+  ) : 'N/A';
+
+  const attendancePercentVal = isLoading ? (
+    <span className="inline-block w-8 h-5 bg-slate-200 animate-pulse rounded" />
+  ) : isError ? (
+    <span className="text-[10px] text-red-500 font-bold">Error</span>
+  ) : statsData && statsData.attendancePercent !== undefined && statsData.attendancePercent !== null ? (
+    `${statsData.attendancePercent}%`
+  ) : 'N/A';
 
   const kpis = [
-    { icon: CheckSquare, label: "Pending Tasks", value: pendingTasks.toString(), trend: "Require completion", up: false, color: "blue" as const },
-    { icon: CheckCircle2, label: "Completed Tasks", value: completedTasks.toString(), trend: `Out of ${myTasks.length} total`, up: true, color: "emerald" as const },
+    { icon: CheckSquare, label: "Pending Tasks", value: pendingTasksVal as any, trend: "Require completion", up: false, color: "blue" as const },
+    { icon: CheckCircle2, label: "Completed Tasks", value: completedTasksVal as any, trend: statsData ? `Out of ${statsData.taskCount} total` : "Total tasks fetched", up: true, color: "emerald" as const },
     {
       icon: Award,
       label: "My Avg Score",
-      value: avgScore,
-      trend: myInternData?.score !== undefined && myInternData?.score !== null ? "Satisfactory status" : "No grade evaluated yet",
+      value: avgScoreVal as any,
+      trend: statsData && statsData.performanceScore !== undefined && statsData.performanceScore !== null ? "Satisfactory status" : "No grade evaluated yet",
       up: true,
       color: "amber" as const
     },
     {
       icon: Calendar,
       label: "Attendance Log",
-      value: attendanceVal,
+      value: attendancePercentVal as any,
       trend: "Present logs",
       up: true,
       color: "cyan" as const

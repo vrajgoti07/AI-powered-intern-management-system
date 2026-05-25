@@ -1,6 +1,9 @@
 import prisma from '../config/database';
 import { safeAddJob } from '../queues/notification.queue';
 import { logger } from '../utils/logger';
+import { getSocketIO } from '../socket/socket';
+import { getSimpleSocketIO } from '../socket/index';
+import { paginate } from '../utils/paginate';
 
 export class NotificationService {
   /**
@@ -33,7 +36,7 @@ export class NotificationService {
       logger.error(`Failed to queue notification for user ${userId}, falling back to DB write:`, error);
       
       // Fallback: directly persist in database to ensure notification delivery
-      return prisma.notification.create({
+      const notification = await prisma.notification.create({
         data: {
           userId,
           title,
@@ -42,6 +45,17 @@ export class NotificationService {
           data: data || undefined,
         },
       });
+
+      const io = getSocketIO();
+      if (io) {
+        io.to(`user:${userId}`).emit('new-notification', notification);
+      }
+      const simpleIo = getSimpleSocketIO();
+      if (simpleIo) {
+        simpleIo.emit('new-notification', notification);
+      }
+
+      return notification;
     }
   }
 
@@ -70,7 +84,7 @@ export class NotificationService {
       logger.error('Failed to queue bulk notification, falling back to DB writes:', error);
       
       // Fallback: transactionally write all notifications directly to the database
-      return prisma.$transaction(
+      const notifications = await prisma.$transaction(
         userIds.map((userId) =>
           prisma.notification.create({
             data: {
@@ -83,6 +97,16 @@ export class NotificationService {
           })
         )
       );
+
+      const io = getSocketIO();
+      const simpleIo = getSimpleSocketIO();
+
+      notifications.forEach((notif) => {
+        if (io) io.to(`user:${notif.userId}`).emit('new-notification', notif);
+        if (simpleIo) simpleIo.emit('new-notification', notif);
+      });
+
+      return notifications;
     }
   }
 
@@ -90,30 +114,27 @@ export class NotificationService {
    * Get paginated notifications history for a user
    */
   async getNotifications(userId: string, isRead?: boolean, page: number = 1, limit: number = 20) {
-    const skip = (page - 1) * limit;
 
     const whereClause: any = { userId };
     if (isRead !== undefined) {
       whereClause.isRead = isRead;
     }
 
-    const [notifications, total] = await prisma.$transaction([
-      prisma.notification.findMany({
-        where: whereClause,
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-      }),
-      prisma.notification.count({ where: whereClause }),
-    ]);
+    const result = await paginate({
+      page,
+      limit,
+      where: whereClause,
+      orderBy: { createdAt: 'desc' },
+      prismaModel: prisma.notification
+    });
 
     return {
-      notifications,
+      notifications: result.data,
       pagination: {
-        page,
+        page: result.currentPage,
         limit,
-        total,
-        pages: Math.ceil(total / limit),
+        total: result.totalCount,
+        pages: result.totalPages,
       },
     };
   }

@@ -8,6 +8,7 @@ import {
   updateDepartmentSchema,
   departmentQuerySchema,
   assignHeadSchema,
+  assignHeadPatchSchema,
   assignMentorSchema,
   moveInternSchema,
 } from '../validations/department.validation';
@@ -129,6 +130,18 @@ router.post(
   authorize('HR'),
   validate(assignHeadSchema),
   departmentController.assignHead
+);
+
+/**
+ * @route   PATCH /api/departments/:id/assign-head
+ * @desc    Assign user as Department Head (Patch method with userId body)
+ * @access  HR
+ */
+router.patch(
+  '/:id/assign-head',
+  authorize('HR'),
+  validate(assignHeadPatchSchema),
+  departmentController.assignHeadPatch
 );
 
 /**
