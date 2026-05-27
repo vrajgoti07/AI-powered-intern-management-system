@@ -6,6 +6,7 @@ import {
   CheckCircle2, Loader2, Globe, Zap
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Logo } from '../../components/common/Logo';
 
 const FAQS = [
   { q: "What is your typical onboarding time?", a: "For teams under 50 interns, onboarding usually takes 48 hours. Enterprise deployments with custom integrations typically take 2-3 weeks depending on your IT review processes." },
@@ -46,10 +47,8 @@ const ContactPage: React.FC = () => {
       <nav className="fixed top-0 w-full z-50 bg-[#0d1117]/90 backdrop-blur-md border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link to="/" className="text-2xl font-black font-['Instrument_Serif'] tracking-tight flex items-center gap-2 italic">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center not-italic">
-              <Zap className="w-5 h-5 text-white" />
-            </div>
-            InternFlow
+            <Logo size="sm" showText={false} />
+            <span className="not-italic">InternFlow</span>
           </Link>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
             <Link to="/about" className="hover:text-white transition-colors">About Us</Link>

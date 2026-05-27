@@ -5,6 +5,7 @@ import {
   Zap, FileText, Download, ChevronDown, AlertTriangle, 
   Calendar, CheckCircle2, ScrollText, History
 } from 'lucide-react';
+import { Logo } from '../../components/common/Logo';
 
 const SECTIONS = [
   { id: 'acceptance', title: '1. Acceptance of Terms' },
@@ -92,9 +93,7 @@ const TermsPage: React.FC = () => {
       <nav className="fixed top-0 w-full z-50 bg-[#0d1117]/90 backdrop-blur-md border-b border-white/10 font-['DM_Sans'] print:hidden">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link to="/" className="text-2xl font-black font-['DM_Sans'] tracking-tight flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
-              <Zap className="w-5 h-5 text-white" />
-            </div>
+            <Logo size="sm" showText={false} />
             InternFlow
           </Link>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { GraduationCap, User, Mail, Lock, ShieldAlert, Sparkles, Building } from 'lucide-react';
+import { Logo } from '../../components/common/Logo';
 import toast from 'react-hot-toast';
 
 export const RegisterPage: React.FC = () => {
@@ -56,8 +57,8 @@ export const RegisterPage: React.FC = () => {
       >
         {/* Brand logo header */}
         <div className="flex flex-col items-center text-center space-y-3 pb-6 border-b border-slate-800">
-          <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-900/40">
-            <GraduationCap className="w-7 h-7 text-white" />
+          <div className="w-12 h-12 flex items-center justify-center">
+            <Logo size="md" showText={false} />
           </div>
           <div className="space-y-1">
             <h2 className="text-xl font-extrabold text-white tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">

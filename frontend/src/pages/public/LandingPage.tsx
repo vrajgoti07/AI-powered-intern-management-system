@@ -2,13 +2,14 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
-  GraduationCap, ArrowRight, Brain, Shield, BarChart3,
+  ArrowRight, Brain, Shield, BarChart3,
   Clock, Zap, CheckCircle2, Star, Globe, Heart,
   Building2, Users, ThumbsUp, Timer, Quote,
   MessageSquare, Video, GitBranch, FileText, Layers, Briefcase,
   Lock, TrendingUp, UserCheck,
   ClipboardCheck, Award, Send
 } from 'lucide-react';
+import { Logo } from '../../components/common/Logo';
 
 /* ─── Tiny reusable sub-components ─── */
 
@@ -38,10 +39,8 @@ export const LandingPage: React.FC = () => {
 
       {/* ═══════════ Navigation ═══════════ */}
       <nav className="sticky top-0 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 px-6 py-3.5 flex items-center justify-between z-50 transition-all duration-300">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-md shadow-blue-500/10">
-            <GraduationCap className="w-5 h-5 text-white" />
-          </div>
+        <div className="flex items-center gap-2">
+          <Logo size="sm" showText={false} />
           <span className="font-extrabold text-slate-900 text-lg tracking-tight">InternFlow</span>
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-500">
@@ -449,9 +448,7 @@ export const LandingPage: React.FC = () => {
         <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-10 mb-12 text-left">
           <div className="space-y-4 col-span-2 md:col-span-1">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/10">
-                <GraduationCap className="w-4.5 h-4.5 text-white" />
-              </div>
+              <Logo size="sm" showText={false} />
               <span className="font-extrabold text-white text-base tracking-tight">InternFlow</span>
             </div>
             <p className="text-xs font-medium leading-relaxed max-w-xs text-slate-500">

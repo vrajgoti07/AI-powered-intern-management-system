@@ -62,7 +62,7 @@ export const RoadmapPage: React.FC = () => {
             <ArrowLeft className="w-4 h-4" /> Back to Home
           </button>
           <div className="flex items-center gap-2">
-            <Logo className="w-6 h-6 text-white" />
+            <Logo size="sm" showText={false} />
             <span className="font-bold text-white tracking-tight">InternFlow</span>
           </div>
         </div>

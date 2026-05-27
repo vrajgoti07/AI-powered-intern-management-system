@@ -6,6 +6,7 @@ import {
   Database, Users, Activity, ExternalLink, ChevronDown, 
   Mail, Bug, FileLock2, Globe2, ShieldCheck, HardDrive
 } from 'lucide-react';
+import { Logo } from '../../components/common/Logo';
 
 const PILLARS = [
   {
@@ -75,9 +76,7 @@ const SecurityPage: React.FC = () => {
       <nav className="absolute top-0 w-full z-40 bg-transparent border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link to="/" className="text-2xl font-black tracking-tight flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
-              <Zap className="w-5 h-5 text-white" />
-            </div>
+            <Logo size="sm" showText={false} />
             InternFlow
           </Link>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">

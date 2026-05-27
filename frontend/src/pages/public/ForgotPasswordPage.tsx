@@ -43,7 +43,7 @@ export const ForgotPasswordPage: React.FC = () => {
         {/* Logo */}
         <div className="px-10 pt-9 pb-5">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
-            <Logo className="w-10 h-10" iconClassName="w-5.5 h-5.5" />
+            <Logo size="sm" showText={false} />
             <span className="font-extrabold text-slate-800 text-xl tracking-tight">InternFlow</span>
           </div>
         </div>

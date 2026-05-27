@@ -107,7 +107,7 @@ export const ApplyPage: React.FC = () => {
           
           {/* Logo Header */}
           <div className="flex items-center gap-3 cursor-pointer animate-fade-in" onClick={() => navigate('/')}>
-            <Logo className="w-9 h-9" iconClassName="w-5 h-5" />
+            <Logo size="sm" showText={false} />
             <span className="font-extrabold text-white text-lg tracking-tight">InternFlow</span>
           </div>
 
@@ -212,7 +212,7 @@ export const ApplyPage: React.FC = () => {
         {/* Mobile Header */}
         <header className="lg:hidden bg-white border-b border-slate-200/60 px-5 py-4 flex items-center justify-between flex-shrink-0 z-10">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-            <Logo className="w-8 h-8" iconClassName="w-4.5 h-4.5" />
+            <Logo size="sm" showText={false} />
             <span className="font-extrabold text-slate-800 text-base">InternFlow</span>
           </div>
           <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">Step {step}/4</span>

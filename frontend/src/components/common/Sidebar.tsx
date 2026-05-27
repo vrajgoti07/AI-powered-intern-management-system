@@ -10,6 +10,8 @@ import {
   ShieldCheck, Milestone
 } from 'lucide-react';
 
+import { Logo } from './Logo';
+
 interface SidebarProps {
   collapsed: boolean;
 }
@@ -88,9 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
     <aside className={`${collapsed ? "w-20" : "w-64"} bg-[#0f172a] flex flex-col h-screen transition-all duration-300 flex-shrink-0 z-40`}>
       {/* Brand Logo */}
       <div className={`flex items-center gap-3 px-5 py-6 border-b border-white/[0.08] ${collapsed ? "justify-center px-0" : ""}`}>
-        <div className="w-10 h-10 bg-[#2563eb] rounded-full flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-900/30 transform hover:scale-105 hover:rotate-3 transition-transform duration-300">
-          <GraduationCap className="w-6 h-6 text-white" />
-        </div>
+        <Logo size="sm" showText={false} />
         {!collapsed && (
           <span className="font-bold text-white text-xl tracking-tight">
             InternFlow

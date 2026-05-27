@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ArrowRight, Download, Mail, Zap, ExternalLink, Filter, Building2, BookOpen
+  ArrowRight, Download, Mail, ExternalLink, Filter, Building2, BookOpen
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Logo } from '../../components/common/Logo';
 
 // Dummy Coverage Data
 const COVERAGE_DATA = [
@@ -39,9 +40,7 @@ const PressPage: React.FC = () => {
       <nav className="fixed top-0 w-full z-50 bg-[#0d1117]/90 backdrop-blur-md border-b border-white/10 font-sans">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link to="/" className="text-2xl font-black font-['Space_Grotesk'] tracking-tight flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
-              <Zap className="w-5 h-5 text-white" />
-            </div>
+            <Logo size="sm" showText={false} />
             InternFlow
           </Link>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
@@ -212,9 +211,7 @@ const PressPage: React.FC = () => {
                 <div className="space-y-3">
                   <div className="h-32 bg-white rounded-xl border border-slate-200 flex items-center justify-center p-6">
                     <div className="text-2xl font-black font-['Space_Grotesk'] tracking-tight text-black flex items-center gap-2">
-                      <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center">
-                        <Zap className="w-3.5 h-3.5 text-white" />
-                      </div>
+                      <Logo size="sm" showText={false} />
                       InternFlow
                     </div>
                   </div>
@@ -230,9 +227,7 @@ const PressPage: React.FC = () => {
                 <div className="space-y-3">
                   <div className="h-32 bg-[#0a0d12] rounded-xl border border-white/10 flex items-center justify-center p-6">
                     <div className="text-2xl font-black font-['Space_Grotesk'] tracking-tight text-white flex items-center gap-2">
-                      <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center">
-                        <Zap className="w-3.5 h-3.5 text-white" />
-                      </div>
+                      <Logo size="sm" showText={false} />
                       InternFlow
                     </div>
                   </div>
@@ -247,9 +242,7 @@ const PressPage: React.FC = () => {
 
                 <div className="space-y-3">
                   <div className="h-32 bg-[#121822] rounded-xl border border-white/10 flex items-center justify-center p-6">
-                    <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
-                      <Zap className="w-6 h-6 text-white" />
-                    </div>
+                    <Logo size="lg" showText={false} />
                   </div>
                   <div className="flex justify-between items-center text-xs text-slate-400 font-bold px-1">
                     <span>Logomark</span>
