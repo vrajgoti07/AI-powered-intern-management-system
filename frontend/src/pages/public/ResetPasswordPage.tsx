@@ -29,7 +29,7 @@ const calcStrength = (pw: string): StrengthResult => {
     { score: 1, label: 'Weak', color: 'text-orange-500', barColor: 'bg-orange-500' },
     { score: 2, label: 'Fair', color: 'text-yellow-500', barColor: 'bg-yellow-500' },
     { score: 3, label: 'Strong', color: 'text-emerald-500', barColor: 'bg-emerald-500' },
-    { score: 4, label: 'Very Strong', color: 'text-indigo-400', barColor: 'bg-indigo-500' },
+    { score: 4, label: 'Very Strong', color: 'text-blue-500', barColor: 'bg-blue-600' },
   ];
   return map[score];
 };
@@ -124,8 +124,8 @@ export const ResetPasswordPage: React.FC = () => {
               <>
                 {/* Header */}
                 <div className="space-y-3">
-                  <div className="w-12 h-12 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-center shadow-md shadow-indigo-100/30">
-                    <KeyRound className="w-6 h-6 text-indigo-600 animate-pulse" />
+                  <div className="w-12 h-12 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-center shadow-md shadow-blue-100/30">
+                    <KeyRound className="w-6 h-6 text-blue-600 animate-pulse" />
                   </div>
                   <h2 className="text-3xl font-black text-slate-900 tracking-tight leading-tight">
                     Set Your Password
@@ -161,7 +161,7 @@ export const ResetPasswordPage: React.FC = () => {
                         onChange={e => setPassword(e.target.value)}
                         placeholder="Create a strong password"
                         autoComplete="new-password"
-                        className="w-full text-sm font-semibold pl-11 pr-11 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 focus:bg-white transition-all placeholder:text-slate-400 text-slate-800"
+                        className="w-full text-sm font-semibold pl-11 pr-11 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 focus:bg-white transition-all placeholder:text-slate-400 text-slate-800"
                         required
                       />
                       <button
@@ -211,7 +211,7 @@ export const ResetPasswordPage: React.FC = () => {
                             ? matches
                               ? 'border-emerald-400 focus:ring-emerald-400'
                               : 'border-red-400 focus:ring-red-400'
-                            : 'border-slate-200 focus:ring-indigo-500 focus:border-indigo-400'
+                            : 'border-slate-200 focus:ring-blue-500 focus:border-blue-400'
                           }`}
                         required
                       />
@@ -254,7 +254,7 @@ export const ResetPasswordPage: React.FC = () => {
                   <button
                     type="submit"
                     disabled={loading || !token || !allMet || !matches}
-                    className="w-full px-6 py-4 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed rounded-xl transition-all shadow-lg shadow-indigo-200/50 flex items-center justify-center gap-2 cursor-pointer group"
+                    className="w-full px-6 py-4 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed rounded-xl transition-all shadow-lg shadow-blue-200/50 flex items-center justify-center gap-2 cursor-pointer group"
                   >
                     {loading ? (
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -271,7 +271,7 @@ export const ResetPasswordPage: React.FC = () => {
                 <div className="pt-2">
                   <button
                     onClick={() => navigate('/login')}
-                    className="w-full py-4 text-xs font-extrabold text-slate-500 hover:text-indigo-600 hover:bg-slate-50 border border-slate-200 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="w-full py-4 text-xs font-extrabold text-slate-500 hover:text-blue-600 hover:bg-slate-50 border border-slate-200 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <ArrowLeft className="w-4 h-4" /> Back to Log In
                   </button>
@@ -304,7 +304,7 @@ export const ResetPasswordPage: React.FC = () => {
 
                 <button
                   onClick={() => navigate('/login')}
-                  className="w-full px-6 py-4 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-lg shadow-indigo-200/50 flex items-center justify-center gap-2 cursor-pointer group"
+                  className="w-full px-6 py-4 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-200/50 flex items-center justify-center gap-2 cursor-pointer group"
                 >
                   Go to Login Now
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -321,9 +321,9 @@ export const ResetPasswordPage: React.FC = () => {
 
         {/* Shifting Gradient Background */}
         <div className="absolute inset-0 z-0">
-          <div className="absolute w-[600px] h-[600px] rounded-full bg-indigo-600/15 blur-[160px]"
+          <div className="absolute w-[600px] h-[600px] rounded-full bg-blue-600/15 blur-[160px]"
             style={{ top: '-10%', left: '20%', animation: 'morphGlow 12s ease-in-out infinite alternate' }} />
-          <div className="absolute w-[500px] h-[500px] rounded-full bg-purple-600/15 blur-[140px]"
+          <div className="absolute w-[500px] h-[500px] rounded-full bg-blue-500/10 blur-[140px]"
             style={{ bottom: '-10%', right: '10%', animation: 'morphGlow2 15s ease-in-out infinite alternate' }} />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px]" />
         </div>
@@ -333,17 +333,17 @@ export const ResetPasswordPage: React.FC = () => {
 
           <div className="text-center space-y-4">
             <div className="relative mx-auto w-20 h-20 mb-6 flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full border border-dashed border-indigo-400/30"
+              <div className="absolute inset-0 rounded-full border border-dashed border-blue-400/30"
                 style={{ animation: 'spinClockwise 25s linear infinite' }} />
-              <div className="absolute inset-2 rounded-full border border-purple-500/20"
+              <div className="absolute inset-2 rounded-full border border-blue-400/20"
                 style={{ animation: 'spinCounterClockwise 18s linear infinite' }} />
-              <div className="absolute inset-4 bg-indigo-500/10 backdrop-blur-2xl rounded-full flex items-center justify-center border border-indigo-400/20 shadow-2xl shadow-indigo-950/50">
-                <Lock className="w-7 h-7 text-indigo-400" />
+              <div className="absolute inset-4 bg-blue-500/10 backdrop-blur-2xl rounded-full flex items-center justify-center border border-blue-400/20 shadow-2xl shadow-blue-950/50">
+                <Lock className="w-7 h-7 text-blue-400" />
               </div>
             </div>
             <h3 className="text-3xl font-extrabold text-white tracking-tight leading-tight">
               Secure Account<br />
-              <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+              <span className="text-blue-400">
                 Password Setup
               </span>
             </h3>
@@ -355,20 +355,19 @@ export const ResetPasswordPage: React.FC = () => {
           {/* Security Feature Cards */}
           <div className="w-full space-y-4">
             {[
-              { icon: ShieldCheck, color: 'indigo', title: 'End-to-End Encrypted', desc: 'Password never transmitted in plain text' },
-              { icon: KeyRound, color: 'purple', title: 'Token-Based Activation', desc: 'One-time 24-hour secure setup link' },
+              { icon: ShieldCheck, color: 'blue', title: 'End-to-End Encrypted', desc: 'Password never transmitted in plain text' },
+              { icon: KeyRound, color: 'blue', title: 'Token-Based Activation', desc: 'One-time 24-hour secure setup link' },
               { icon: Sparkles, color: 'emerald', title: 'bcrypt Hashing', desc: 'Military-grade salted password storage' },
             ].map((item, idx) => {
               const Icon = item.icon;
               const colorMap: Record<string, string> = {
-                indigo: 'bg-indigo-500/15 border-indigo-500/20 text-indigo-400',
-                purple: 'bg-purple-500/15 border-purple-500/20 text-purple-400',
+                blue: 'bg-blue-500/15 border-blue-500/20 text-blue-400',
                 emerald: 'bg-emerald-500/15 border-emerald-500/20 text-emerald-400',
               };
               return (
                 <div
                   key={item.title}
-                  className="bg-white/5 backdrop-blur-xl border border-white/10 hover:border-indigo-400/30 hover:bg-white/10 rounded-2xl p-5 flex items-center gap-4 transition-all duration-500 shadow-xl shadow-slate-950/80 cursor-default"
+                  className="bg-white/5 backdrop-blur-xl border border-white/10 hover:border-blue-400/30 hover:bg-white/10 rounded-2xl p-5 flex items-center gap-4 transition-all duration-500 shadow-xl shadow-slate-950/80 cursor-default"
                   style={{ animation: `floatAnim${idx + 1} ${6 + idx}s ease-in-out infinite` }}
                 >
                   <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 border ${colorMap[item.color]}`}>

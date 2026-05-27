@@ -292,7 +292,7 @@ export const LoginPage: React.FC = () => {
         {/* Continuous Dynamic Morphing Mesh Background */}
         <div className="absolute inset-0 z-0 opacity-70">
           <div className="absolute w-[600px] h-[600px] rounded-full bg-blue-600/10 blur-[160px]" style={{ top: '-10%', left: '20%', animation: 'morphGlow 12s ease-in-out infinite alternate' }} />
-          <div className="absolute w-[500px] h-[500px] rounded-full bg-indigo-600/10 blur-[140px]" style={{ bottom: '-10%', right: '10%', animation: 'morphGlow2 15s ease-in-out infinite alternate' }} />
+          <div className="absolute w-[500px] h-[500px] rounded-full bg-blue-500/8 blur-[140px]" style={{ bottom: '-10%', right: '10%', animation: 'morphGlow2 15s ease-in-out infinite alternate' }} />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:32px_32px]" />
         </div>
 
@@ -304,14 +304,14 @@ export const LoginPage: React.FC = () => {
             <div className="relative mx-auto w-20 h-20 mb-6 flex items-center justify-center">
               {/* Rotating ring frames */}
               <div className="absolute inset-0 rounded-full border border-dashed border-blue-500/20" style={{ animation: 'spinClockwise 25s linear infinite' }} />
-              <div className="absolute inset-2 rounded-full border border-indigo-500/10" style={{ animation: 'spinCounterClockwise 18s linear infinite' }} />
+              <div className="absolute inset-2 rounded-full border border-blue-400/10" style={{ animation: 'spinCounterClockwise 18s linear infinite' }} />
               <div className="absolute inset-4 bg-blue-600/10 backdrop-blur-2xl rounded-full flex items-center justify-center border border-blue-500/25 shadow-2xl shadow-blue-950/50">
                 <GraduationCap className="w-7 h-7 text-blue-400" />
               </div>
             </div>
             <h3 className="text-3xl font-extrabold text-white tracking-tight leading-tight">
               AI-Powered Intern<br />
-              <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400 bg-clip-text text-transparent">Management System</span>
+              <span className="text-blue-400">Management System</span>
             </h3>
             <p className="text-sm text-slate-400 font-semibold max-w-sm mx-auto leading-relaxed">
               Streamline onboarding, track daily milestones, and automate program operations cleanly.
@@ -337,11 +337,11 @@ export const LoginPage: React.FC = () => {
 
             {/* Card 2 */}
             <div
-              className="bg-white/5 backdrop-blur-xl border border-white/5 hover:border-indigo-500/30 hover:bg-white/10 rounded-2xl p-5 flex items-center gap-4 transition-all duration-500 shadow-2xl shadow-slate-950/80 cursor-default transform hover:-translate-y-0.5"
+              className="bg-white/5 backdrop-blur-xl border border-white/5 hover:border-blue-500/30 hover:bg-white/10 rounded-2xl p-5 flex items-center gap-4 transition-all duration-500 shadow-2xl shadow-slate-950/80 cursor-default transform hover:-translate-y-0.5"
               style={{ animation: 'floatAnim2 7s ease-in-out infinite' }}
             >
-              <div className="w-11 h-11 bg-indigo-500/10 rounded-xl flex items-center justify-center flex-shrink-0 border border-indigo-500/20">
-                <Users className="w-5 h-5 text-indigo-400" />
+              <div className="w-11 h-11 bg-blue-500/10 rounded-xl flex items-center justify-center flex-shrink-0 border border-blue-500/20">
+                <Users className="w-5 h-5 text-blue-400" />
               </div>
               <div className="flex-1 min-w-0 text-left">
                 <p className="text-sm font-extrabold text-white">Cohort Automation</p>

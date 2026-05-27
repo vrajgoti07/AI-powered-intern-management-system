@@ -25,7 +25,7 @@ export const Logo: React.FC<LogoProps> = ({ className = "w-9 h-9", iconClassName
   }
 
   return (
-    <div className={`bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200/50 transform hover:scale-105 transition-all duration-300 ${className}`}>
+    <div className={`bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 transform hover:scale-105 transition-all duration-300 ${className}`}>
       <svg
         viewBox="0 0 24 24"
         fill="none"

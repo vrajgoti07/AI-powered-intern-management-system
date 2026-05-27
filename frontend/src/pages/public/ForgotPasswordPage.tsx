@@ -53,7 +53,7 @@ export const ForgotPasswordPage: React.FC = () => {
           <div className="w-full max-w-md space-y-8">
 
             <div className="space-y-3.5">
-              <div className="w-12 h-12 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 shadow-md shadow-indigo-100/30">
+              <div className="w-12 h-12 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-center text-blue-600 shadow-md shadow-blue-100/30">
                 <KeyRound className="w-6 h-6 animate-pulse" />
               </div>
               <h2 className="text-3xl font-black text-slate-900 tracking-tight leading-tight">Reset Password</h2>
@@ -73,7 +73,7 @@ export const ForgotPasswordPage: React.FC = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="e.g. hr@internflow.com"
-                      className="w-full text-sm font-semibold pl-12 pr-4.5 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 focus:bg-white transition-all placeholder:text-slate-400 text-slate-800"
+                      className="w-full text-sm font-semibold pl-12 pr-4.5 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 focus:bg-white transition-all placeholder:text-slate-400 text-slate-800"
                       required
                     />
                   </div>
@@ -82,7 +82,7 @@ export const ForgotPasswordPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full px-6 py-4 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 rounded-xl transition-all shadow-lg shadow-indigo-200/50 flex items-center justify-center gap-2 cursor-pointer group"
+                  className="w-full px-6 py-4 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-xl transition-all shadow-lg shadow-blue-200/50 flex items-center justify-center gap-2 cursor-pointer group"
                 >
                   {loading ? (
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -120,7 +120,7 @@ export const ForgotPasswordPage: React.FC = () => {
             <div className="pt-2">
               <button
                 onClick={() => navigate('/login')}
-                className="w-full py-4 text-xs font-extrabold text-slate-500 hover:text-indigo-600 hover:bg-slate-50 border border-slate-200 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full py-4 text-xs font-extrabold text-slate-500 hover:text-blue-600 hover:bg-slate-50 border border-slate-200 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" /> Back to Log In
               </button>
@@ -135,8 +135,8 @@ export const ForgotPasswordPage: React.FC = () => {
 
         {/* Shifting Gradient Background */}
         <div className="absolute inset-0 z-0">
-          <div className="absolute w-[600px] h-[600px] rounded-full bg-indigo-600/15 blur-[160px]" style={{ top: '-10%', left: '20%', animation: 'morphGlow 12s ease-in-out infinite alternate' }} />
-          <div className="absolute w-[500px] h-[500px] rounded-full bg-purple-600/15 blur-[140px]" style={{ bottom: '-10%', right: '10%', animation: 'morphGlow2 15s ease-in-out infinite alternate' }} />
+          <div className="absolute w-[600px] h-[600px] rounded-full bg-blue-600/15 blur-[160px]" style={{ top: '-10%', left: '20%', animation: 'morphGlow 12s ease-in-out infinite alternate' }} />
+          <div className="absolute w-[500px] h-[500px] rounded-full bg-blue-500/10 blur-[140px]" style={{ bottom: '-10%', right: '10%', animation: 'morphGlow2 15s ease-in-out infinite alternate' }} />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px]" />
         </div>
 
@@ -145,15 +145,15 @@ export const ForgotPasswordPage: React.FC = () => {
 
           <div className="text-center space-y-4">
             <div className="relative mx-auto w-20 h-20 mb-6 flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full border border-dashed border-indigo-400/30" style={{ animation: 'spinClockwise 25s linear infinite' }} />
-              <div className="absolute inset-2 rounded-full border border-purple-500/20" style={{ animation: 'spinCounterClockwise 18s linear infinite' }} />
-              <div className="absolute inset-4 bg-indigo-500/10 backdrop-blur-2xl rounded-full flex items-center justify-center border border-indigo-400/20 shadow-2xl">
-                <Lock className="w-7 h-7 text-indigo-400" />
+              <div className="absolute inset-0 rounded-full border border-dashed border-blue-400/30" style={{ animation: 'spinClockwise 25s linear infinite' }} />
+              <div className="absolute inset-2 rounded-full border border-blue-400/20" style={{ animation: 'spinCounterClockwise 18s linear infinite' }} />
+              <div className="absolute inset-4 bg-blue-500/10 backdrop-blur-2xl rounded-full flex items-center justify-center border border-blue-400/20 shadow-2xl">
+                <Lock className="w-7 h-7 text-blue-400" />
               </div>
             </div>
             <h3 className="text-3xl font-extrabold text-white tracking-tight leading-tight">
               Enterprise Level<br />
-              <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Identity Protection</span>
+              <span className="text-blue-400">Identity Protection</span>
             </h3>
             <p className="text-sm text-slate-400 font-semibold max-w-sm mx-auto leading-relaxed">
               We leverage strict encryption frameworks and multi-factor checks to safeguard corporate directories.
@@ -168,7 +168,7 @@ export const ForgotPasswordPage: React.FC = () => {
                   <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active Security Protocol</span>
                 </div>
-                <span className="text-[9px] font-mono text-indigo-400">SSL_256_BIT</span>
+                <span className="text-[9px] font-mono text-blue-400">SSL_256_BIT</span>
               </div>
               <div className="space-y-2">
                 <div className="h-2 bg-white/10 rounded-full w-full" />
@@ -176,7 +176,7 @@ export const ForgotPasswordPage: React.FC = () => {
                 <div className="h-2 bg-white/5 rounded-full w-2/3" />
               </div>
               <div className="flex items-center gap-2 pt-2 text-[10px] text-slate-400 font-semibold">
-                <ShieldCheck className="w-4 h-4 text-indigo-400" />
+                <ShieldCheck className="w-4 h-4 text-blue-400" />
                 <span>Zero-Trust Directory Integration Active</span>
               </div>
             </div>

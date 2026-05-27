@@ -1,604 +1,537 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import {
   GraduationCap, ArrowRight, Brain, Shield, BarChart3,
-  Clock, Zap, CheckCircle2, Star, Globe, Heart
+  Clock, Zap, CheckCircle2, Star, Globe, Heart,
+  Building2, Users, ThumbsUp, Timer, Quote,
+  MessageSquare, Video, GitBranch, FileText, Layers, Briefcase,
+  Lock, TrendingUp, UserCheck,
+  ClipboardCheck, Award, Send
 } from 'lucide-react';
-import { useSocket } from '../../hooks/useSocket';
+
+/* ─── Tiny reusable sub-components ─── */
+
+const SectionBadge: React.FC<{ text: string }> = ({ text }) => (
+  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[11px] font-bold text-blue-600 uppercase tracking-widest mb-4">
+    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+    {text}
+  </span>
+);
+
+const InitialAvatar: React.FC<{ name: string; color: string }> = ({ name, color }) => (
+  <div
+    className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
+    style={{ background: color }}
+  >
+    {name.charAt(0)}
+  </div>
+);
+
+/* ─── Main Component ─── */
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
-  const socket = useSocket();
-  const [pingCount, setPingCount] = React.useState(0);
-  const [pongCount, setPongCount] = React.useState(0);
-  const [lastPongTime, setLastPongTime] = React.useState<string | null>(null);
-  const [isConnected, setIsConnected] = React.useState(false);
-
-  React.useEffect(() => {
-    if (!socket) return;
-
-    const handleConnect = () => setIsConnected(true);
-    const handleDisconnect = () => setIsConnected(false);
-    const handlePong = () => {
-      setPongCount((prev) => prev + 1);
-      setLastPongTime(new Date().toLocaleTimeString());
-    };
-
-    setIsConnected(socket.connected);
-
-    socket.on('connect', handleConnect);
-    socket.on('disconnect', handleDisconnect);
-    socket.on('pong', handlePong);
-
-    return () => {
-      socket.off('connect', handleConnect);
-      socket.off('disconnect', handleDisconnect);
-      socket.off('pong', handlePong);
-    };
-  }, [socket]);
-
-  const sendPing = () => {
-    if (socket && isConnected) {
-      setPingCount((prev) => prev + 1);
-      socket.emit('ping');
-    }
-  };
 
   return (
     <div className="bg-slate-50 min-h-screen text-slate-800 flex flex-col font-sans overflow-x-hidden selection:bg-blue-600 selection:text-white">
-      {/* Navigation */}
-      <nav className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-slate-200/80 px-6 py-4 flex items-center justify-between z-50">
+
+      {/* ═══════════ Navigation ═══════════ */}
+      <nav className="sticky top-0 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 px-6 py-3.5 flex items-center justify-between z-50 transition-all duration-300">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-100">
+          <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-md shadow-blue-500/10">
             <GraduationCap className="w-5 h-5 text-white" />
           </div>
-          <span className="font-extrabold text-slate-800 text-lg tracking-tight">InternFlow</span>
+          <span className="font-extrabold text-slate-900 text-lg tracking-tight">InternFlow</span>
         </div>
-        <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
-          <a href="#features" className="hover:text-blue-600 transition-colors">Features</a>
-          <a href="#workflow" className="hover:text-blue-600 transition-colors">How It Works</a>
-          <a href="#testimonials" className="hover:text-blue-600 transition-colors">Testimonials</a>
+        <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-500">
+          <a href="#features" className="hover:text-blue-600 transition-colors duration-200">Features</a>
+          <a href="#workflow" className="hover:text-blue-600 transition-colors duration-200">How It Works</a>
+          <a href="#testimonials" className="hover:text-blue-600 transition-colors duration-200">Testimonials</a>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/login')}
-            className="px-4.5 py-2 text-sm font-bold text-slate-600 hover:text-blue-600 hover:bg-slate-50 rounded-xl transition-all cursor-pointer"
+            className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-blue-600 hover:bg-slate-100/50 rounded-lg transition-all cursor-pointer"
           >
             Login
           </button>
           <button
             onClick={() => navigate('/apply')}
-            className="px-4.5 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-md shadow-blue-100 flex items-center gap-1.5 cursor-pointer"
+            className="px-4.5 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-md shadow-blue-500/10 flex items-center gap-1.5 cursor-pointer"
           >
-            Apply Now <ArrowRight className="w-4 h-4" />
+            Get started <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative px-6 py-20 md:py-28 max-w-5xl mx-auto text-center flex flex-col items-center">
+      {/* ═══════════ Hero Section ═══════════ */}
+      <section className="relative px-6 pt-16 pb-8 md:pt-20 md:pb-12 max-w-6xl mx-auto w-full">
         {/* Decorative Light Orbs */}
-        <div className="absolute top-10 left-10 w-72 h-72 bg-blue-200 rounded-full blur-[120px] opacity-45 -z-10" style={{ animation: 'blobFloat 12s ease-in-out infinite alternate' }} />
-        <div className="absolute top-20 right-10 w-72 h-72 bg-indigo-200 rounded-full blur-[120px] opacity-45 -z-10" style={{ animation: 'blobFloat2 15s ease-in-out infinite alternate' }} />
+        <div className="absolute top-10 left-10 w-72 h-72 bg-blue-200/25 rounded-full blur-[120px] -z-10 animate-[blobFloat_12s_ease-in-out_infinite_alternate]" />
+        <div className="absolute top-20 right-10 w-72 h-72 bg-indigo-200/25 rounded-full blur-[120px] -z-10 animate-[blobFloat2_15s_ease-in-out_infinite_alternate]" />
 
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-blue-50 border border-blue-100 rounded-full text-blue-700 text-xs font-bold mb-6 tracking-wide uppercase" style={{ animation: 'heroFadeIn 0.8s ease-out 0.1s both' }}>
-          <Brain className="w-3.5 h-3.5 animate-bounce" /> Smart Internship Automation
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          {/* Left — Copy */}
+          <div className="text-left flex flex-col items-start animate-[heroFadeIn_0.8s_ease-out_0.2s_both]">
+            <SectionBadge text="AI-Powered Platform" />
+            <h1 className="text-4xl md:text-5xl lg:text-[3.25rem] font-extrabold text-slate-900 tracking-tight leading-[1.1] mb-5">
+              The smarter way to manage your{' '}
+              <span className="text-blue-600">internship program</span>
+            </h1>
+            <p className="text-base md:text-lg text-slate-500 font-medium leading-relaxed mb-8 max-w-lg">
+              Onboard applicants, assign mentors, track daily progress, and issue verified certificates — all from one intelligent dashboard.
+            </p>
 
-        <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.1] mb-6" style={{ animation: 'heroFadeIn 0.8s ease-out 0.3s both' }}>
-          Manage Your Interns <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent whitespace-nowrap">Smarter with AI</span>
-        </h1>
-
-        <p className="text-base md:text-xl text-slate-500 font-medium max-w-2xl leading-relaxed mb-10" style={{ animation: 'heroFadeIn 0.8s ease-out 0.5s both' }}>
-          From onboarding application pipelines to AI-driven radar skill charts and certificate issuance — automate, track, and optimize your internship program in one dashboard.
-        </p>
-
-        <div className="flex flex-col sm:flex-row items-center gap-4" style={{ animation: 'heroFadeIn 0.8s ease-out 0.7s both' }}>
-          <button
-            onClick={() => navigate('/apply')}
-            className="w-full sm:w-auto px-8 py-4 text-base font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-2xl transition-all shadow-xl shadow-blue-200/50 hover:shadow-blue-300/60 flex items-center justify-center gap-2 cursor-pointer transform hover:-translate-y-0.5"
-          >
-            Apply for Internship <ArrowRight className="w-5 h-5" />
-          </button>
-          <button
-            onClick={() => navigate('/login')}
-            className="w-full sm:w-auto px-8 py-4 text-base font-bold text-slate-700 bg-white hover:bg-slate-50 rounded-2xl transition-all border border-slate-200 shadow-sm flex items-center justify-center gap-2 cursor-pointer transform hover:-translate-y-0.5"
-          >
-            Explore Dashboards
-          </button>
-        </div>
-      </section>
-      {/* Interactive Dashboard Preview Mockup Box */}      <section className="px-6 pb-24 max-w-5xl mx-auto w-full" style={{ animation: 'heroFadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.9s both' }}>
-        <div className="relative bg-white rounded-3xl p-4 md:p-6 border border-slate-200/80 shadow-[0_30px_60px_rgba(15,23,42,0.06)] overflow-hidden transition-all duration-500 hover:shadow-[0_40px_80px_rgba(37,99,235,0.1)] group"
-             style={{ 
-               perspective: '1000px',
-               animation: 'float3D 9s ease-in-out infinite alternate',
-             }}>
-          {/* Decorative Subtle Background Glows inside Mockup */}
-          <div className="absolute top-0 right-0 w-80 h-80 bg-blue-50 rounded-full blur-[100px] pointer-events-none -z-10 opacity-70" />
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-slate-50 rounded-full blur-[100px] pointer-events-none -z-10 opacity-70" />
-
-          {/* Browser Header Bar */}
-          <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5 flex-wrap gap-3">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 bg-rose-400 rounded-full" />
-              <span className="w-2.5 h-2.5 bg-amber-400 rounded-full" />
-              <span className="w-2.5 h-2.5 bg-emerald-400 rounded-full" />
-            </div>
-            
-            {/* Search Input Bar Mock */}
-            <div className="w-full sm:w-auto flex-1 max-w-md mx-4">
-              <div className="relative">
-                <input 
-                  type="text" 
-                  disabled
-                  placeholder="Search interns, tasks, departments, announcements..." 
-                  className="w-full text-[10px] bg-slate-50 text-slate-500 border border-slate-200 rounded-xl px-4 py-2 focus:outline-none placeholder-slate-400 font-semibold"
-                />
-              </div>
+            <div className="flex flex-col sm:flex-row items-start gap-3 mb-8">
+              <button
+                onClick={() => navigate('/apply')}
+                className="w-full sm:w-auto px-6 py-3.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-500/15 hover:-translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                Apply for internship <ArrowRight className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => navigate('/login')}
+                className="w-full sm:w-auto px-6 py-3.5 text-sm font-bold text-slate-600 bg-white hover:bg-slate-50 rounded-xl transition-all border border-slate-200/80 shadow-sm hover:-translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                Explore dashboard
+              </button>
             </div>
 
-            {/* Profile Dropdown Mock */}
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="w-7 h-7 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-505 cursor-pointer hover:bg-slate-100 transition-colors">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+            {/* Trusted By Strip */}
+            <div className="flex items-center gap-3 text-xs text-slate-400 font-medium">
+              <span>Trusted by teams at</span>
+              <div className="flex items-center gap-2">
+                {['TechCorp', 'InnovateLabs', 'CloudNine', 'PixelForge'].map((company) => (
+                  <span key={company} className="px-2.5 py-1 bg-slate-100 rounded-md text-[10px] font-bold text-slate-500 tracking-wide">
+                    {company}
                   </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5">
-                <div className="w-5.5 h-5.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-md flex items-center justify-center text-[9px] font-extrabold shadow-sm">
-                  HA
-                </div>
-                <div className="text-left hidden sm:block">
-                  <p className="text-[9px] font-extrabold text-slate-700 leading-none">HR Admin</p>
-                  <p className="text-[7px] text-blue-600 font-extrabold mt-0.5">Manager</p>
-                </div>
+                ))}
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-5 gap-5 text-left">
-            {/* Left Navigation Sidebar Mock */}
-            <div className="col-span-1 border-r border-slate-100 pr-4 space-y-4 hidden md:block">
-              <div className="flex items-center gap-2 px-2.5 pb-2 border-b border-slate-100">
-                <div className="w-5.5 h-5.5 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-200">
-                  <span className="text-[10px] font-extrabold text-white">IF</span>
+          {/* Right — Dashboard Preview Mock */}
+          <div className="relative animate-[heroFadeIn_0.8s_ease-out_0.5s_both]">
+            <div className="bg-white rounded-2xl border border-slate-200/60 shadow-xl shadow-slate-200/40 overflow-hidden">
+              {/* Title bar */}
+              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 bg-slate-50/50">
+                <div className="flex gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-green-400" />
                 </div>
-                <span className="text-[10px] font-extrabold text-slate-800 tracking-tight">InternFlow</span>
-              </div>
-              <div className="space-y-1">
-                {[
-                  { label: "Dashboard", active: true, dot: "bg-blue-600" },
-                  { label: "Interns", active: false, dot: "bg-slate-400" },
-                  { label: "Mentors", active: false, dot: "bg-slate-400" },
-                  { label: "Departments", active: false, dot: "bg-slate-400" },
-                  { label: "Announcements", active: false, dot: "bg-slate-400" },
-                  { label: "Reports & Analytics", active: false, dot: "bg-slate-400" }
-                ].map((item, idx) => (
-                  <div 
-                    key={idx} 
-                    className={`h-8.5 rounded-xl flex items-center gap-2.5 px-3 transition-all duration-300 cursor-pointer
-                      ${item.active 
-                        ? "bg-blue-600 text-white shadow-lg shadow-blue-200" 
-                        : "hover:bg-slate-50 text-slate-600 hover:text-slate-900"}`}
-                  >
-                    <div className={`w-1.5 h-1.5 rounded-full ${item.active ? "bg-white" : item.dot}`} />
-                    <span className="text-[9px] font-extrabold tracking-tight">{item.label}</span>
-                  </div>
-                ))}
+                <span className="text-[10px] font-semibold text-slate-400 ml-2">InternFlow Dashboard</span>
               </div>
 
-              {/* Bot status widget */}
-              <div className="pt-8">
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-2.5 space-y-1 text-center">
-                  <div className="flex items-center justify-center gap-1.5">
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                    </span>
-                    <span className="text-[8px] font-extrabold text-slate-600">AI Co-pilot</span>
+              {/* Dashboard body */}
+              <div className="p-4 space-y-3">
+                {/* Top stat cards */}
+                <div className="grid grid-cols-3 gap-2.5">
+                  {[
+                    { label: 'Active Interns', value: '148', icon: Users, accent: 'text-blue-600 bg-blue-50' },
+                    { label: 'Tasks Done', value: '1,024', icon: CheckCircle2, accent: 'text-emerald-600 bg-emerald-50' },
+                    { label: 'Avg. Score', value: '87%', icon: TrendingUp, accent: 'text-indigo-600 bg-indigo-50' },
+                  ].map((card) => {
+                    const Icon = card.icon;
+                    return (
+                      <div key={card.label} className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center mb-2 ${card.accent}`}>
+                          <Icon className="w-3.5 h-3.5" />
+                        </div>
+                        <p className="text-lg font-extrabold text-slate-800 tracking-tight">{card.value}</p>
+                        <p className="text-[10px] font-semibold text-slate-400">{card.label}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Mini chart placeholder */}
+                <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-bold text-slate-500">Weekly Performance</span>
+                    <span className="text-[9px] font-semibold text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded">+12%</span>
                   </div>
-                  <p className="text-[7px] font-bold text-slate-400 leading-normal">System active</p>
+                  <div className="flex items-end gap-1.5 h-10">
+                    {[40, 55, 35, 70, 60, 80, 75].map((h, i) => (
+                      <div
+                        key={i}
+                        className="flex-1 rounded-sm bg-blue-500/80"
+                        style={{ height: `${h}%`, opacity: 0.5 + (i * 0.07) }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Recent activity rows */}
+                <div className="space-y-1.5">
+                  {[
+                    { name: 'Priya Nair', action: 'completed React module', time: '2m ago' },
+                    { name: 'Rahul Mehta', action: 'submitted weekly report', time: '5m ago' },
+                    { name: 'Ankit Patil', action: 'checked in for today', time: '12m ago' },
+                  ].map((row, i) => (
+                    <div key={i} className="flex items-center gap-2.5 px-2.5 py-1.5 bg-slate-50 rounded-lg border border-slate-100">
+                      <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-[8px] font-bold text-blue-600">
+                        {row.name.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] font-semibold text-slate-700 truncate">
+                          <span className="font-bold">{row.name}</span> {row.action}
+                        </p>
+                      </div>
+                      <span className="text-[9px] text-slate-400 font-medium shrink-0">{row.time}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
 
-            {/* Dashboard Content Mock */}
-            <div className="col-span-5 md:col-span-4 space-y-4">
-              {/* Top Cards Row */}
-              <div className="grid grid-cols-3 gap-3.5">
-                {[
-                  { 
-                    title: "Active Interns", 
-                    val: "142", 
-                    trend: "+12 this week", 
-                    color: "bg-white border-slate-200 shadow-sm",
-                    extra: (
-                      <div className="flex -space-x-1.5 overflow-hidden">
-                        {['bg-rose-500', 'bg-blue-500', 'bg-indigo-500', 'bg-emerald-500'].map((color, i) => (
-                          <div key={i} className={`inline-block h-4.5 w-4.5 rounded-full border border-white ${color} flex items-center justify-center text-[6px] font-bold text-white shadow-sm`}>
-                            {['SC', 'AR', 'LC', 'KP'][i]}
-                          </div>
-                        ))}
-                      </div>
-                    )
-                  },
-                  { 
-                    title: "Avg Task Velocity", 
-                    val: "94.8%", 
-                    trend: "Optimal rating", 
-                    color: "bg-white border-slate-200 shadow-sm",
-                    extra: (
-                      <div className="w-full bg-slate-100 rounded-full h-1 mt-1 border border-slate-200/50 overflow-hidden">
-                        <div className="bg-emerald-500 h-1 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.3)]" style={{ width: '94.8%' }} />
-                      </div>
-                    )
-                  },
-                  { 
-                    title: "AI Skill Fit accuracy", 
-                    val: "89%", 
-                    trend: "+4.2% score", 
-                    color: "bg-white border-slate-200 shadow-sm",
-                    extra: (
-                      <span className="text-[7px] text-amber-600 font-extrabold uppercase bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100">
-                        Excellent Match
-                      </span>
-                    )
-                  }
-                ].map((card, idx) => (
-                  <div key={idx} className={`${card.color} rounded-2xl p-3 border flex flex-col justify-between space-y-2`}>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <span className="text-[8px] font-extrabold uppercase tracking-wider text-slate-400">{card.title}</span>
-                        <p className="text-sm md:text-base font-extrabold text-slate-800 tracking-tight mt-0.5">{card.val}</p>
-                      </div>
-                      <span className="text-[7px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded-md">{card.trend}</span>
-                    </div>
-                    <div className="pt-1 flex items-center justify-between">
-                      {card.extra}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Main Content Rows */}
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-                {/* Active Interns Table Grid (Left) */}
-                <div className="lg:col-span-3 bg-white border border-slate-200 shadow-sm rounded-2xl p-3.5 space-y-3.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[9px] font-extrabold text-slate-800 uppercase tracking-wider">Active Cohort Directory</span>
-                    <span className="text-[8px] text-blue-600 hover:text-blue-700 transition-colors cursor-pointer font-extrabold">View all 142 →</span>
-                  </div>
-                  
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="border-b border-slate-100 pb-2">
-                          <th className="text-[7px] font-extrabold text-slate-400 uppercase tracking-wider pb-2">Intern</th>
-                          <th className="text-[7px] font-extrabold text-slate-400 uppercase tracking-wider pb-2">Department</th>
-                          <th className="text-[7px] font-extrabold text-slate-400 uppercase tracking-wider pb-2">Performance</th>
-                          <th className="text-[7px] font-extrabold text-slate-400 uppercase tracking-wider pb-2">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-50">
-                        {[
-                          { name: "Sophia Chen", dept: "Engineering", score: "94%", color: "bg-blue-50 text-blue-600 border-blue-100", progress: "w-[94%] bg-blue-600" },
-                          { name: "Alex Rivera", dept: "Product Design", score: "88%", color: "bg-purple-50 text-purple-600 border-purple-100", progress: "w-[88%] bg-purple-600" },
-                          { name: "Liam Carter", dept: "Data Science", score: "91%", color: "bg-cyan-50 text-cyan-600 border-cyan-100", progress: "w-[91%] bg-cyan-600" }
-                        ].map((intern, i) => (
-                          <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                            <td className="py-2.5 flex items-center gap-2">
-                              <div className="w-5.5 h-5.5 rounded-full bg-slate-100 flex items-center justify-center text-[7px] font-extrabold text-slate-600 border border-slate-200">
-                                {intern.name.split(' ').map(n=>n[0]).join('')}
-                              </div>
-                              <span className="text-[9px] font-extrabold text-slate-700">{intern.name}</span>
-                            </td>
-                            <td className="py-2.5">
-                              <span className={`text-[7px] font-bold px-1.5 py-0.5 rounded border ${intern.color}`}>{intern.dept}</span>
-                            </td>
-                            <td className="py-2.5">
-                              <div className="flex items-center gap-2">
-                                <span className="text-[9px] font-extrabold text-slate-700">{intern.score}</span>
-                                <div className="w-12 bg-slate-100 rounded-full h-1 overflow-hidden">
-                                  <div className={`h-1 rounded-full ${intern.progress}`} />
-                                </div>
-                              </div>
-                            </td>
-                            <td className="py-2.5">
-                              <span className="inline-flex items-center gap-1 text-[7px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
-                                <span className="h-1 w-1 bg-emerald-500 rounded-full" /> ACTIVE
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* AI co-pilot + Bulletin Feed (Right) */}
-                <div className="lg:col-span-2 space-y-4">
-                  {/* AI match card */}
-                  <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-3.5 space-y-2.5">
-                    <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                      <div className="w-4.5 h-4.5 bg-blue-50 border border-blue-100 rounded-md flex items-center justify-center text-blue-600 text-[10px]">
-                        <span>✨</span>
-                      </div>
-                      <span className="text-[9px] font-extrabold text-slate-800 uppercase tracking-wider">AI Recruiting Agent</span>
-                    </div>
-                    <p className="text-[8px] font-bold text-slate-500 leading-normal">
-                      "98.4% resume matching confidence across 4 pending applicant intakes. Autogenerated scoring profile recommendations are successfully dispatched to HR inbox."
-                    </p>
-                  </div>
-
-                  {/* Bulletins Bulletin Feed */}
-                  <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-3.5 space-y-2.5">
-                    <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                      <span className="text-[9px] font-extrabold text-slate-800 uppercase tracking-wider">Live Broadcasts</span>
-                      <span className="text-[7px] font-bold text-rose-600 bg-rose-50 border border-rose-100 px-1 rounded">2 Active</span>
-                    </div>
-
-                    <div className="space-y-2.5">
-                      <div className="p-2 bg-slate-50 border border-slate-200 rounded-xl space-y-1 hover:border-blue-200 hover:bg-blue-50/10 transition-all flex justify-between items-start">
-                        <div className="space-y-0.5 text-left flex-1 min-w-0 pr-2">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-[8px] font-extrabold text-slate-700 truncate">Q2 Intern Hackathon</span>
-                            <span className="text-[6px] bg-rose-100 border border-rose-200 text-rose-600 px-1 rounded font-extrabold">HIGH</span>
-                          </div>
-                          <p className="text-[7px] text-slate-500 leading-normal truncate font-semibold">Teams must submit code repositories by Friday night.</p>
-                        </div>
-                        <button className="text-rose-500 hover:text-rose-700 p-1 hover:bg-rose-50 rounded transition-all cursor-pointer flex-shrink-0" title="Delete Notice">
-                          <span className="text-[8px] font-bold">✕</span>
-                        </button>
-                      </div>
-
-                      <div className="p-2 bg-slate-50 border border-slate-200 rounded-xl space-y-1 hover:border-blue-200 hover:bg-blue-50/10 transition-all flex justify-between items-start">
-                        <div className="space-y-0.5 text-left flex-1 min-w-0 pr-2">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-[8px] font-extrabold text-slate-700 truncate">Mid-Term Appraisal Cycle</span>
-                            <span className="text-[6px] bg-blue-100 border border-blue-200 text-blue-600 px-1 rounded font-extrabold">MED</span>
-                          </div>
-                          <p className="text-[7px] text-slate-500 leading-normal truncate font-semibold">Mentors must finalize reviews by June 1st.</p>
-                        </div>
-                        <button className="text-rose-500 hover:text-rose-700 p-1 hover:bg-rose-50 rounded transition-all cursor-pointer flex-shrink-0" title="Delete Notice">
-                          <span className="text-[8px] font-bold">✕</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            {/* Floating accent badge */}
+            <div className="absolute -bottom-3 -left-3 bg-blue-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-lg shadow-blue-500/20 flex items-center gap-1.5 animate-[floatBadge_3s_ease-in-out_infinite]">
+              <Zap className="w-3 h-3" /> AI Powered
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stats Bar */}
-      <section className="bg-white border-y border-slate-200/60 py-10" style={{ animation: 'slideUpFadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both' }}>
+      {/* ═══════════ Stats Bar ═══════════ */}
+      <section className="bg-white border-y border-slate-200/50 py-10 mt-8 animate-[slideUpFadeIn_1s_cubic-bezier(0.16,1,0.3,1)_0.5s_both]">
         <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {[
-            { value: "500+", label: "Partner Companies" },
-            { value: "10,000+", label: "Interns Managed" },
-            { value: "98%", label: "Satisfaction Rate" },
-            { value: "60%", label: "Time Saved Daily" },
-          ].map((stat, i) => (
-            <div key={i} className="space-y-1">
-              <p className="text-3xl font-extrabold text-blue-600 tracking-tight">{stat.value}</p>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section id="features" className="px-6 py-20 max-w-5xl mx-auto space-y-16">
-        <div className="text-center max-w-2xl mx-auto space-y-4" style={{ animation: 'slideUpFadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) both' }}>
-          <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Powerful Capabilities at Your Fingertips</h2>
-          <p className="text-sm font-semibold text-slate-400">Everything you need to successfully launch, run and score multi-department internship operations.</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            { icon: Brain, title: "AI-Powered NLP Bot", desc: "Interactive chatbot responding instantly to attendance, task due-dates and certification guidelines." },
-            { icon: BarChart3, title: "Radar Competence Analytics", desc: "Detailed performance mapping across coding, collaboration, communication and planning parameters." },
-            { icon: Zap, title: "Multi-Step Onboarding", desc: "Interactive applications form logic that channels applicants directly into review channels for approval." },
-            { icon: Clock, title: "Interactive Kanban Boards", desc: "Visual task columns enabling drag-and-drop workflow tracking for both supervisors and interns." },
-            { icon: CheckCircle2, title: "Daily Punch Attendance", desc: "Calendar view clock ins and logs tracking to automatically formulate attendance metrics." },
-            { icon: Shield, title: "Role-Based Navigation", desc: "Secured view portals with individual configurations tailored for HR administrators, Mentors, and Interns." },
-          ].map((feat, i) => {
-            const Icon = feat.icon;
+            { value: '500+', label: 'Partner Companies', icon: Building2 },
+            { value: '10,000+', label: 'Interns Placed', icon: Users },
+            { value: '98%', label: 'Satisfaction Rate', icon: ThumbsUp },
+            { value: '60%', label: 'Admin Time Saved', icon: Timer },
+          ].map((stat, i) => {
+            const Icon = stat.icon;
             return (
-              <div 
-                key={i} 
-                className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-lg hover:shadow-blue-100/30 hover:border-blue-200/50 hover:scale-[1.03] transition-all duration-300 flex flex-col items-start text-left"
-                style={{ 
-                  animation: 'scaleUpIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both',
-                  animationDelay: `${0.1 + i * 0.1}s`
-                }}
-              >
-                <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 mb-5">
+              <div key={i} className="space-y-2 group">
+                <div className="w-10 h-10 mx-auto bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 mb-1 group-hover:bg-blue-100 transition-colors duration-200">
                   <Icon className="w-5 h-5" />
                 </div>
-                <h3 className="text-base font-extrabold text-slate-800 tracking-tight mb-2">{feat.title}</h3>
-                <p className="text-xs text-slate-500 leading-relaxed font-semibold">{feat.desc}</p>
+                <p className="text-3xl md:text-4xl font-extrabold text-blue-600 tracking-tight">{stat.value}</p>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{stat.label}</p>
               </div>
             );
           })}
         </div>
       </section>
 
-      {/* How it Works Workflow */}
-      <section id="workflow" className="bg-white border-y border-slate-200/60 py-20 px-6">
+      {/* ═══════════ Features ═══════════ */}
+      <section id="features" className="px-6 py-20 max-w-5xl mx-auto space-y-14">
+        <div className="text-center max-w-2xl mx-auto space-y-4 animate-[slideUpFadeIn_1s_cubic-bezier(0.16,1,0.3,1)_both]">
+          <SectionBadge text="Core Features" />
+          <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">Everything your team needs, nothing it doesn't</h2>
+          <p className="text-sm md:text-base font-medium text-slate-400">Launch and scale multi-department internship programs without the operational overhead.</p>
+        </div>
+
+        {/* Clean 3×2 Uniform Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[
+            { icon: Brain, title: 'AI Recruiting Assistant', desc: 'Automatically scores applicant resumes against role requirements and routes top matches directly to your HR inbox.', gradient: 'from-blue-500 to-blue-600', shadow: 'shadow-blue-500/15', bg: 'bg-blue-50/40' },
+            { icon: BarChart3, title: 'Radar Skill Analytics', desc: 'Visualize intern competency across coding, collaboration, and communication with dynamic radar charts updated in real time.', gradient: 'from-indigo-500 to-indigo-600', shadow: 'shadow-indigo-500/15', bg: 'bg-indigo-50/40' },
+            { icon: Zap, title: 'Smart Onboarding Flow', desc: 'Multi-step application forms that collect credentials, preferences, and consent — then channel candidates straight into review queues.', gradient: 'from-amber-500 to-orange-500', shadow: 'shadow-amber-500/15', bg: 'bg-amber-50/40' },
+            { icon: Clock, title: 'Kanban Task Boards', desc: 'Drag-and-drop task columns give supervisors and interns a shared view of work in progress, blockers, and deliverables.', gradient: 'from-emerald-500 to-teal-500', shadow: 'shadow-emerald-500/15', bg: 'bg-emerald-50/40' },
+            { icon: CheckCircle2, title: 'Daily Attendance Tracking', desc: 'Calendar-based clock-in logs automatically compile attendance metrics so you always have accurate records at appraisal time.', gradient: 'from-sky-500 to-blue-500', shadow: 'shadow-sky-500/15', bg: 'bg-sky-50/40' },
+            { icon: Shield, title: 'Role-Based Access Control', desc: 'Separate portals for HR admins, mentors, and interns — each with the exact permissions their role requires.', gradient: 'from-blue-600 to-slate-600', shadow: 'shadow-blue-500/15', bg: 'bg-blue-50/40' },
+          ].map((feat, i) => {
+            const Icon = feat.icon;
+            return (
+              <div
+                key={i}
+                className="bg-white rounded-2xl p-6 border border-slate-200/60 shadow-sm hover:shadow-xl hover:border-blue-200/50 hover:-translate-y-1 transition-all duration-300 flex flex-col items-start text-left group relative overflow-hidden"
+                style={{ animation: 'scaleUpIn 0.8s cubic-bezier(0.34,1.56,0.64,1) both', animationDelay: `${0.1 + i * 0.07}s` }}
+              >
+                {/* Subtle hover glow */}
+                <div className={`absolute top-0 right-0 w-28 h-28 ${feat.bg} rounded-full blur-2xl -z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+                <div className={`w-11 h-11 bg-gradient-to-br ${feat.gradient} rounded-xl flex items-center justify-center text-white mb-5 shadow-md ${feat.shadow} relative z-10`}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                <h3 className="text-base font-bold text-slate-900 tracking-tight mb-2 relative z-10">{feat.title}</h3>
+                <p className="text-[13px] text-slate-500 leading-relaxed font-medium relative z-10">{feat.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ═══════════ Social Proof Band ═══════════ */}
+      <section className="bg-white border-y border-slate-200/50 py-12 px-6">
+        <div className="max-w-5xl mx-auto text-center space-y-6">
+          <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">Trusted by HR teams at 500+ organizations worldwide</p>
+          <div className="flex flex-wrap items-center justify-center gap-6">
+            {[
+              { name: 'TechCorp', icon: Building2 },
+              { name: 'InnovateLabs', icon: Layers },
+              { name: 'CloudNine', icon: Globe },
+              { name: 'PixelForge', icon: Briefcase },
+              { name: 'DataSphere', icon: BarChart3 },
+              { name: 'CodeCraft', icon: GitBranch },
+            ].map((company) => {
+              const Icon = company.icon;
+              return (
+                <button
+                  key={company.name}
+                  onClick={() => window.open(`https://www.google.com/search?q=${company.name}+company`, '_blank')}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-slate-400 hover:text-slate-600 hover:border-slate-200 transition-all duration-200 cursor-pointer"
+                >
+                  <Icon className="w-4 h-4" />
+                  <span className="text-xs font-bold tracking-wide">{company.name}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex items-center justify-center gap-2 text-xs text-slate-400 font-medium">
+            <Lock className="w-3.5 h-3.5" />
+            <span>Enterprise-grade security · SOC 2 compliant · 99.9% uptime</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════ How it Works ═══════════ */}
+      <section id="workflow" className="py-20 px-6">
         <div className="max-w-5xl mx-auto space-y-16">
           <div className="text-center max-w-2xl mx-auto space-y-4">
-            <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Structured Internship Journey</h2>
-            <p className="text-sm font-semibold text-slate-400">Our structured automation platform supports candidates from day one through graduation.</p>
+            <SectionBadge text="Simple Workflow" />
+            <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">From application to certification in three steps</h2>
+            <p className="text-sm md:text-base font-medium text-slate-400">Our structured pipeline supports every candidate from day one through program graduation.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 relative">
-            <div className="absolute top-1/2 left-1/4 right-1/4 h-0.5 bg-slate-100 hidden md:block -z-10" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 relative">
+            {/* Gradient connecting line */}
+            <div className="absolute top-[40px] left-[20%] right-[20%] h-0.5 bg-gradient-to-r from-blue-200 via-blue-400 to-indigo-300 hidden md:block -z-10 rounded-full" />
+
             {[
-              { step: "01", title: "Apply & Onboard", desc: "Submit your academic credentials and preferences. Receive department mapping upon manual approval." },
-              { step: "02", title: "Collaborate & Deliver", desc: "Work on visual Kanban cards. Check in daily on the clock and sync with assigned corporate mentors." },
-              { step: "03", title: "Assess & Certify", desc: "Analyze dynamic radar skill scores and receive a blockchain verified digital internship certificate." },
-            ].map((step, i) => (
-              <div key={i} className="flex flex-col items-center text-center space-y-4">
-                <div className="w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center text-white font-extrabold text-lg shadow-xl shadow-blue-100 ring-8 ring-blue-50">
-                  {step.step}
+              { step: '01', title: 'Apply & Onboard', desc: 'Submit academic credentials and role preferences. Receive an instant department match upon HR approval.', icon: Send },
+              { step: '02', title: 'Collaborate & Deliver', desc: 'Work through Kanban tasks, check in daily, and sync regularly with your assigned corporate mentor.', icon: UserCheck },
+              { step: '03', title: 'Assess & Certify', desc: 'Review radar skill scores with your mentor, then receive a blockchain-verified digital internship certificate.', icon: Award },
+            ].map((step, i) => {
+              const Icon = step.icon;
+              return (
+                <div
+                  key={i}
+                  className="flex flex-col items-center text-center space-y-4 group"
+                  style={{ animation: 'scaleUpIn 0.8s cubic-bezier(0.34,1.56,0.64,1) both', animationDelay: `${0.2 + i * 0.15}s` }}
+                >
+                  <div className="relative">
+                    <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-500/15 ring-8 ring-blue-50 transition-all duration-300 group-hover:scale-105 group-hover:shadow-xl group-hover:shadow-blue-500/20">
+                      <Icon className="w-7 h-7" />
+                    </div>
+                    <span className="absolute -top-2 -right-2 w-7 h-7 bg-white border-2 border-blue-200 rounded-full flex items-center justify-center text-[10px] font-extrabold text-blue-600 shadow-sm">
+                      {step.step}
+                    </span>
+                  </div>
+                  <h3 className="text-base font-bold text-slate-900 tracking-tight">{step.title}</h3>
+                  <p className="text-xs text-slate-500 font-medium max-w-xs leading-relaxed">{step.desc}</p>
                 </div>
-                <h3 className="text-base font-extrabold text-slate-800 tracking-tight">{step.title}</h3>
-                <p className="text-xs text-slate-500 font-semibold max-w-xs leading-relaxed">{step.desc}</p>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════ Testimonials ═══════════ */}
+      <section id="testimonials" className="bg-white border-y border-slate-200/50 px-6 py-20">
+        <div className="max-w-5xl mx-auto space-y-14">
+          <div className="text-center max-w-2xl mx-auto space-y-4">
+            <SectionBadge text="Testimonials" />
+            <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">Trusted by HR teams and interns alike</h2>
+            <p className="text-sm md:text-base font-medium text-slate-400">From fast-growing startups to established enterprises.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { quote: 'InternFlow cut our program management overhead by 60%. Assigning mentors, tracking tasks, and issuing certificates now takes minutes instead of days.', author: 'Priya Nair', role: 'HR Manager, TechCorp', color: '#2563eb', rating: 5 },
+              { quote: 'The radar analytics made performance feedback concrete and objective. Our design interns could see exactly where to improve — no more vague end-of-term reviews.', author: 'Rahul Mehta', role: 'Design Director, InnovateLabs', color: '#6366f1', rating: 5 },
+              { quote: 'The attendance tracker and AI chatbot kept me on top of every deadline during my three-month engineering placement. Genuinely useful, not just a nice-to-have.', author: 'Ankit Patil', role: 'Software Engineering Intern', color: '#0ea5e9', rating: 5 },
+            ].map((test, i) => (
+              <div
+                key={i}
+                className="bg-slate-50 rounded-2xl p-6 border border-slate-200/60 hover:shadow-lg hover:border-blue-200/40 hover:-translate-y-0.5 transition-all duration-300 text-left flex flex-col justify-between relative"
+                style={{ animation: 'scaleUpIn 0.8s cubic-bezier(0.34,1.56,0.64,1) both', animationDelay: `${0.1 + i * 0.1}s` }}
+              >
+                {/* Quote decoration */}
+                <Quote className="w-8 h-8 text-blue-100 mb-3" />
+
+                <div className="space-y-4 flex-1">
+                  <div className="flex gap-0.5 items-center">
+                    {[...Array(test.rating)].map((_, idx) => (
+                      <Star key={idx} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                    ))}
+                  </div>
+                  <p className="text-sm text-slate-600 leading-relaxed font-medium">"{test.quote}"</p>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-slate-200/60 flex items-center gap-3">
+                  <InitialAvatar name={test.author} color={test.color} />
+                  <div>
+                    <p className="text-xs font-bold text-slate-900">{test.author}</p>
+                    <p className="text-[10px] text-slate-400 font-semibold">{test.role}</p>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section id="testimonials" className="px-6 py-20 max-w-5xl mx-auto space-y-16">
-        <div className="text-center max-w-2xl mx-auto space-y-4">
-          <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">What Our Partners & Interns Say</h2>
-          <p className="text-sm font-semibold text-slate-400">Trusted by modern businesses and outstanding university graduates.</p>
-        </div>
+      {/* ═══════════ Integrations ═══════════ */}
+      <section id="integrations" className="px-6 py-16">
+        <div className="max-w-4xl mx-auto text-center space-y-8">
+          <div className="space-y-3">
+            <SectionBadge text="Integrations" />
+            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Integrates with your existing stack</h2>
+            <p className="text-sm font-medium text-slate-400 max-w-lg mx-auto">Connect InternFlow with the tools your team already uses. No migration headaches.</p>
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            { quote: "InternFlow cut down our program management overhead by 60%. Assigning mentors and reviewing scores has never been this fluid.", author: "Priya Nair", role: "HR Manager, TechCorp", rating: 5 },
-            { quote: "Evaluating interns' skills became extremely visual. The Radar Analytics chart makes performance feedback highly scientific.", author: "Rahul Mehta", role: "Design Director", rating: 5 },
-            { quote: "The daily punch-in logs and the interactive AI Chatbot kept me aligned with my tasks throughout my 3-month engineering internship.", author: "Ankit Patil", role: "Software Intern", rating: 5 },
-          ].map((test, i) => (
-            <div key={i} className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-100 hover:scale-[1.01] transition-all duration-300 text-left flex flex-col justify-between">
-              <div className="space-y-4">
-                <div className="flex gap-0.5">
-                  {[...Array(test.rating)].map((_, idx) => (
-                    <Star key={idx} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed font-semibold italic">"{test.quote}"</p>
-              </div>
-              <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold text-slate-800">{test.author}</p>
-                  <p className="text-[10px] text-slate-400 font-semibold">{test.role}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* CTA Banner */}
-      <section className="bg-gradient-to-br from-blue-600 to-indigo-800 py-16 px-6 text-center text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent)]" />
-        <div className="max-w-xl mx-auto space-y-6 relative z-10">
-          <h2 className="text-3xl font-extrabold tracking-tight">Ready to Transform Your Internship Program?</h2>
-          <p className="text-blue-100 text-sm font-semibold leading-relaxed">
-            Get started today. Deploy secure dashboards, AI features, and scientific evaluations for your next cohort of interns.
-          </p>
-          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <button
-              onClick={() => navigate('/apply')}
-              className="w-full sm:w-auto px-6 py-3.5 bg-white text-blue-600 hover:bg-blue-50 font-bold text-sm rounded-xl transition-all shadow-xl cursor-pointer"
-            >
-              Start Free Trial
-            </button>
-            <button
-              onClick={() => navigate('/login')}
-              className="w-full sm:w-auto px-6 py-3.5 bg-blue-700 hover:bg-blue-800 border border-blue-500 font-bold text-sm rounded-xl transition-all cursor-pointer"
-            >
-              Explore Sandbox
-            </button>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {[
+              { name: 'Slack', icon: MessageSquare, url: 'https://slack.com' },
+              { name: 'Google Workspace', icon: Globe, url: 'https://workspace.google.com' },
+              { name: 'Zoom', icon: Video, url: 'https://zoom.us' },
+              { name: 'GitHub', icon: GitBranch, url: 'https://github.com' },
+              { name: 'Jira', icon: ClipboardCheck, url: 'https://www.atlassian.com/software/jira' },
+              { name: 'Notion', icon: FileText, url: 'https://notion.so' },
+            ].map((tool) => {
+              const Icon = tool.icon;
+              return (
+                <button
+                  key={tool.name}
+                  onClick={() => window.open(tool.url, '_blank')}
+                  className="flex items-center gap-2.5 px-5 py-3 bg-white border border-slate-200/60 rounded-xl shadow-sm hover:shadow-md hover:border-blue-200/50 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+                >
+                  <Icon className="w-4.5 h-4.5 text-blue-600" />
+                  <span className="text-sm font-semibold text-slate-700">{tool.name}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-slate-900 border-t border-slate-800 px-6 py-12 text-slate-400">
-        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 mb-12 text-left">
-          <div className="space-y-4">
+      {/* ═══════════ CTA Banner ═══════════ */}
+      <section className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 py-16 px-6 text-center text-white relative overflow-hidden">
+        {/* Subtle geometric accents */}
+        <div className="absolute top-0 left-0 w-64 h-64 bg-white/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-0 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl" />
+        <div className="absolute top-10 right-20 w-20 h-20 border border-white/10 rounded-2xl rotate-12" />
+        <div className="absolute bottom-8 left-16 w-14 h-14 border border-white/10 rounded-xl -rotate-12" />
+
+        <div className="max-w-2xl mx-auto space-y-6 relative z-10">
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight leading-tight">
+            Ready to transform your<br />internship program?
+          </h2>
+          <p className="text-blue-100 text-sm md:text-base font-medium max-w-xl mx-auto leading-relaxed">
+            Deploy AI-powered dashboards, scientific skill evaluations, and verified certificates for your next cohort — today.
+          </p>
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={() => navigate('/apply')}
+              className="w-full sm:w-auto px-7 py-3.5 bg-white text-blue-600 hover:bg-blue-50 font-bold text-sm rounded-xl transition-all shadow-lg shadow-black/10 hover:shadow-xl hover:-translate-y-0.5 cursor-pointer"
+            >
+              Start free trial
+            </button>
+            <button
+              onClick={() => navigate('/login')}
+              className="w-full sm:w-auto px-7 py-3.5 bg-blue-700/50 hover:bg-blue-700 border border-blue-400/30 font-bold text-sm rounded-xl transition-all hover:-translate-y-0.5 cursor-pointer"
+            >
+              Explore sandbox
+            </button>
+          </div>
+          <p className="text-[11px] text-blue-200 font-medium flex items-center justify-center gap-1.5">
+            <Lock className="w-3 h-3" /> No credit card required · Setup in under 5 minutes
+          </p>
+        </div>
+      </section>
+
+      {/* ═══════════ Footer ═══════════ */}
+      <footer className="bg-slate-900 border-t border-slate-800 px-6 py-16 text-slate-400">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-10 mb-12 text-left">
+          <div className="space-y-4 col-span-2 md:col-span-1">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center">
+              <div className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/10">
                 <GraduationCap className="w-4.5 h-4.5 text-white" />
               </div>
               <span className="font-extrabold text-white text-base tracking-tight">InternFlow</span>
             </div>
-            <p className="text-xs font-semibold leading-relaxed max-w-xs text-slate-500">
-              Complete state-of-the-art cohort management tools powered by AI insights.
+            <p className="text-xs font-medium leading-relaxed max-w-xs text-slate-500">
+              Complete cohort management tools powered by AI — built for the teams shaping the next generation of talent.
             </p>
+            {/* Social Icons */}
+            <div className="flex items-center gap-3 pt-1">
+              <a href="#" className="w-8 h-8 bg-slate-800 hover:bg-blue-600 rounded-lg flex items-center justify-center transition-all duration-200 group">
+                <Globe className="w-3.5 h-3.5 text-slate-400 group-hover:text-white" />
+              </a>
+              <a href="#" className="w-8 h-8 bg-slate-800 hover:bg-blue-600 rounded-lg flex items-center justify-center transition-all duration-200 group">
+                <MessageSquare className="w-3.5 h-3.5 text-slate-400 group-hover:text-white" />
+              </a>
+              <a href="#" className="w-8 h-8 bg-slate-800 hover:bg-blue-600 rounded-lg flex items-center justify-center transition-all duration-200 group">
+                <GitBranch className="w-3.5 h-3.5 text-slate-400 group-hover:text-white" />
+              </a>
+            </div>
           </div>
           {[
-            { title: "Product", links: ["Features", "Pricing", "Integrations", "Roadmap"] },
-            { title: "Company", links: ["About Us", "Careers", "Press", "Contact"] },
-            { title: "Legal", links: ["Privacy Policy", "Terms of Service", "Cookie Settings", "Security"] }
+            {
+              title: 'Product',
+              links: [
+                { label: 'Features', href: '#features' },
+                { label: 'Integrations', href: '#integrations' },
+                { label: 'Roadmap', href: '/roadmap' }
+              ]
+            },
+            {
+              title: 'Company',
+              links: [
+                { label: 'About Us', href: '/about' },
+                { label: 'Careers', href: '/careers' },
+                { label: 'Press', href: '/press' },
+                { label: 'Contact', href: '/contact' }
+              ]
+            },
+            {
+              title: 'Legal',
+              links: [
+                { label: 'Privacy Policy', href: '/privacy' },
+                { label: 'Terms of Service', href: '/terms' },
+                { label: 'Cookie Settings', href: '/cookies' },
+                { label: 'Security', href: '/security' }
+              ]
+            }
           ].map((col, idx) => (
             <div key={idx} className="space-y-3">
-              <h4 className="text-xs font-extrabold text-slate-200 uppercase tracking-wider">{col.title}</h4>
-              <ul className="space-y-2 text-xs font-semibold text-slate-500">
+              <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">{col.title}</h4>
+              <ul className="space-y-2.5 text-xs font-medium text-slate-500">
                 {col.links.map((link) => (
-                  <li key={link}><a href="#" className="hover:text-white transition-colors">{link}</a></li>
+                  <li key={link.label}>
+                    <a
+                      href={link.href}
+                      onClick={(e) => {
+                        if (link.href === '#') {
+                          e.preventDefault();
+                          toast.success(`${link.label} page coming soon!`);
+                        } else if (link.href.startsWith('/')) {
+                          e.preventDefault();
+                          window.scrollTo(0, 0);
+                          navigate(link.href);
+                        }
+                      }}
+                      className="hover:text-white transition-colors duration-200"
+                    >
+                      {link.label}
+                    </a>
+                  </li>
                 ))}
               </ul>
             </div>
           ))}
         </div>
-        <div className="max-w-5xl mx-auto pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-slate-500">
+        <div className="max-w-5xl mx-auto pt-8 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-500">
           <p>© 2026 InternFlow Inc. All rights reserved.</p>
-          <div className="flex gap-4">
-            <a href="#" className="hover:text-white transition-colors"><Globe className="w-4 h-4" /></a>
-            <a href="#" className="hover:text-white transition-colors"><Heart className="w-4 h-4" /></a>
-          </div>
+          <p className="flex items-center gap-1.5">Made with <Heart className="w-3 h-3 text-red-400 fill-red-400" /> in India</p>
         </div>
       </footer>
 
-      {/* Floating Socket.IO Test Control Widget */}
-      <div className="fixed bottom-6 right-6 z-50 w-72 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-[0_10px_30px_rgba(15,23,42,0.08)] p-4 flex flex-col gap-3 font-sans transition-all duration-300 hover:shadow-[0_15px_35px_rgba(37,99,235,0.12)]">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-rose-400'} opacity-75`}></span>
-              <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isConnected ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
-            </span>
-            <span className="text-[10px] font-extrabold text-slate-700 uppercase tracking-wider">Socket.IO Live Status</span>
-          </div>
-          <span className="text-[9px] font-extrabold text-slate-400">
-            {isConnected ? 'Connected' : 'Disconnected'}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 text-center text-xs">
-          <div className="bg-slate-50 border border-slate-100 rounded-xl p-2">
-            <p className="text-[8px] font-extrabold text-slate-400 uppercase">Pings Sent</p>
-            <p className="text-sm font-extrabold text-slate-700 mt-0.5">{pingCount}</p>
-          </div>
-          <div className="bg-slate-50 border border-slate-100 rounded-xl p-2">
-            <p className="text-[8px] font-extrabold text-slate-400 uppercase">Pongs Recv</p>
-            <p className="text-sm font-extrabold text-blue-600 mt-0.5">{pongCount}</p>
-          </div>
-        </div>
-
-        {lastPongTime && (
-          <p className="text-[9px] font-bold text-slate-400 text-center">
-            Last Pong: <span className="text-slate-600 font-extrabold">{lastPongTime}</span>
-          </p>
-        )}
-
-        <button
-          onClick={sendPing}
-          disabled={!isConnected}
-          className={`w-full py-2 px-4 rounded-xl text-xs font-bold text-white transition-all transform hover:-translate-y-0.5 cursor-pointer shadow-md ${
-            isConnected
-              ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-100 hover:shadow-blue-200'
-              : 'bg-slate-300 cursor-not-allowed shadow-none'
-          }`}
-        >
-          Send Ping
-        </button>
-      </div>
-
-      {/* Embedded High-Fidelity Custom Animation Styles */}
+      {/* ═══════════ Animations ═══════════ */}
       <style>{`
         @keyframes heroFadeIn {
           0% { opacity: 0; transform: translateY(15px); }
@@ -612,10 +545,6 @@ export const LandingPage: React.FC = () => {
           0%, 100% { transform: translate(0, 0) scale(1); }
           50% { transform: translate(-25px, 20px) scale(1.05); }
         }
-        @keyframes float3D {
-          0%, 100% { transform: translateY(0px) rotateX(1.5deg) rotateY(-1.5deg); }
-          50% { transform: translateY(-12px) rotateX(-1.5deg) rotateY(1.5deg); }
-        }
         @keyframes slideUpFadeIn {
           0% { opacity: 0; transform: translateY(30px); }
           100% { opacity: 1; transform: translateY(0); }
@@ -623,6 +552,10 @@ export const LandingPage: React.FC = () => {
         @keyframes scaleUpIn {
           0% { opacity: 0; transform: scale(0.96) translateY(20px); }
           100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes floatBadge {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
         }
       `}</style>
     </div>
