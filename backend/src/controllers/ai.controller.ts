@@ -1,10 +1,48 @@
 import { Request, Response, NextFunction } from 'express';
 import aiService from '../services/ai.service';
-import { successResponse } from '../utils/response';
+import { successResponse, errorResponse } from '../utils/response';
 import prisma from '../config/database';
 import { logger } from '../utils/logger';
+import * as fs from 'fs';
 
 export class AIController {
+  
+  /**
+   * Parse Resume (Part 1)
+   */
+  async parseResume(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.file) {
+        errorResponse(res, 'No file uploaded', 400);
+        return;
+      }
+      
+      let requiredSkills = [];
+      if (req.body.requiredSkills) {
+        try {
+          requiredSkills = JSON.parse(req.body.requiredSkills);
+        } catch (e) {
+          requiredSkills = req.body.requiredSkills.split(',').map((s: string) => s.trim());
+        }
+      }
+
+      // Pass token if we want to forward auth to python, else undefined
+      const token = req.headers.authorization?.split(' ')[1];
+      
+      const result = await aiService.parseInternResume(req.file.path, requiredSkills, token);
+      
+      // Clean up the temporary file
+      fs.unlinkSync(req.file.path);
+
+      successResponse(res, 'Resume parsed successfully', result);
+    } catch (error) {
+      if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+      next(error);
+    }
+  }
+
   /**
    * Match an intern profile to department and role requirements
    */
@@ -30,16 +68,95 @@ export class AIController {
    */
   async predictPerformance(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { attendanceRate, taskCompletionRate, feedbackSentimentScore, productivityScore } = req.body;
+      const { 
+        internId,
+        attendanceRate, 
+        taskCompletionRate, 
+        feedbackSentimentScore, 
+        productivityScore,
+        daysSinceLastTask,
+        communicationScore,
+        skillMatchScore,
+        weekNumber
+      } = req.body;
 
-      const result = await aiService.predictPerformance({
+      const result = await aiService.predictPerformance(internId || 'unknown', {
         attendanceRate,
         taskCompletionRate,
         feedbackSentimentScore,
         productivityScore,
+        daysSinceLastTask,
+        communicationScore,
+        skillMatchScore,
+        weekNumber
       });
 
       successResponse(res, 'Performance prediction analysis completed successfully', result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Get Smart Intern Ranking (Part 3)
+   */
+  async getRanking(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { departmentId } = req.query;
+      
+      // Fetch interns to rank
+      const whereClause = departmentId ? { departmentId: departmentId as string } : {};
+      const interns = await prisma.intern.findMany({
+        where: whereClause,
+        include: {
+          user: { select: { name: true } }
+        }
+      });
+
+      // Map to expected format
+      const internsData = interns.map(i => ({
+        intern_id: i.id,
+        name: i.user?.name || 'Unknown',
+        attendance_rate: i.attendance || 0,
+        task_completion_rate: (i.score || 0) / 100, // proxy
+        avg_task_rating: 4.0, // mock or fetch from tasks
+        communication_score: 4.0,
+        skill_growth_score: 0.8
+      }));
+
+      const result = await aiService.getInternRanking(internsData, departmentId as string);
+
+      successResponse(res, 'Intern ranking generated successfully', result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Evaluate Intern Risks (Part 5)
+   */
+  async evaluateRisks(_req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      // Fetch interns to evaluate
+      const interns = await prisma.intern.findMany({
+        include: {
+          user: { select: { name: true } }
+        }
+      });
+
+      const internsData = interns.map(i => ({
+        intern_id: i.id,
+        name: i.user?.name || 'Unknown',
+        attendance_rate: i.attendance || 0,
+        days_since_last_activity: 1, // mock or calculate based on last active
+        avg_task_rating: 4.0,
+        sentiment_score: 0.5,
+        productivity_trend: 0
+      }));
+
+      const result = await aiService.evaluateInternRisks(internsData);
+
+      successResponse(res, 'Risk evaluation completed successfully', result);
     } catch (error) {
       next(error);
     }
@@ -58,6 +175,30 @@ export class AIController {
 
       successResponse(res, 'Feedback sentiment analysis completed successfully', result);
     } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Add Document for Chatbot (Part 4)
+   */
+  async addChatbotDocument(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.file) {
+        errorResponse(res, 'No file uploaded', 400);
+        return;
+      }
+      
+      const result = await aiService.addHRDocument(req.file.path);
+      
+      // Clean up the temporary file
+      fs.unlinkSync(req.file.path);
+
+      successResponse(res, 'Document indexed successfully', result);
+    } catch (error) {
+      if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
       next(error);
     }
   }

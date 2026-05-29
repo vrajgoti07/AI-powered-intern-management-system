@@ -1029,23 +1029,29 @@ export const PerformanceAnalytics: React.FC = () => {
                         </h4>
                         <p className="text-xs text-slate-500 font-semibold">Generate a premium cryptographic credential with digital authority signature markers.</p>
                       </div>
-                      <div className="flex gap-2">
-                        {showCertificate && (
+                      {selectedIntern?.status === 'COMPLETED' ? (
+                        <div className="flex gap-2">
+                          {showCertificate && (
+                            <button
+                              onClick={handleDownloadCertificate}
+                              disabled={isDownloadingCert}
+                              className="py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-xs font-extrabold flex items-center gap-2 shadow-md shadow-emerald-600/10 cursor-pointer"
+                            >
+                              {isDownloadingCert ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} Download Gold PDF
+                            </button>
+                          )}
                           <button
-                            onClick={handleDownloadCertificate}
-                            disabled={isDownloadingCert}
-                            className="py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-xs font-extrabold flex items-center gap-2 shadow-md shadow-emerald-600/10 cursor-pointer"
+                            onClick={() => setShowCertificate(!showCertificate)}
+                            className="py-2.5 px-4 bg-[#2563eb] hover:bg-blue-700 text-white rounded-xl text-xs font-extrabold flex items-center gap-2 shadow-md shadow-blue-600/10 cursor-pointer"
                           >
-                            {isDownloadingCert ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} Download Gold PDF
+                            <Eye className="w-4 h-4" /> {showCertificate ? "Hide Signature Preview" : "Preview Golden Certificate"}
                           </button>
-                        )}
-                        <button
-                          onClick={() => setShowCertificate(!showCertificate)}
-                          className="py-2.5 px-4 bg-[#2563eb] hover:bg-blue-700 text-white rounded-xl text-xs font-extrabold flex items-center gap-2 shadow-md shadow-blue-600/10 cursor-pointer"
-                        >
-                          <Eye className="w-4 h-4" /> {showCertificate ? "Hide Signature Preview" : "Preview Golden Certificate"}
-                        </button>
-                      </div>
+                        </div>
+                      ) : (
+                        <span className="text-xs font-bold text-rose-500 bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-100">
+                          Internship must be COMPLETED to generate this certificate.
+                        </span>
+                      )}
                     </div>
 
                     {showCertificate && (

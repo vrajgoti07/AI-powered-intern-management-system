@@ -17,6 +17,13 @@ router.use(authenticate);
 router.get('/', validate(getNotificationsQuerySchema), notificationController.getNotifications);
 
 /**
+ * @route   GET /api/v1/notifications/unread-count
+ * @desc    Get unread notification count
+ * @access  Authenticated Users
+ */
+router.get('/unread-count', notificationController.getUnreadCount);
+
+/**
  * @route   PUT /api/v1/notifications/:id/read
  * @desc    Mark a specific notification as read
  * @access  Authenticated Users
@@ -30,5 +37,12 @@ router.patch('/:id/read', notificationController.markAsRead);
  * @access  Authenticated Users
  */
 router.put('/read-all', notificationController.markAllAsRead);
+
+/**
+ * @route   DELETE /api/v1/notifications/:id
+ * @desc    Delete a notification
+ * @access  Authenticated Users
+ */
+router.delete('/:id', notificationController.deleteNotification);
 
 export default router;

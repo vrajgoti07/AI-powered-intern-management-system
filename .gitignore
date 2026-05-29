@@ -86,3 +86,9 @@
 **/*.bak
 **/*.tmp
 **/*.temp
+
+# Uploads
+**/uploads/
+
+# Test results
+**/test-results.txt

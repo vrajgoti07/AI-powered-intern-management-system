@@ -1,48 +1,66 @@
+import winston from 'winston';
+import path from 'path';
+import { config } from '../config/env';
+
 /**
- * Logger Utility
- * Simple console logger with timestamp and color coding
+ * Custom log format with timestamp, level, message, and optional metadata.
+ * In development: colorized console output.
+ * In production: JSON logs written to error.log + combined.log files.
  */
+const logFormat = winston.format.printf(({ level, message, timestamp, ...metadata }) => {
+  let msg = `${timestamp} [${level}] ${message}`;
+  if (Object.keys(metadata).length > 0) {
+    msg += ` ${JSON.stringify(metadata)}`;
+  }
+  return msg;
+});
 
-enum LogLevel {
-  INFO = 'INFO',
-  WARN = 'WARN',
-  ERROR = 'ERROR',
-  DEBUG = 'DEBUG',
+/**
+ * Winston transports configuration
+ */
+const transports: winston.transport[] = [];
+
+if (config.server.isProduction) {
+  // Production: write to files
+  transports.push(
+    new winston.transports.File({
+      filename: path.join(process.cwd(), 'logs', 'error.log'),
+      level: 'error',
+      maxsize: 10 * 1024 * 1024, // 10MB per file
+      maxFiles: 5,
+    }),
+    new winston.transports.File({
+      filename: path.join(process.cwd(), 'logs', 'combined.log'),
+      maxsize: 10 * 1024 * 1024,
+      maxFiles: 10,
+    })
+  );
+} else {
+  // Development: colorized console output
+  transports.push(
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize({ all: true }),
+        winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+        logFormat
+      ),
+    })
+  );
 }
 
-const colors = {
-  INFO: '\x1b[36m',    // Cyan
-  WARN: '\x1b[33m',    // Yellow
-  ERROR: '\x1b[31m',   // Red
-  DEBUG: '\x1b[35m',   // Magenta
-  RESET: '\x1b[0m',
-};
-
-class Logger {
-  private formatMessage(level: LogLevel, message: string): string {
-    const timestamp = new Date().toISOString();
-    const color = colors[level];
-    const reset = colors.RESET;
-    return `${color}[${timestamp}] [${level}]${reset} ${message}`;
-  }
-
-  info(message: string, ...args: any[]): void {
-    console.log(this.formatMessage(LogLevel.INFO, message), ...args);
-  }
-
-  warn(message: string, ...args: any[]): void {
-    console.warn(this.formatMessage(LogLevel.WARN, message), ...args);
-  }
-
-  error(message: string, ...args: any[]): void {
-    console.error(this.formatMessage(LogLevel.ERROR, message), ...args);
-  }
-
-  debug(message: string, ...args: any[]): void {
-    if (process.env.NODE_ENV === 'development') {
-      console.debug(this.formatMessage(LogLevel.DEBUG, message), ...args);
-    }
-  }
-}
-
-export const logger = new Logger();
+/**
+ * Create Winston logger instance
+ */
+export const logger = winston.createLogger({
+  level: config.server.isDevelopment ? 'debug' : 'info',
+  levels: winston.config.npm.levels,
+  format: winston.format.combine(
+    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+    winston.format.errors({ stack: true }),
+    logFormat
+  ),
+  defaultMeta: { service: 'intern-management-api' },
+  transports,
+  // Never crash on uncaught log errors
+  exitOnError: false,
+});

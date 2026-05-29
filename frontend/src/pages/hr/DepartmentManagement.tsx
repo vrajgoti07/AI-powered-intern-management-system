@@ -44,7 +44,10 @@ export const DepartmentManagement: React.FC = () => {
       // Call standard refreshData to sync global AppState
       await refreshData();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to assign head');
+      const errorMsg = error.response?.data?.errors 
+        ? error.response.data.errors.map((e: any) => e.message).join(', ') 
+        : error.response?.data?.message || error.message || 'Failed to assign head';
+      toast.error(errorMsg);
     } finally {
       setIsSubmittingPatch(false);
     }
@@ -173,7 +176,10 @@ export const DepartmentManagement: React.FC = () => {
       setCreateForm({ name: '', code: '', description: '', color: 'indigo', headId: '' });
       refreshData();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to create department');
+      const errorMsg = error.response?.data?.errors 
+        ? error.response.data.errors.map((e: any) => e.message).join(', ') 
+        : error.response?.data?.message || error.message || 'Failed to create department';
+      toast.error(errorMsg);
     }
   };
 
@@ -193,7 +199,10 @@ export const DepartmentManagement: React.FC = () => {
       setAssignHeadForm({ headId: '' });
       refreshData();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to assign head');
+      const errorMsg = error.response?.data?.errors 
+        ? error.response.data.errors.map((e: any) => e.message).join(', ') 
+        : error.response?.data?.message || error.message || 'Failed to assign head';
+      toast.error(errorMsg);
     }
   };
 

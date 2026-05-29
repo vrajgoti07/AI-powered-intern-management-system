@@ -4,6 +4,7 @@ import { successResponse } from '../utils/response';
 import { LeaveType, LeaveStatus } from '@prisma/client';
 import notificationService from '../services/notification.service';
 import prisma from '../config/database';
+import { emailQueue } from '../queues/queue.config';
 
 export class LeaveController {
   /**
@@ -81,7 +82,7 @@ export class LeaveController {
         where: { id: leave.internId },
         select: { 
           userId: true,
-          user: { select: { name: true } }
+          user: { select: { name: true, email: true } }
         },
       });
       if (internUser?.userId) {
@@ -94,6 +95,19 @@ export class LeaveController {
           true,
           'Leave Request Approved'
         );
+
+        if (internUser.user?.email) {
+          await emailQueue.add('LEAVE_APPROVED', {
+            to: internUser.user.email,
+            data: {
+              name: internUser.user.name,
+              leaveType: leave.type,
+              startDate: leave.startDate.toISOString().split('T')[0],
+              endDate: leave.endDate.toISOString().split('T')[0],
+              approvedBy
+            }
+          });
+        }
       }
 
       // Notify all HR administrators
@@ -134,7 +148,7 @@ export class LeaveController {
         where: { id: leave.internId },
         select: { 
           userId: true,
-          user: { select: { name: true } }
+          user: { select: { name: true, email: true } }
         },
       });
       if (internUser?.userId) {
@@ -147,6 +161,17 @@ export class LeaveController {
           true,
           'Leave Request Update'
         );
+
+        if (internUser.user?.email) {
+          await emailQueue.add('LEAVE_REJECTED', {
+            to: internUser.user.email,
+            data: {
+              name: internUser.user.name,
+              leaveType: leave.type,
+              reason: rejectionReason || 'No reason provided'
+            }
+          });
+        }
       }
 
       // Notify all HR administrators

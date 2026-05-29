@@ -1,30 +1,19 @@
 import { useEffect, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
-
-const SOCKET_URL = 'http://localhost:5000';
+import { Socket } from 'socket.io-client';
+import { socketService } from '../services/socket.service';
 
 export const useSocket = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
-    const socketInstance = io(SOCKET_URL, {
-      path: '/simple-socket/',
-      autoConnect: true,
-    });
-
+    socketService.connect();
+    const socketInstance = socketService.getSocket();
     setSocket(socketInstance);
 
-    socketInstance.on('connect', () => {
-      console.log(`[useSocket] Connected to server with ID: ${socketInstance.id}`);
-    });
-
-    socketInstance.on('disconnect', (reason) => {
-      console.log(`[useSocket] Disconnected: ${reason}`);
-    });
-
     return () => {
-      socketInstance.disconnect();
-      console.log('[useSocket] Socket disconnected on unmount');
+      // We don't necessarily want to disconnect on every unmount if it's a global socket,
+      // but if the hook is unmounted globally, we could.
+      // For now, we leave the connection open, or let App.tsx handle disconnect on logout.
     };
   }, []);
 

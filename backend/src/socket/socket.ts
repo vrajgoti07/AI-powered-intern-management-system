@@ -3,8 +3,10 @@ import { Server as HttpServer } from 'http';
 import { createAdapter } from '@socket.io/redis-adapter';
 import { verifyAccessToken } from '../utils/jwt';
 import { logger } from '../utils/logger';
+import { UserRole } from '@prisma/client';
 import redis from '../config/redis';
 import { config } from '../config/env';
+import prisma from '../config/database';
 
 // Extended socket interface to store user metadata
 export interface AuthenticatedSocket extends Socket {
@@ -86,6 +88,38 @@ export const initSocket = (httpServer: HttpServer): SocketIOServer => {
       await redis.sadd('online_users', userId);
       // Join self room (user:userId) for user-specific real-time alerts
       await socket.join(`user:${userId}`);
+      
+      // Join global room
+      await socket.join('global');
+
+      // Fetch user details to join specific rooms
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true, departmentId: true }
+      });
+
+      if (user) {
+        if (user.role === UserRole.HR || user.role === UserRole.SUPER_ADMIN) {
+          await socket.join('admin');
+        }
+        if (user.departmentId) {
+          await socket.join(`dept:${user.departmentId}`);
+        }
+        
+        // If user is an intern, they have mentorId on the Intern record
+        if (user.role === UserRole.INTERN) {
+            const intern = await prisma.intern.findUnique({ where: { userId } });
+            if (intern && intern.mentorId) {
+                await socket.join(`mentor_group:${intern.mentorId}`); // For intern to listen to mentor group
+            }
+        } else if (user.role === UserRole.MENTOR) {
+            const mentor = await prisma.mentor.findUnique({ where: { userId } });
+            if (mentor) {
+                await socket.join(`mentor:${mentor.id}`);
+                await socket.join(`mentor_group:${mentor.id}`);
+            }
+        }
+      }
       
       // Broadcast online status to all connected users
       socket.broadcast.emit('user_status_change', {

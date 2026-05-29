@@ -7,6 +7,8 @@ import { logger } from './utils/logger';
 import { initSocket } from './socket/socket';
 import { initSimpleSocket } from './socket/index';
 import './queues/notification.worker';
+import './queues/workers/email.worker';
+import { startScheduledJobs } from './jobs/scheduledJobs';
 
 /**
  * Start Server
@@ -27,6 +29,9 @@ const startServer = async () => {
 
     // Initialize simple Socket.IO server
     initSimpleSocket(server);
+
+    // Start scheduled background jobs
+    startScheduledJobs();
 
     // Start listening
     server.listen(config.server.port, () => {
@@ -52,6 +57,12 @@ const startServer = async () => {
     // Graceful shutdown
     const gracefulShutdown = async (signal: string) => {
       logger.info(`\n${signal} received. Starting graceful shutdown...`);
+
+      if (config.server.isDevelopment) {
+        logger.info('Development mode: forcing immediate shutdown to free port');
+        await disconnectDatabase().catch(() => {});
+        process.exit(0);
+      }
 
       server.close(async () => {
         logger.info('HTTP server closed');

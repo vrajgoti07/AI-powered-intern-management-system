@@ -110,6 +110,77 @@ export class NotificationService {
     }
   }
 
+  async sendToUser(userId: string, event: string, data: any) {
+    const notification = await prisma.notification.create({
+      data: {
+        userId,
+        title: data.title || 'Notification',
+        message: data.message || '',
+        type: data.type || 'SYSTEM',
+        data: data || undefined,
+      },
+    });
+    const io = getSocketIO();
+    if (io) io.to(`user:${userId}`).emit(event, { notification, data });
+    return notification;
+  }
+
+  async sendToDepartment(deptId: string, event: string, data: any) {
+    const users = await prisma.user.findMany({ where: { departmentId: deptId, isActive: true }, select: { id: true } });
+    if (users.length > 0) {
+      await prisma.notification.createMany({
+        data: users.map(u => ({
+          userId: u.id,
+          title: data.title || 'Notification',
+          message: data.message || '',
+          type: data.type || 'SYSTEM',
+          data: data || undefined,
+        }))
+      });
+    }
+    const io = getSocketIO();
+    if (io) io.to(`dept:${deptId}`).emit(event, data);
+  }
+
+  async sendToRole(role: string, event: string, data: any) {
+    const users = await prisma.user.findMany({ where: { role: role as any, isActive: true }, select: { id: true } });
+    if (users.length > 0) {
+      await prisma.notification.createMany({
+        data: users.map(u => ({
+          userId: u.id,
+          title: data.title || 'Notification',
+          message: data.message || '',
+          type: data.type || 'SYSTEM',
+          data: data || undefined,
+        }))
+      });
+    }
+    const io = getSocketIO();
+    if (io) {
+      if (role === 'HR' || role === 'SUPER_ADMIN') io.to('admin').emit(event, data);
+      else {
+        users.forEach(u => io.to(`user:${u.id}`).emit(event, data));
+      }
+    }
+  }
+
+  async sendToAll(event: string, data: any) {
+    const users = await prisma.user.findMany({ where: { isActive: true }, select: { id: true } });
+    if (users.length > 0) {
+      await prisma.notification.createMany({
+        data: users.map(u => ({
+          userId: u.id,
+          title: data.title || 'Notification',
+          message: data.message || '',
+          type: data.type || 'SYSTEM',
+          data: data || undefined,
+        }))
+      });
+    }
+    const io = getSocketIO();
+    if (io) io.to('global').emit(event, data);
+  }
+
   /**
    * Get paginated notifications history for a user
    */

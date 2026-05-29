@@ -26,25 +26,25 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
+
     // If unauthorized (401) and we haven't retried this request yet
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       const refreshToken = localStorage.getItem('internflow_refresh_token');
-      
+
       if (refreshToken) {
         try {
           // Attempt to refresh the access token using standard Axios to bypass custom interceptor loops
           const res = await axios.post('http://localhost:5000/api/v1/auth/refresh-token', {
             refreshToken,
           });
-          
+
           const { accessToken, refreshToken: newRefreshToken } = res.data.data;
-          
+
           // Store new tokens in client-side storage
           localStorage.setItem('internflow_access_token', accessToken);
           localStorage.setItem('internflow_refresh_token', newRefreshToken);
-          
+
           // Update authorization header with new valid access token and retry the original request
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
           return api(originalRequest);
@@ -58,7 +58,7 @@ api.interceptors.response.use(
         }
       }
     }
-    
+
     return Promise.reject(error);
   }
 );

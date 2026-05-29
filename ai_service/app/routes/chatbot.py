@@ -1,54 +1,43 @@
-"""
-Route handler for the AI Chatbot endpoint.
+from fastapi import APIRouter, UploadFile, File, HTTPException
+from pydantic import BaseModel
+from typing import Dict, Any
 
-POST /api/ai/chatbot — accepts a user message and returns an
-intent-classified response with suggested follow-up prompts.
-"""
+from app.services.rag_chatbot import chatbot_service
 
-import logging
-from datetime import datetime
-
-from fastapi import APIRouter, Request
-from app.schemas.chatbot import ChatRequest, ChatResponse, ChatData
-from app.services.chatbot_service import ChatbotService
-
-logger = logging.getLogger(__name__)
 router = APIRouter()
 
-_service = ChatbotService()
+class QueryRequest(BaseModel):
+    question: str
+    userId: str
 
-
-@router.post(
-    "/chatbot",
-    response_model=ChatResponse,
-    summary="Get an AI chatbot response with intent classification",
-)
-async def chatbot(payload: ChatRequest, request: Request) -> ChatResponse:
-    """Process a user message and return a contextual AI response."""
-    logger.info("[%s] POST /api/ai/chatbot", datetime.utcnow().isoformat())
-
+@router.post("/chatbot/add-document")
+async def add_document(file: UploadFile = File(...)):
+    if not file.filename.endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Only PDF files are supported.")
+        
     try:
-        # Pass Redis client from app state if available
-        redis_client = getattr(request.app.state, "redis", None)
+        content = await file.read()
+        chunks_added = chatbot_service.add_document(content, file.filename)
+        return {"message": f"Successfully indexed {chunks_added} chunks from {file.filename}."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-        result = _service.get_reply(
-            message=payload.message,
-            session_id=payload.session_id,
-            history=[msg.model_dump() for msg in payload.history] if payload.history else [],
-            context=payload.context,
-            redis_client=redis_client,
-        )
-        return ChatResponse(
-            success=True,
-            data=ChatData(**result),
-            error=None,
-        )
-    except Exception as exc:
-        logger.error("chatbot failed: %s", exc, exc_info=True)
-        return ChatResponse(
-            success=False,
-            data=ChatData(
-                reply="Sorry, I encountered an error. Please try again.",
-            ),
-            error=str(exc),
-        )
+@router.post("/chatbot/query")
+async def query_chatbot(request: QueryRequest):
+    try:
+        response = chatbot_service.query(request.question, request.userId)
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/chatbot/history/{user_id}")
+async def get_history(user_id: str):
+    return chatbot_service.get_history(user_id)
+
+@router.delete("/chatbot/history/{user_id}")
+async def clear_history(user_id: str):
+    success = chatbot_service.clear_history(user_id)
+    if success:
+        return {"message": f"History cleared for user {user_id}"}
+    else:
+        return {"message": "No history found for this user."}

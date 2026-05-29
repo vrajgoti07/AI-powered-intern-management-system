@@ -1,17 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { GraduationCap, Shield, Sparkles, User, UserCheck, ArrowRight, BarChart3, Users, Clock, Star, Zap, TrendingUp } from 'lucide-react';
+import { GraduationCap, Shield, Sparkles, User, UserCheck, ArrowRight, BarChart3, Users, Clock, Star, Zap, TrendingUp, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Logo } from '../../components/common/Logo';
 
+/**
+ * Role-based redirect map.
+ * Backend detects the actual role from DB — frontend just redirects accordingly.
+ */
+const ROLE_REDIRECT_MAP: Record<string, string> = {
+  super_admin: '/admin/super-admin',
+  admin: '/admin/super-admin',
+  hr: '/hr/dashboard',
+  department_head: '/mentor/dashboard',
+  mentor: '/mentor/dashboard',
+  intern: '/intern/dashboard',
+};
+
+/**
+ * Resolve the correct dashboard path from the user's role string.
+ */
+const getDashboardPath = (role: string): string => {
+  return ROLE_REDIRECT_MAP[role.toLowerCase()] || '/hr/dashboard';
+};
+
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { login, sendLoginOtp, verifyLoginOtp } = useAuth();
+  const { user, sendLoginOtp, verifyLoginOtp, isAuthenticated } = useAuth();
 
-  const [role, setRole] = useState<'hr' | 'mentor' | 'intern'>('hr');
-  const [email, setEmail] = useState('hr.internflow@gmail.com');
-  const [password, setPassword] = useState('hr@123456789');
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      navigate(getDashboardPath(user.originalRole || user.role), { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
+
+  // Cosmetic role tab — purely visual, does NOT affect authentication logic
+  const [activeTab, setActiveTab] = useState<'hr' | 'mentor' | 'intern'>('hr');
+
+  // Credential fields
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // OTP Stage States
   const [isOtpStage, setIsOtpStage] = useState(false);
@@ -19,6 +51,7 @@ export const LoginPage: React.FC = () => {
   const [expiryTime, setExpiryTime] = useState(300); // 5 mins
   const [resendCooldown, setResendCooldown] = useState(0); // 30s cooldown
 
+  // OTP expiry countdown
   useEffect(() => {
     let timer: any;
     if (isOtpStage && expiryTime > 0) {
@@ -29,6 +62,7 @@ export const LoginPage: React.FC = () => {
     return () => clearInterval(timer);
   }, [isOtpStage, expiryTime]);
 
+  // Resend cooldown countdown
   useEffect(() => {
     let timer: any;
     if (resendCooldown > 0) {
@@ -39,44 +73,58 @@ export const LoginPage: React.FC = () => {
     return () => clearInterval(timer);
   }, [resendCooldown]);
 
-  const handleRoleChange = (selectedRole: 'hr' | 'mentor' | 'intern') => {
-    setRole(selectedRole);
-    if (selectedRole === 'hr') {
-      setEmail('hr.internflow@gmail.com');
-      setPassword('hr@123456789');
-    } else {
-      // Clear fields so user can log in with their actual email
-      setEmail('');
-      setPassword('');
+  /**
+   * Navigate user to the correct dashboard after successful authentication.
+   */
+  const redirectAfterLogin = () => {
+    const storedUser = localStorage.getItem('internflow_user');
+    if (storedUser) {
+      const userObj = JSON.parse(storedUser);
+      const userRole = userObj.originalRole || userObj.role;
+      toast.success(`Welcome back, ${userObj.name}!`);
+      navigate(getDashboardPath(userRole), { replace: true });
     }
   };
 
+  /**
+   * Handle credential submission.
+   * Sends email + password to backend. Backend auto-detects role from DB.
+   * If trusted device is recognized → direct login bypass.
+   * Otherwise → OTP verification stage.
+   */
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) { toast.error("Please enter email and password."); return; }
 
-    const loadingToast = toast.loading("Verifying credentials against backend...");
-    const res = await sendLoginOtp(email, password);
-    toast.dismiss(loadingToast);
+    setIsSubmitting(true);
+    const loadingToast = toast.loading("Verifying credentials...");
 
-    if (res.success) {
-      if (res.directLogin) {
-        const storedUser = localStorage.getItem('internflow_user');
-        if (storedUser) {
-          const userObj = JSON.parse(storedUser);
-          const userRole = userObj.role; // maps to 'hr', 'mentor', or 'intern'
-          toast.success(`Welcome back, ${userObj.name}! (Trusted Device Recognized)`);
-          navigate(userRole === 'hr' ? '/hr/dashboard' : (userRole === 'mentor' || userRole === 'department_head') ? '/mentor/dashboard' : '/intern/dashboard');
+    try {
+      const res = await sendLoginOtp(email, password);
+      toast.dismiss(loadingToast);
+
+      if (res.success) {
+        if (res.directLogin) {
+          // Trusted device recognized — skip OTP, go straight to dashboard
+          redirectAfterLogin();
+        } else {
+          // OTP dispatched — show verification stage
+          toast.success("A login verification code has been sent to your email.");
+          setIsOtpStage(true);
+          setExpiryTime(300);
+          setResendCooldown(30);
         }
-      } else {
-        toast.success("Credentials validated! A login verification code has been dispatched.");
-        setIsOtpStage(true);
-        setExpiryTime(300);
-        setResendCooldown(30);
       }
+    } catch {
+      toast.dismiss(loadingToast);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  /**
+   * Handle OTP verification submission.
+   */
   const handleOtpVerifySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (otpCode.length !== 6) {
@@ -89,38 +137,37 @@ export const LoginPage: React.FC = () => {
       return;
     }
 
-    const loadingToast = toast.loading("Authorizing security credentials...");
-    const success = await verifyLoginOtp(email, password, otpCode);
-    toast.dismiss(loadingToast);
+    setIsSubmitting(true);
+    const loadingToast = toast.loading("Verifying passcode...");
 
-    if (success) {
-      const storedUser = localStorage.getItem('internflow_user');
-      if (storedUser) {
-        const userObj = JSON.parse(storedUser);
-        const userRole = userObj.role; // maps to 'hr', 'mentor', or 'intern'
-        toast.success(`Access Authorized! Welcome back, ${userObj.name}!`);
-        navigate(userRole === 'hr' ? '/hr/dashboard' : (userRole === 'mentor' || userRole === 'department_head') ? '/mentor/dashboard' : '/intern/dashboard');
+    try {
+      const success = await verifyLoginOtp(email, password, otpCode);
+      toast.dismiss(loadingToast);
+
+      if (success) {
+        redirectAfterLogin();
       }
+    } catch {
+      toast.dismiss(loadingToast);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  /**
+   * Handle OTP resend.
+   */
   const handleResendOtp = async () => {
     if (resendCooldown > 0) return;
-    const loadingToast = toast.loading("Resending login passcode...");
+    const loadingToast = toast.loading("Resending verification code...");
     const res = await sendLoginOtp(email, password);
     toast.dismiss(loadingToast);
 
     if (res.success) {
       if (res.directLogin) {
-        const storedUser = localStorage.getItem('internflow_user');
-        if (storedUser) {
-          const userObj = JSON.parse(storedUser);
-          const userRole = userObj.role;
-          toast.success(`Welcome back, ${userObj.name}! (Trusted Device Recognized)`);
-          navigate(userRole === 'hr' ? '/hr/dashboard' : (userRole === 'mentor' || userRole === 'department_head') ? '/mentor/dashboard' : '/intern/dashboard');
-        }
+        redirectAfterLogin();
       } else {
-        toast.success("A fresh verification passcode has been dispatched!");
+        toast.success("A fresh verification code has been sent!");
         setOtpCode('');
         setExpiryTime(300);
         setResendCooldown(30);
@@ -128,7 +175,9 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  // Format expiry seconds into MM:SS
+  /**
+   * Format seconds into MM:SS display string.
+   */
   const formatTime = (secs: number) => {
     const mins = Math.floor(secs / 60);
     const remaining = secs % 60;
@@ -157,36 +206,12 @@ export const LoginPage: React.FC = () => {
               <>
                 <div className="space-y-2.5">
                   <h2 className="text-3xl font-black text-slate-900 tracking-tight leading-tight">Welcome Back</h2>
-                  <p className="text-sm font-semibold text-slate-400">Select your role and sign in to continue</p>
+                  <p className="text-sm font-semibold text-slate-400">Sign in with your email and password to continue</p>
                 </div>
 
-                {/* Role Tabs */}
-                <div className="grid grid-cols-3 gap-2.5 bg-slate-50 p-2 rounded-2xl border border-slate-100/80">
-                  {[
-                    { id: 'hr', label: 'HR Admin', icon: Shield },
-                    { id: 'mentor', label: 'Mentor', icon: UserCheck },
-                    { id: 'intern', label: 'Intern', icon: User },
-                  ].map((r) => {
-                    const Icon = r.icon;
-                    const isSelected = role === r.id;
-                    return (
-                      <button
-                        key={r.id}
-                        type="button"
-                        onClick={() => handleRoleChange(r.id as any)}
-                        className={`flex flex-col items-center gap-2 py-3.5 rounded-xl text-[11px] font-bold transition-all duration-300 cursor-pointer
-                          ${isSelected
-                            ? "bg-white text-[#2563eb] shadow-md shadow-blue-100/40 border border-blue-100 scale-[1.02]"
-                            : "text-slate-400 hover:text-slate-600 hover:bg-white/50"}`}
-                      >
-                        <Icon className="w-4.5 h-4.5" />
-                        {r.label}
-                      </button>
-                    );
-                  })}
-                </div>
 
-                {/* Form */}
+
+                {/* Login Form — only email + password, backend detects role */}
                 <form onSubmit={handleCredentialsSubmit} className="space-y-5 text-left">
                   <div>
                     <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Email Address</label>
@@ -200,12 +225,23 @@ export const LoginPage: React.FC = () => {
 
                   <div>
                     <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Password</label>
-                    <input
-                      type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full text-sm font-semibold px-4.5 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all placeholder:text-slate-400 text-slate-800"
-                      required
-                    />
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full text-sm font-semibold px-4.5 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all placeholder:text-slate-400 text-slate-800 pr-12"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                      >
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between pt-1">
@@ -218,19 +254,20 @@ export const LoginPage: React.FC = () => {
 
                   <button
                     type="submit"
-                    className="w-full px-6 py-4 text-sm font-bold text-white bg-[#2563eb] hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-200/50 flex items-center justify-center gap-2 cursor-pointer group animate-fade-in"
+                    disabled={isSubmitting}
+                    className="w-full px-6 py-4 text-sm font-bold text-white bg-[#2563eb] hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-200/50 flex items-center justify-center gap-2 cursor-pointer group animate-fade-in disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    Verify Credentials
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    {isSubmitting ? 'Verifying...' : 'Sign In'}
+                    {!isSubmitting && <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
                   </button>
                 </form>
               </>
             ) : (
               <>
                 <div className="space-y-2.5">
-                  <h2 className="text-3xl font-black text-slate-900 tracking-tight leading-tight">Identity Authorization</h2>
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tight leading-tight">Identity Verification</h2>
                   <p className="text-sm font-semibold text-slate-400 leading-relaxed">
-                    A secure 6-digit verification code has been dispatched to <strong className="text-slate-600 font-extrabold">{email}</strong>. Please enter the passcode to access the workspace.
+                    A secure 6-digit verification code has been sent to <strong className="text-slate-600 font-extrabold">{email}</strong>. Enter the code to access your workspace.
                   </p>
                 </div>
 
@@ -265,9 +302,10 @@ export const LoginPage: React.FC = () => {
                   <div className="space-y-3.5 pt-2">
                     <button
                       type="submit"
-                      className="w-full px-6 py-4 text-sm font-black uppercase tracking-wider text-white bg-[#2563eb] hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-200/50 flex items-center justify-center gap-2 cursor-pointer"
+                      disabled={isSubmitting}
+                      className="w-full px-6 py-4 text-sm font-black uppercase tracking-wider text-white bg-[#2563eb] hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-200/50 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      Verify Passcode & Enter
+                      {isSubmitting ? 'Verifying...' : 'Verify Passcode & Enter'}
                     </button>
 
                     <button

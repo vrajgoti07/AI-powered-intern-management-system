@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { PrismaClient, AnnouncementPriority, UserRole } from '@prisma/client';
 import { successResponse, errorResponse } from '../utils/response';
 import { sendAnnouncementEmail } from '../utils/email';
+import notificationService from '../services/notification.service';
 
 const prisma = new PrismaClient();
 
@@ -139,6 +140,27 @@ export const createAnnouncement = async (req: Request, res: Response, next: Next
         announcement.author,
         announcement.priority
       ).catch(err => console.error("Error sending announcement broadcast:", err));
+    }
+    
+    // Real-time Socket & DB Notifications
+    const eventPayload = {
+      title: announcement.title,
+      message: announcement.content,
+      type: 'ANNOUNCEMENT',
+      payload: announcement
+    };
+
+    if (audience === 'All') {
+      await notificationService.sendToAll('announcement:new', eventPayload);
+    } else if (audience === 'Interns') {
+      await notificationService.sendToRole(UserRole.INTERN, 'announcement:new', eventPayload);
+    } else if (audience === 'Mentors') {
+      await notificationService.sendToRole(UserRole.MENTOR, 'announcement:new', eventPayload);
+    } else {
+      const dept = await prisma.department.findUnique({ where: { name: audience } });
+      if (dept) {
+        await notificationService.sendToDepartment(dept.id, 'announcement:new', eventPayload);
+      }
     }
 
     successResponse(res, 'Announcement published successfully', announcement, 201);

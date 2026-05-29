@@ -28,6 +28,7 @@ const InternManagement = React.lazy(() => import('./pages/hr/InternManagement').
 const MentorManagement = React.lazy(() => import('./pages/hr/MentorManagement').then(m => ({ default: m.MentorManagement })));
 const DepartmentManagement = React.lazy(() => import('./pages/hr/DepartmentManagement').then(m => ({ default: m.DepartmentManagement })));
 const DepartmentDetails = React.lazy(() => import('./pages/hr/DepartmentDetails').then(m => ({ default: m.DepartmentDetails })));
+const DepartmentHeadDashboard = React.lazy(() => import('./pages/department-head/DepartmentDashboard').then(m => ({ default: m.DepartmentDashboard })));
 const ReportsAnalytics = React.lazy(() => import('./pages/hr/ReportsAnalytics').then(m => ({ default: m.ReportsAnalytics })));
 const Announcements = React.lazy(() => import('./pages/hr/Announcements').then(m => ({ default: m.Announcements })));
 const OnboardingVerification = React.lazy(() => import('./pages/hr/OnboardingVerification').then(m => ({ default: m.OnboardingVerification })));
@@ -263,6 +264,17 @@ const App: React.FC = () => {
                     </ProtectedRoute>
                   }
                 />
+
+                {/* Department Head Dashboard */}
+                <Route
+                  path="/department-head/dashboard"
+                  element={
+                    <ProtectedRoute allowedRole="mentor">
+                      <DepartmentHeadDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+
                 {/* Corporate Mentor Secured Route Portal */}
                 <Route
                   path="/mentor/dashboard"

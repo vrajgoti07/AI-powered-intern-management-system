@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import leaveRequestService from '../services/leaveRequest.service';
 import { successResponse } from '../utils/response';
+import { getSocketIO } from '../socket/socket';
 
 export class LeaveRequestController {
   /**
@@ -13,7 +14,7 @@ export class LeaveRequestController {
 
       // Emit Socket notification
       try {
-        const io = (req.app as any).get('io');
+        const io = getSocketIO();
         if (io) {
           io.emit('leave_update', {
             type: 'NEW_REQUEST',
@@ -21,6 +22,19 @@ export class LeaveRequestController {
             internName: req.user.name,
             leaveType: record.leaveType,
           });
+          io.to('admin').emit('leave:new', {
+            leaveRequestId: record.id,
+            internName: req.user.name,
+            leaveType: record.leaveType,
+          });
+          // Also to dept head if known
+          const userDeptId = req.user.departmentId;
+          if (userDeptId) {
+             io.to(`dept:${userDeptId}`).emit('leave:new', {
+               leaveRequestId: record.id,
+               internName: req.user.name,
+             });
+          }
         }
       } catch (ioErr) {
         console.error("Socket emit failed", ioErr);
@@ -79,12 +93,16 @@ export class LeaveRequestController {
 
       // Emit Socket update
       try {
-        const io = (req.app as any).get('io');
+        const io = getSocketIO();
         if (io) {
           io.emit('leave_update', {
             type: 'HR_APPROVED',
             leaveRequestId: id,
             status: 'Approved',
+          });
+          io.to(`user:${record.userId}`).emit('leave:decision', {
+            leaveRequestId: id,
+            status: 'Approved'
           });
         }
       } catch (ioErr) {
@@ -113,12 +131,17 @@ export class LeaveRequestController {
 
       // Emit Socket update
       try {
-        const io = (req.app as any).get('io');
+        const io = getSocketIO();
         if (io) {
           io.emit('leave_update', {
             type: 'REJECTED',
             leaveRequestId: id,
             reason,
+          });
+          io.to(`user:${record.userId}`).emit('leave:decision', {
+            leaveRequestId: id,
+            status: 'Rejected',
+            reason
           });
         }
       } catch (ioErr) {

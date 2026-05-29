@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import notificationService from '../services/notification.service';
-import { successResponse } from '../utils/response';
+import { successResponse, errorResponse } from '../utils/response';
+import prisma from '../config/database';
 
 export class NotificationController {
   /**
@@ -69,6 +70,58 @@ export class NotificationController {
       successResponse(res, 'All notifications marked as read successfully', {
         modifiedCount: result.count,
       });
+    } catch (error) {
+      next(error);
+    }
+  }
+  /**
+   * Get unread notification count
+   */
+  async getUnreadCount(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        res.status(401).json({ success: false, message: 'Unauthorized' });
+        return;
+      }
+
+      const count = await prisma.notification.count({
+        where: { userId, isRead: false },
+      });
+
+      successResponse(res, 'Unread count retrieved', { count });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Delete a notification
+   */
+  async deleteNotification(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        res.status(401).json({ success: false, message: 'Unauthorized' });
+        return;
+      }
+
+      const id = req.params.id as string;
+      
+      const existing = await prisma.notification.findUnique({ where: { id } });
+      if (!existing) {
+        errorResponse(res, 'Notification not found', 404);
+        return;
+      }
+
+      if (existing.userId !== userId) {
+        errorResponse(res, 'Unauthorized to delete this notification', 403);
+        return;
+      }
+
+      await prisma.notification.delete({ where: { id } });
+
+      successResponse(res, 'Notification deleted successfully');
     } catch (error) {
       next(error);
     }

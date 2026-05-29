@@ -21,6 +21,9 @@ import securityRoutes from './security.routes';
 import settingsRoutes from './settings.routes';
 import auditLogRoutes from './auditLog.routes';
 import restoreRoutes from './restore.routes';
+import projectRoutes from './project.routes';
+import emailRoutes from './email.routes';
+import documentRoutes from './document.routes';
 import { authenticate } from '../middleware/auth.middleware';
 import { authorize } from '../middleware/role.middleware';
 import prisma from '../config/database';
@@ -65,6 +68,9 @@ router.use('/security', securityRoutes);
 router.use('/settings', settingsRoutes);
 router.use('/admin/audit-logs', auditLogRoutes);
 router.use('/admin', restoreRoutes);
+router.use('/projects', projectRoutes);
+router.use('/emails', emailRoutes);
+router.use('/documents', documentRoutes);
 
 /**
  * GET /api/intern/dashboard-stats

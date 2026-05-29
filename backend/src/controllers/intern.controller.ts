@@ -1,6 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import * as internService from '../services/intern.service';
 import { successResponse } from '../utils/response';
+import notificationService from '../services/notification.service';
+import { emailQueue } from '../queues/queue.config';
+import prisma from '../config/database';
 
 /**
  * Create new intern
@@ -65,7 +68,52 @@ export const updateIntern = async (
 ): Promise<void> => {
   try {
     const intern = await internService.updateIntern(req.params.id as string, req.body);
+    
+    // Check if status changed to OFFERED
+    if (req.body.status === 'OFFERED' && intern.userId) {
+      await notificationService.sendToUser(intern.userId, 'offer:received', {
+        title: 'Internship Offer Received',
+        message: 'Congratulations! You have received an internship offer.',
+        type: 'SYSTEM',
+        payload: { internId: intern.id }
+      });
+
+      const user = await prisma.user.findUnique({ where: { id: intern.userId }, include: { department: true } });
+      if (user?.email) {
+        await emailQueue.add('OFFER_LETTER', {
+          to: user.email,
+          data: {
+            name: user.name,
+            position: 'Intern',
+            department: user.department?.name || 'Your Department',
+            startDate: intern.startDate ? new Date(intern.startDate).toISOString().split('T')[0] : 'TBD',
+            endDate: intern.completedDate ? new Date(intern.completedDate).toISOString().split('T')[0] : 'TBD',
+            mentorName: 'Your Assigned Mentor',
+            hrName: 'HR Department'
+          }
+        });
+      }
+    }
+
+    if (req.body.status === 'COMPLETED' && intern.userId) {
+      const user = await prisma.user.findUnique({ where: { id: intern.userId }, include: { department: true } });
+      if (user?.email) {
+        await emailQueue.add('CERTIFICATE_ISSUED', {
+          to: user.email,
+          data: {
+            name: user.name,
+            position: 'Intern',
+            department: user.department?.name || 'Your Department',
+            startDate: intern.startDate ? new Date(intern.startDate).toISOString().split('T')[0] : 'N/A',
+            endDate: intern.completedDate ? new Date(intern.completedDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+            pdfUrl: `${process.env.FRONTEND_URL}/certificates/${intern.id}`
+          }
+        });
+      }
+    }
+
     successResponse(res, 'Intern updated successfully', intern);
+
   } catch (error) {
     next(error);
   }

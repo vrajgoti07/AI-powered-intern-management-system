@@ -17,6 +17,8 @@ import {
 } from '../validations/auth.validation';
 import { logAction } from '../services/auditLog.service';
 
+import { emailQueue } from '../queues/queue.config';
+
 /**
  * Register new user
  * POST /api/auth/register
@@ -26,8 +28,21 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 
   const result = await authService.registerUser(email, password, name, role);
 
+  if (role === 'INTERN') {
+    await emailQueue.add('WELCOME_EMAIL', {
+      to: email,
+      data: {
+        name: name,
+        email: email,
+        temporaryPassword: password, // Note: storing/sending raw password. Only good if it's generated/temporary.
+        loginUrl: process.env.FRONTEND_URL || 'http://localhost:3000/login',
+      }
+    });
+  }
+
   successResponse(res, 'User registered successfully', result, 201);
 });
+
 
 /**
  * Login user
@@ -136,9 +151,6 @@ export const sendOtp = asyncHandler(async (req: Request, res: Response) => {
 
   // 2. Verify password
   let isPasswordValid = await bcrypt.compare(password, user.password);
-  if (process.env.NODE_ENV === 'development' && (user.email === 'vrajg072@gmail.com' || user.email === 'vrajgoti07@gmail.com' || user.email === 'intern@internmanagement.com')) {
-    isPasswordValid = true;
-  }
   if (!isPasswordValid) {
     // Log failed attempt
     await prisma.loginActivity.create({
@@ -169,13 +181,13 @@ export const sendOtp = asyncHandler(async (req: Request, res: Response) => {
       const browserChanged = trustedSession.browser !== ua.browser;
       const osChanged = trustedSession.operatingSystem !== ua.device;
 
-      // Count failures in the last 15 minutes
-      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+      // Count failures in the last 5 minutes
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
       const failedCount = await prisma.loginActivity.count({
         where: {
           userId: user.id,
           status: 'FAILED',
-          createdAt: { gt: fifteenMinutesAgo }
+          createdAt: { gt: fiveMinutesAgo }
         }
       });
 
@@ -294,9 +306,6 @@ export const verifyOtp = asyncHandler(async (req: Request, res: Response) => {
   let isPasswordValid = false;
   if (user) {
     isPasswordValid = await bcrypt.compare(password, user.password);
-    if (process.env.NODE_ENV === 'development' && (user.email === 'vrajg072@gmail.com' || user.email === 'vrajgoti07@gmail.com' || user.email === 'intern@internmanagement.com')) {
-      isPasswordValid = true;
-    }
   }
 
   if (!user || !isPasswordValid) {

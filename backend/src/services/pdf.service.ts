@@ -1,5 +1,47 @@
 import PDFDocument from 'pdfkit';
 import { logger } from '../utils/logger';
+import { v2 as cloudinary } from 'cloudinary';
+
+export interface GenerateCertificateParams {
+  internName: string;
+  department: string;
+  startDate: Date;
+  endDate: Date;
+  performanceScore: number;
+  hrManagerName: string;
+  deptHeadName: string;
+  companyName: string;
+}
+
+export interface GenerateOfferLetterParams {
+  internName: string;
+  position: string;
+  department: string;
+  startDate: Date;
+  endDate: Date;
+  mentorName: string;
+  stipend?: string;
+  acceptDeadline: Date;
+  hrManagerName: string;
+  companyName: string;
+  companyAddress: string;
+}
+
+export interface GeneratePerformanceReportParams {
+  internName: string;
+  department: string;
+  mentorName: string;
+  month: string;
+  year: number;
+  attendanceData: any[];
+  taskData: any[];
+  performanceMetrics: {
+    attendancePercent: number;
+    taskCompletionPercent: number;
+    avgTaskRating: number;
+  };
+  mentorFeedback: string;
+}
 
 // --- Color Palette ---
 const COLORS = {
@@ -428,6 +470,297 @@ export class PDFService {
       logger.error('Summary PDF export error:', error);
       throw error;
     }
+  }
+
+  /**
+   * Generates an Internship Certificate
+   */
+  async generateCertificate(data: GenerateCertificateParams): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      try {
+        const doc = new PDFDocument({
+          size: 'A4',
+          layout: 'landscape',
+          margin: 50,
+        });
+
+        const buffers: Buffer[] = [];
+        doc.on('data', buffers.push.bind(buffers));
+        doc.on('end', () => resolve(Buffer.concat(buffers)));
+        doc.on('error', reject);
+
+        // Draw border
+        doc.rect(20, 20, doc.page.width - 40, doc.page.height - 40).stroke();
+        doc.rect(25, 25, doc.page.width - 50, doc.page.height - 50).stroke();
+
+        // Certificate ID
+        const certId = `CERT-${new Date().getFullYear()}-${Math.floor(Math.random() * 100000).toString().padStart(5, '0')}`;
+        doc.fontSize(10).text(`Certificate ID: ${certId}`, 40, 40);
+        doc.text(`Issue Date: ${new Date().toLocaleDateString()}`, 40, 55);
+
+        // Header
+        doc.moveDown(2);
+        doc.fontSize(24).font('Helvetica-Bold').text(data.companyName, { align: 'center' });
+        doc.moveDown(1);
+        doc.fontSize(36).fillColor('#2c3e50').text('Certificate of Internship Completion', { align: 'center' });
+        doc.moveDown(1.5);
+
+        // Body
+        doc.fontSize(16).fillColor('#000000').font('Helvetica').text('This is to certify that', { align: 'center' });
+        doc.moveDown(0.5);
+        doc.fontSize(26).font('Helvetica-Bold').fillColor('#2980b9').text(data.internName, { align: 'center' });
+        doc.moveDown(0.5);
+
+        const startDateStr = new Date(data.startDate).toLocaleDateString();
+        const endDateStr = new Date(data.endDate).toLocaleDateString();
+
+        doc.fontSize(14).font('Helvetica').fillColor('#000000')
+          .text(`has successfully completed an internship in the `, { align: 'center', continued: true })
+          .font('Helvetica-Bold').text(`${data.department} department`, { continued: true })
+          .font('Helvetica').text(` from `, { continued: true })
+          .font('Helvetica-Bold').text(`${startDateStr} to ${endDateStr}.`, { align: 'center' });
+
+        doc.moveDown(1);
+
+        let grade = 'Satisfactory';
+        if (data.performanceScore >= 9) grade = 'Excellent';
+        else if (data.performanceScore >= 7.5) grade = 'Good';
+
+        doc.fontSize(14).font('Helvetica').text('Performance Grade: ', { align: 'center', continued: true })
+          .font('Helvetica-Bold').text(grade);
+
+        // Signatures
+        const signatureY = doc.page.height - 120;
+        
+        doc.fontSize(12).font('Helvetica');
+        
+        // HR Signature
+        doc.text('_______________________', 150, signatureY);
+        doc.text(data.hrManagerName, 150, signatureY + 20);
+        doc.text('HR Manager', 150, signatureY + 35);
+
+        // Dept Head Signature
+        doc.text('_______________________', doc.page.width - 300, signatureY);
+        doc.text(data.deptHeadName, doc.page.width - 300, signatureY + 20);
+        doc.text('Department Head', doc.page.width - 300, signatureY + 35);
+
+        doc.end();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Generates an Offer Letter
+   */
+  async generateOfferLetter(data: GenerateOfferLetterParams): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      try {
+        const doc = new PDFDocument({
+          size: 'A4',
+          layout: 'portrait',
+          margin: 50,
+        });
+
+        const buffers: Buffer[] = [];
+        doc.on('data', buffers.push.bind(buffers));
+        doc.on('end', () => resolve(Buffer.concat(buffers)));
+        doc.on('error', reject);
+
+        // Header: Company Name & Address
+        doc.fontSize(20).font('Helvetica-Bold').text(data.companyName, { align: 'right' });
+        doc.fontSize(10).font('Helvetica').text(data.companyAddress, { align: 'right' });
+        doc.moveDown(3);
+
+        // Date
+        doc.fontSize(11).text(`Date: ${new Date().toLocaleDateString()}`, { align: 'left' });
+        doc.moveDown(1);
+
+        // Recipient
+        doc.font('Helvetica-Bold').text(`To:\n${data.internName}`);
+        doc.moveDown(1);
+
+        // Subject
+        doc.font('Helvetica-Bold').text('Subject: Internship Offer Letter');
+        doc.moveDown(1);
+
+        // Salutation
+        doc.font('Helvetica').text(`Dear ${data.internName},`);
+        doc.moveDown(1);
+
+        // Body
+        doc.text(`We are pleased to offer you an internship as `)
+          .font('Helvetica-Bold').text(data.position, { continued: true })
+          .font('Helvetica').text(` in the `)
+          .font('Helvetica-Bold').text(data.department, { continued: true })
+          .font('Helvetica').text(` department at ${data.companyName}.`);
+        
+        doc.moveDown(1);
+
+        const startDateStr = new Date(data.startDate).toLocaleDateString();
+        const endDateStr = new Date(data.endDate).toLocaleDateString();
+        
+        doc.text(`Internship period: `)
+          .font('Helvetica-Bold').text(`${startDateStr} to ${endDateStr}`);
+        
+        doc.moveDown(0.5);
+        doc.font('Helvetica').text(`Reporting to: `)
+          .font('Helvetica-Bold').text(data.mentorName);
+
+        if (data.stipend) {
+          doc.moveDown(0.5);
+          doc.font('Helvetica').text(`Stipend: `)
+            .font('Helvetica-Bold').text(data.stipend);
+        }
+
+        doc.moveDown(0.5);
+        doc.font('Helvetica').text(`Working hours: Monday-Friday, 9:00 AM - 6:00 PM`);
+
+        doc.moveDown(1.5);
+        doc.font('Helvetica-Bold').text('Terms and Conditions:');
+        doc.moveDown(0.5);
+        doc.font('Helvetica');
+        const terms = [
+          'During your internship, you may have access to confidential, proprietary, or trade secret information. You agree to keep all this information strictly confidential.',
+          'Your internship will include training, orientation, and focus primarily on learning and developing new skills.',
+          'You will be required to abide by all the policies and procedures of the company.',
+          'This offer is contingent upon the successful verification of your educational documents.',
+          'Either party may terminate this internship agreement at any time by giving a written notice of 7 days.',
+        ];
+        terms.forEach((term, idx) => {
+          doc.text(`${idx + 1}. ${term}`, { indent: 20 });
+          doc.moveDown(0.5);
+        });
+
+        doc.moveDown(1);
+        const deadlineStr = new Date(data.acceptDeadline).toLocaleDateString();
+        doc.text(`Please confirm your acceptance of this offer by signing and returning this letter by ${deadlineStr}.`);
+
+        doc.moveDown(3);
+        doc.text('Sincerely,');
+        doc.moveDown(2);
+        doc.text('_______________________');
+        doc.font('Helvetica-Bold').text(data.hrManagerName);
+        doc.font('Helvetica').text('HR Manager');
+        doc.text(data.companyName);
+
+        doc.end();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Generates a Monthly Performance Report
+   */
+  async generatePerformanceReport(data: GeneratePerformanceReportParams): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      try {
+        const doc = new PDFDocument({
+          size: 'A4',
+          layout: 'portrait',
+          margin: 50,
+        });
+
+        const buffers: Buffer[] = [];
+        doc.on('data', buffers.push.bind(buffers));
+        doc.on('end', () => resolve(Buffer.concat(buffers)));
+        doc.on('error', reject);
+
+        // Header
+        doc.fontSize(18).font('Helvetica-Bold').text('Monthly Performance Report', { align: 'center' });
+        doc.moveDown(0.5);
+        doc.fontSize(12).font('Helvetica').text(`${data.internName} - ${data.department} Department`, { align: 'center' });
+        doc.text(`${data.month} ${data.year}`, { align: 'center' });
+        doc.moveDown(1.5);
+
+        // Section 1: Performance Metrics
+        doc.fontSize(14).font('Helvetica-Bold').text('1. Performance Metrics');
+        doc.moveDown(0.5);
+        doc.fontSize(11).font('Helvetica');
+        doc.text(`Attendance Rate: ${data.performanceMetrics.attendancePercent}%`, { indent: 20 });
+        doc.text(`Task Completion Rate: ${data.performanceMetrics.taskCompletionPercent}%`, { indent: 20 });
+        doc.text(`Average Task Rating: ${data.performanceMetrics.avgTaskRating} / 10`, { indent: 20 });
+        doc.moveDown(1.5);
+
+        // Section 2: Attendance Summary
+        doc.fontSize(14).font('Helvetica-Bold').text('2. Attendance Summary');
+        doc.moveDown(0.5);
+        doc.fontSize(10).font('Helvetica');
+        let totalPresent = 0;
+        let totalAbsent = 0;
+        data.attendanceData.forEach(a => {
+          if (a.status === 'PRESENT') totalPresent++;
+          else totalAbsent++;
+        });
+        doc.text(`Total Days Present: ${totalPresent}`, { indent: 20 });
+        doc.text(`Total Days Absent/Leave: ${totalAbsent}`, { indent: 20 });
+        doc.moveDown(1.5);
+
+        // Section 3: Task Summary
+        doc.fontSize(14).font('Helvetica-Bold').text('3. Task Summary');
+        doc.moveDown(0.5);
+        doc.fontSize(10).font('Helvetica');
+        
+        if (data.taskData.length === 0) {
+          doc.text('No tasks recorded for this period.', { indent: 20 });
+        } else {
+          data.taskData.slice(0, 10).forEach((task, idx) => {
+            const status = task.status || 'UNKNOWN';
+            doc.text(`${idx + 1}. ${task.title} - Status: ${status}`, { indent: 20 });
+          });
+          if (data.taskData.length > 10) {
+            doc.text(`...and ${data.taskData.length - 10} more tasks.`, { indent: 20 });
+          }
+        }
+        doc.moveDown(1.5);
+
+        // Section 4: Mentor Feedback
+        doc.fontSize(14).font('Helvetica-Bold').text('4. Mentor Feedback');
+        doc.moveDown(0.5);
+        doc.fontSize(11).font('Helvetica');
+        doc.text(data.mentorFeedback || 'No feedback provided.', { indent: 20, align: 'justify' });
+        doc.moveDown(2);
+
+        // Footer
+        doc.fontSize(9).fillColor('gray').text(`Generated on ${new Date().toLocaleDateString()} | Mentor: ${data.mentorName}`, 50, doc.page.height - 50, { align: 'center' });
+
+        doc.end();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Uploads a PDF buffer to Cloudinary
+   */
+  async uploadToCloudinary(buffer: Buffer, filename: string): Promise<{ url: string; publicId: string }> {
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'raw', // Important for PDFs
+          folder: 'intern_documents',
+          public_id: filename.replace('.pdf', ''),
+          format: 'pdf',
+        },
+        (error, result) => {
+          if (error) return reject(error);
+          if (result) {
+            resolve({
+              url: result.secure_url,
+              publicId: result.public_id,
+            });
+          } else {
+            reject(new Error('Unknown error during Cloudinary upload'));
+          }
+        }
+      );
+
+      uploadStream.end(buffer);
+    });
   }
 }
 

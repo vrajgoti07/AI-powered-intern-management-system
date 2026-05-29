@@ -1,5 +1,8 @@
 import { config } from '../config/env';
 import { logger } from '../utils/logger';
+import axios from 'axios';
+import FormData from 'form-data';
+import * as fs from 'fs';
 
 // --- Integration Types ---
 export interface RoleMatchPayload {
@@ -19,6 +22,10 @@ export interface PerformancePredictPayload {
   taskCompletionRate: number;
   feedbackSentimentScore: number;
   productivityScore: number;
+  daysSinceLastTask?: number;
+  communicationScore?: number;
+  skillMatchScore?: number;
+  weekNumber?: number;
 }
 
 export interface SentimentAnalysisPayload {
@@ -40,26 +47,41 @@ export class AIService {
   }
 
   /**
-   * Match intern profile to departmental requirements
+   * 1. Parse Resume (Part 1)
+   */
+  async parseInternResume(filePath: string, requiredSkills: string[], token?: string) {
+    const formData = new FormData();
+    formData.append('file', fs.createReadStream(filePath));
+    // The Python backend might expect a JSON string of skills
+    formData.append('required_skills', JSON.stringify(requiredSkills));
+
+    try {
+      const response = await axios.post(`${this.serviceUrl}/api/ai/parse-resume`, formData, {
+        headers: {
+          ...formData.getHeaders(),
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+      });
+      return response.data;
+    } catch (error: any) {
+      logger.error(`Failed to parse resume: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * 2. Match intern profile to departmental requirements (Existing)
    */
   async matchRole(payload: RoleMatchPayload) {
     try {
-      const response = await fetch(`${this.serviceUrl}/api/ai/match-role`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          skills: payload.skills,
-          interests: payload.interests,
-          education: payload.education,
-          technologies: [], // Added for new schema
-        }),
+      const response = await axios.post(`${this.serviceUrl}/api/ai/match-role`, {
+        skills: payload.skills,
+        interests: payload.interests,
+        education: payload.education,
+        technologies: [],
       });
 
-      if (!response.ok) {
-        throw new Error(`FastAPI match-role response error: ${response.statusText}`);
-      }
-
-      const responseJson = await response.json() as any;
+      const responseJson = response.data;
       if (!responseJson.success) {
         throw new Error(`FastAPI match-role logic error: ${responseJson.error}`);
       }
@@ -76,7 +98,6 @@ export class AIService {
       };
     } catch (error) {
       logger.warn('AI Microservice offline. Triggering fallback Role Matching heuristics...');
-      
       // Fallback Jaccard-like algorithm in TS
       let bestMatch = 0;
       let bestRole = 'General Support Intern';
@@ -110,40 +131,24 @@ export class AIService {
   }
 
   /**
-   * Predict performance parameters and drivers
+   * 3. Predict performance parameters (Part 2)
    */
-  async predictPerformance(payload: PerformancePredictPayload) {
+  async predictPerformance(internId: string, payload: PerformancePredictPayload) {
     try {
-      const response = await fetch(`${this.serviceUrl}/api/ai/predict-performance`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const response = await axios.post(`${this.serviceUrl}/api/ai/predict-performance`, {
+        internId,
+        features: {
           attendance_rate: payload.attendanceRate,
           task_completion_rate: payload.taskCompletionRate,
-          feedback_score: payload.feedbackSentimentScore, // Mapped to new schema
-          productivity_score: payload.productivityScore,
-          submission_rate: payload.taskCompletionRate, // Using completion as a proxy
-        }),
+          avg_task_rating: payload.feedbackSentimentScore * 2 + 3, // Roughly map -1..1 to 1..5
+          days_since_last_task: payload.daysSinceLastTask || 2,
+          communication_score: payload.communicationScore || 4.0,
+          skill_match_score: payload.skillMatchScore || 0.75,
+          week_number: payload.weekNumber || 4
+        }
       });
 
-      if (!response.ok) {
-        throw new Error(`FastAPI predict-performance response error: ${response.statusText}`);
-      }
-
-      const responseJson = await response.json() as any;
-      if (!responseJson.success) {
-        throw new Error(`FastAPI predict-performance logic error: ${responseJson.error}`);
-      }
-      
-      const data = responseJson.data;
-      return {
-        predictedPerformanceScore: data.predicted_performance_score,
-        productivityLevel: data.productivity_level,
-        riskLevel: data.risk_level,
-        internshipSuccessProbability: data.internship_success_probability,
-        keyDrivers: data.key_drivers,
-        recommendations: data.recommendations,
-      };
+      return response.data;
     } catch (error) {
       logger.warn('AI Microservice offline. Triggering fallback Performance scoring formulas...');
 
@@ -161,38 +166,44 @@ export class AIService {
       else if (weightedScore >= 70) grade = 'C';
       else if (weightedScore >= 60) grade = 'D';
 
-      const risk = payload.attendanceRate < 0.8 || payload.taskCompletionRate < 0.7 ? 'HIGH' : 'LOW';
+
 
       return {
-        predictedPerformanceGrade: grade,
-        predictedScore: weightedScore,
-        riskLevel: risk,
-        keyDrivers: ['[Fallback] Performance parameters assessed using central weighted averages.'],
-        reconciliationSuggestions: [
-          'Enable the AI microservice to receive advanced regression key drivers and comprehensive improvement suggestions.',
-        ],
+        prediction: grade,
+        confidence: 0.85,
+        explanation: 'Fallback calculation performed.',
+        topFactors: ['attendance', 'task_completion']
       };
     }
   }
 
   /**
-   * Analyze feedback sentiment polarity
+   * 4. Smart Intern Ranking (Part 3)
+   */
+  async getInternRanking(internsData: any[], departmentId?: string) {
+    try {
+      const params = departmentId ? { departmentId, period: 'monthly' } : { period: 'monthly' };
+      const response = await axios.post(`${this.serviceUrl}/api/ai/ranking`, {
+        interns: internsData 
+      }, { params });
+      
+      return response.data;
+    } catch (error: any) {
+      logger.error(`Ranking failed: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * 5. Analyze feedback sentiment polarity (Existing)
    */
   async analyzeSentiment(payload: SentimentAnalysisPayload) {
     try {
-      const response = await fetch(`${this.serviceUrl}/api/ai/sentiment-analysis`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          feedback_text: payload.feedbackText,
-        }),
+      const response = await axios.post(`${this.serviceUrl}/api/ai/sentiment-analysis`, {
+        feedback_text: payload.feedbackText,
       });
 
-      if (!response.ok) {
-        throw new Error(`FastAPI sentiment-analysis response error: ${response.statusText}`);
-      }
-
-      const responseJson = await response.json() as any;
+      const responseJson = response.data;
       if (!responseJson.success) {
         throw new Error(`FastAPI sentiment-analysis logic error: ${responseJson.error}`);
       }
@@ -213,7 +224,6 @@ export class AIService {
       let label = 'NEUTRAL';
       let score = 0.0;
 
-      // Basic keyword search fallback
       const positiveWords = ['good', 'excellent', 'great', 'amazing', 'happy', 'proactive'];
       const negativeWords = ['poor', 'slow', 'bad', 'difficult', 'unhappy', 'delayed'];
 
@@ -242,45 +252,65 @@ export class AIService {
   }
 
   /**
-   * Request chatbot response
+   * 6. RAG Chatbot: Add Document (Part 4)
+   */
+  async addHRDocument(filePath: string) {
+    const formData = new FormData();
+    formData.append('file', fs.createReadStream(filePath));
+
+    try {
+      const response = await axios.post(`${this.serviceUrl}/api/ai/chatbot/add-document`, formData, {
+        headers: formData.getHeaders()
+      });
+      return response.data;
+    } catch (error: any) {
+      logger.error(`Failed to index document: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * 7. RAG Chatbot: Query (Part 4)
    */
   async chatbot(payload: ChatbotPayload) {
     try {
-      const response = await fetch(`${this.serviceUrl}/api/ai/chatbot`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: payload.message,
-          session_id: payload.sessionId || "default",
-          history: payload.history,
-          context: payload.context || {},
-        }),
+      // Direct it to the new RAG /query endpoint
+      const response = await axios.post(`${this.serviceUrl}/api/ai/chatbot/query`, {
+        question: payload.message,
+        userId: payload.sessionId || "default"
       });
 
-      if (!response.ok) {
-        throw new Error(`FastAPI chatbot response error: ${response.statusText}`);
-      }
-
-      const responseJson = await response.json() as any;
-      if (!responseJson.success) {
-        throw new Error(`FastAPI chatbot logic error: ${responseJson.error}`);
-      }
-
-      const data = responseJson.data;
+      const responseJson = response.data;
       return {
-        reply: data.reply,
-        suggestedPrompts: data.suggested_prompts,
-        intent: data.intent,
-        confidence: data.confidence,
+        reply: responseJson.answer,
+        suggestedPrompts: [],
+        intent: 'rag_query',
+        confidence: 0.9,
+        sources: responseJson.sources
       };
     } catch (error) {
       logger.warn('AI Microservice offline. Triggering fallback FAQ Dialog replies...');
-
       return {
-        response: `[Fallback Mode] Hello! The AI microservice is currently offline, so my smart capabilities are limited. I am configured with this default notice. Let me know if you would like me to assist with anything else!`,
-        suggestedActions: ['Try re-connecting AI microservice', 'View active tasks'],
-        matchedFaq: null,
+        reply: `[Fallback Mode] Hello! The AI microservice is currently offline, so my smart capabilities are limited. Let me know if you would like me to assist with anything else!`,
+        suggestedPrompts: ['Try re-connecting AI microservice', 'View active tasks'],
+        intent: 'fallback',
+        confidence: 0.5
       };
+    }
+  }
+
+  /**
+   * 8. Risk Detection (Part 5)
+   */
+  async evaluateInternRisks(internsData: any[]) {
+    try {
+      const response = await axios.post(`${this.serviceUrl}/api/ai/risks/evaluate`, {
+        interns: internsData
+      });
+      return response.data;
+    } catch (error: any) {
+      logger.error(`Risk evaluation failed: ${error.message}`);
+      throw error;
     }
   }
 }

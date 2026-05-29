@@ -19,7 +19,7 @@ export const DepartmentDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'directory' | 'analytics' | 'leaves' | 'activities'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'interns' | 'mentors' | 'projects' | 'reports'>('overview');
   
   // Data States
   const [analytics, setAnalytics] = useState<any>(null);
@@ -179,7 +179,7 @@ export const DepartmentDetails: React.FC = () => {
 
           {/* Navigation Tabs */}
           <div className="flex border-b border-slate-200 overflow-x-auto gap-4 scrollbar-none">
-            {(['overview', 'directory', 'analytics', 'leaves', 'activities'] as const).map((tab) => (
+            {(['overview', 'interns', 'mentors', 'projects', 'reports'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -316,45 +316,9 @@ export const DepartmentDetails: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 2: TEAM DIRECTORY */}
-          {activeTab === 'directory' && (
+          {/* TAB 2: INTERNS */}
+          {activeTab === 'interns' && (
             <div className="space-y-6 text-left">
-              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
-                <h3 className="font-extrabold text-slate-800 text-base mb-4">Assigned Mentors ({department.mentors?.length || 0})</h3>
-                
-                {department.mentors?.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse text-xs font-semibold text-slate-500">
-                      <thead>
-                        <tr className="border-b border-slate-100 text-[10px] text-slate-400 uppercase font-black">
-                          <th className="pb-3">Name</th>
-                          <th className="pb-3">Email</th>
-                          <th className="pb-3 text-right">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {department.mentors.map((m: any) => (
-                          <tr key={m.id} className="border-b border-slate-50 last:border-b-0 hover:bg-slate-50/50">
-                            <td className="py-3.5 font-bold text-slate-800">{m.name}</td>
-                            <td className="py-3.5">{m.email}</td>
-                            <td className="py-3.5 text-right">
-                              <button 
-                                onClick={() => navigate(`/hr/mentors/${m.mentor?.id || m.id}`)}
-                                className="px-3 py-1.5 border border-slate-200 rounded-xl hover:bg-slate-100 transition-all cursor-pointer font-bold"
-                              >
-                                View Profile
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <p className="text-xs text-slate-400 font-bold py-4">No mentors assigned to this division.</p>
-                )}
-              </div>
-
               <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
                 <h3 className="font-extrabold text-slate-800 text-base mb-4">Assigned Interns ({department.interns?.length || 0})</h3>
                 
@@ -400,8 +364,83 @@ export const DepartmentDetails: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 3: ANALYTICS DASHBOARD */}
-          {activeTab === 'analytics' && (
+          {/* TAB 3: MENTORS */}
+          {activeTab === 'mentors' && (
+            <div className="space-y-6 text-left">
+              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
+                <h3 className="font-extrabold text-slate-800 text-base mb-4">Assigned Mentors ({department.mentors?.length || 0})</h3>
+                
+                {department.mentors?.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs font-semibold text-slate-500">
+                      <thead>
+                        <tr className="border-b border-slate-100 text-[10px] text-slate-400 uppercase font-black">
+                          <th className="pb-3">Name</th>
+                          <th className="pb-3">Email</th>
+                          <th className="pb-3 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {department.mentors.map((m: any) => (
+                          <tr key={m.id} className="border-b border-slate-50 last:border-b-0 hover:bg-slate-50/50">
+                            <td className="py-3.5 font-bold text-slate-800">{m.name}</td>
+                            <td className="py-3.5">{m.email}</td>
+                            <td className="py-3.5 text-right">
+                              <button 
+                                onClick={() => navigate(`/hr/mentors/${m.mentor?.id || m.id}`)}
+                                className="px-3 py-1.5 border border-slate-200 rounded-xl hover:bg-slate-100 transition-all cursor-pointer font-bold"
+                              >
+                                View Profile
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400 font-bold py-4">No mentors assigned to this division.</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: PROJECTS */}
+          {activeTab === 'projects' && (
+            <div className="space-y-6 text-left">
+              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
+                <h3 className="font-extrabold text-slate-800 text-base mb-4">Department Projects</h3>
+                
+                {department.projects && department.projects.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {department.projects.map((p: any) => (
+                      <div key={p.id} className="p-5 border border-slate-200 rounded-2xl flex flex-col justify-between">
+                        <div>
+                          <h4 className="font-bold text-slate-800 text-sm mb-2">{p.title}</h4>
+                          <p className="text-xs text-slate-500 mb-4">{p.description || 'No description provided'}</p>
+                        </div>
+                        <div className="flex items-center justify-between mt-4">
+                          <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                            p.status === 'ACTIVE' ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800'
+                          }`}>
+                            {p.status}
+                          </span>
+                          <span className="text-xs text-slate-400 font-bold">
+                            {new Date(p.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400 font-bold py-4">No projects have been created yet.</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: REPORTS & ANALYTICS */}
+          {activeTab === 'reports' && (
             <div className="space-y-6 text-left">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 
@@ -444,159 +483,6 @@ export const DepartmentDetails: React.FC = () => {
                     </ResponsiveContainer>
                   </div>
                 </div>
-
-                {/* 3. Task Allocation PieChart */}
-                <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4 lg:col-span-2">
-                  <h3 className="font-extrabold text-slate-800 text-sm flex items-center gap-2">
-                    <FileCheck className="w-4 h-4 text-indigo-600" />
-                    Task Deliverables Overview
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-6">
-                    <div className="h-48">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={taskChartData}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={55}
-                            outerRadius={75}
-                            paddingAngle={3}
-                            dataKey="value"
-                          >
-                            {taskChartData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                          </Pie>
-                          <Tooltip />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-
-                    <div className="space-y-3">
-                      {taskChartData.map((d, index) => (
-                        <div key={index} className="flex items-center justify-between text-xs font-bold p-3 bg-slate-50 rounded-2xl border border-slate-100">
-                          <div className="flex items-center gap-2">
-                            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }} />
-                            <span className="text-slate-500">{d.name}</span>
-                          </div>
-                          <span className="text-slate-800">{d.value} Deliverables</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-          )}
-
-          {/* TAB 4: LEAVE APPROVALS WORKFLOW */}
-          {activeTab === 'leaves' && (
-            <div className="space-y-6 text-left">
-              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                    <Clock className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-slate-800 text-base">Pending Leave Requests</h3>
-                    <p className="text-[10px] font-bold text-slate-400">Review and approve employee leave requests in this division</p>
-                  </div>
-                </div>
-
-                {pendingLeaves.length > 0 ? (
-                  <div className="space-y-4 pt-4">
-                    {pendingLeaves.map((l: any) => (
-                      <div key={l.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 bg-slate-50 rounded-3xl border border-slate-100 shadow-inner">
-                        <div className="space-y-1">
-                          <p className="text-xs font-black text-slate-800">{l.user?.name || 'Anonymous Employee'}</p>
-                          <p className="text-[10px] text-slate-400 font-bold">
-                            Duration: {new Date(l.startDate).toLocaleDateString()} - {new Date(l.endDate).toLocaleDateString()}
-                          </p>
-                          <p className="text-xs text-slate-500 font-semibold italic bg-white px-3.5 py-1.5 rounded-xl border border-slate-100 mt-2 block max-w-lg leading-relaxed">
-                            Reason: "{l.reason}"
-                          </p>
-                        </div>
-
-                        {l.status.startsWith('Pending') ? (
-                          <div className="flex items-center gap-2 w-full sm:w-auto">
-                            <button
-                              onClick={() => handleRejectLeave(l.id)}
-                              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold text-rose-600 bg-white hover:bg-rose-50 border border-slate-200 rounded-xl transition-all cursor-pointer"
-                            >
-                              <X className="w-4 h-4" /> Reject
-                            </button>
-                            <button
-                              onClick={() => handleApproveLeave(l.id)}
-                              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md cursor-pointer"
-                            >
-                              <Check className="w-4 h-4" /> Approve
-                            </button>
-                          </div>
-                        ) : (
-                          <span className={`text-[10px] font-black px-3.5 py-1.5 rounded-full uppercase tracking-wider ${
-                            l.status === 'Approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
-                          }`}>
-                            {l.status}
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12 text-slate-400 font-bold text-xs space-y-2">
-                    <FileText className="w-10 h-10 text-slate-200 mx-auto" />
-                    <p>All leave requests cleared. No pending workflows.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 5: ACTIVITY LOG TIMELINE */}
-          {activeTab === 'activities' && (
-            <div className="space-y-6 text-left">
-              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                    <Calendar className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-slate-800 text-base font-black">Audit History Log</h3>
-                    <p className="text-[10px] font-bold text-slate-400">Strict chronological operations trail of changes, assignments, and transfers</p>
-                  </div>
-                </div>
-
-                {activities.length > 0 ? (
-                  <div className="relative pl-6 border-l-2 border-slate-100 space-y-8">
-                    {activities.map((a: any) => (
-                      <div key={a.id} className="relative text-left space-y-1">
-                        {/* Chronological dot indicator */}
-                        <div className="absolute -left-[31px] top-0 w-4 h-4 rounded-full bg-white border-2 border-indigo-600 shadow-sm flex items-center justify-center">
-                          <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full animate-ping" />
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
-                            {a.activityType}
-                          </span>
-                          <span className="text-[10px] font-bold text-slate-400">
-                            {new Date(a.createdAt).toLocaleString()}
-                          </span>
-                        </div>
-
-                        <p className="text-xs font-semibold text-slate-700 leading-relaxed">{a.description}</p>
-                        <p className="text-[9px] font-bold text-slate-400">Performed by: <strong className="text-slate-500">{a.performedBy}</strong></p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12 text-slate-400 font-bold text-xs space-y-2">
-                    <FileText className="w-10 h-10 text-slate-200 mx-auto" />
-                    <p>No activity log registry available for this division.</p>
-                  </div>
-                )}
               </div>
             </div>
           )}

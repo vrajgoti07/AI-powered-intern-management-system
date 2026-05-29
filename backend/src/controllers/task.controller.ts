@@ -3,6 +3,7 @@ import taskService from '../services/task.service';
 import { TaskPriority } from '@prisma/client';
 import notificationService from '../services/notification.service';
 import prisma from '../config/database';
+import { getSocketIO } from '../socket/socket';
 
 export class TaskController {
   /**
@@ -58,6 +59,16 @@ export class TaskController {
         'TASK',
         { taskId: task.id, internId }
       );
+
+      const io = getSocketIO();
+      if (io && internUser?.userId) {
+        io.to(`user:${internUser.userId}`).emit('task:assigned', {
+          taskId: task.id,
+          title: task.title,
+          dueDate: task.dueDate,
+          assignedBy: req.user!.name
+        });
+      }
 
       res.status(201).json({
         success: true,
@@ -226,6 +237,18 @@ export class TaskController {
           );
         }
 
+        const io = getSocketIO();
+        if (io) {
+          // Emit to intern
+          io.to(`user:${req.user!.id}`).emit('task:updated', { taskId: updatedTask.id, status: updatedTask.status });
+          
+          // Emit to mentor
+          const mentorUser = await prisma.mentor.findUnique({ where: { id: task.mentorId }, select: { userId: true } });
+          if (mentorUser?.userId) {
+            io.to(`user:${mentorUser.userId}`).emit('task:updated', { taskId: updatedTask.id, status: updatedTask.status });
+          }
+        }
+
         res.status(200).json({
           success: true,
           message: 'Task status updated successfully',
@@ -284,6 +307,14 @@ export class TaskController {
           'TASK',
           { taskId: updatedTask.id }
         );
+      }
+
+      const io = getSocketIO();
+      if (io) {
+        if (internUser?.userId) {
+          io.to(`user:${internUser.userId}`).emit('task:updated', { taskId: updatedTask.id, status: updatedTask.status });
+        }
+        io.to(`user:${req.user!.id}`).emit('task:updated', { taskId: updatedTask.id, status: updatedTask.status });
       }
 
       res.status(200).json({

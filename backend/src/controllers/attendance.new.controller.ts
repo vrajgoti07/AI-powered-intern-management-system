@@ -4,6 +4,7 @@ import redis from '../config/redis';
 import holidayService from '../services/holiday.service';
 import { successResponse } from '../utils/response';
 import prisma from '../config/database';
+import { getSocketIO } from '../socket/socket';
 
 export class AttendanceNewController {
   /**
@@ -29,7 +30,7 @@ export class AttendanceNewController {
 
       // Emit Socket event for real-time dashboard notifications
       try {
-        const io = (req.app as any).get('io');
+        const io = getSocketIO();
         if (io) {
           io.emit('attendance_update', {
             type: 'CHECK_IN',
@@ -37,6 +38,10 @@ export class AttendanceNewController {
             name: req.user.name,
             status: record.status,
             date: record.date,
+          });
+          io.to(`user:${req.user!.id}`).emit('attendance:marked', {
+            date: record.date,
+            status: record.status
           });
         }
       } catch (ioErr) {
@@ -71,7 +76,7 @@ export class AttendanceNewController {
 
       // Emit Socket event for real-time dashboards
       try {
-        const io = (req.app as any).get('io');
+        const io = getSocketIO();
         if (io) {
           io.emit('attendance_update', {
             type: 'CHECK_OUT',
@@ -80,6 +85,10 @@ export class AttendanceNewController {
             workingHours: record.workingHours,
             status: record.status,
             date: record.date,
+          });
+          io.to(`user:${req.user!.id}`).emit('attendance:marked', {
+            date: record.date,
+            status: record.status
           });
         }
       } catch (ioErr) {
@@ -226,7 +235,7 @@ export class AttendanceNewController {
 
       // Emit socket update
       try {
-        const io = (req.app as any).get('io');
+        const io = getSocketIO();
         if (io) {
           io.emit('attendance_update', {
             type: 'OVERRIDE',
@@ -234,6 +243,13 @@ export class AttendanceNewController {
             status,
             date: record.date,
           });
+          const internRecord = await prisma.intern.findUnique({ where: { id: internId }, select: { userId: true } });
+          if (internRecord?.userId) {
+            io.to(`user:${internRecord.userId}`).emit('attendance:marked', {
+              date: record.date,
+              status: record.status
+            });
+          }
         }
       } catch (ioErr) {
         console.error("Socket emit failed", ioErr);

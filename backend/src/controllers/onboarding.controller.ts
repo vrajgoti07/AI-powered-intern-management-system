@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { successResponse } from '../utils/response';
 import { AppError } from '../middleware/error.middleware';
 import * as onboardingService from '../services/onboarding.service';
+import { emailQueue } from '../queues/queue.config';
+
 
 export const getStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -22,6 +24,16 @@ export const submitOffer = async (req: Request, res: Response, next: NextFunctio
 
     const { offerAccepted } = req.body;
     const status = await onboardingService.submitOffer(internId, offerAccepted);
+
+    if (offerAccepted && req.user?.email) {
+      await emailQueue.add('ACCEPTANCE_CONFIRMATION', {
+        to: req.user.email,
+        data: {
+          name: req.user.name,
+        }
+      });
+    }
+
     successResponse(res, 'Offer step completed', status);
   } catch (error) {
     next(error);

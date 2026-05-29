@@ -1,14 +1,15 @@
+
 import express, { Application } from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import { config } from './config/env';
 import { apiLimiter } from './middleware/rateLimit.middleware';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
+import { applySecurityMiddleware } from './middleware/security.middleware';
 import routes from './routes';
 import './config/redis';
 import path from 'path';
+import { serverAdapter } from './queues/queue.config';
+
 
 /**
  * Create Express Application
@@ -16,47 +17,42 @@ import path from 'path';
 const createApp = (): Application => {
   const app = express();
 
-  // Security middleware
-  app.use(
-    helmet({
-      crossOriginResourcePolicy: { policy: 'cross-origin' },
-    })
-  );
+  // ── 1. Security Middleware (helmet, CORS, request logger, content-type guard) ──
+  applySecurityMiddleware(app);
 
-  // CORS configuration
-  app.use(
-    cors({
-      origin: config.cors.origin,
-      credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
-    })
-  );
-
-  // Body parsing middleware
+  // ── 2. Body Parsing (with size limits) ──
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-  // Cookie parser
+  // ── 3. Cookie Parser ──
   app.use(cookieParser());
 
-  // Serve static uploads
+  // ── 4. Serve static uploads ──
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
-  // Logging middleware
-  if (config.server.isDevelopment) {
-    app.use(morgan('dev'));
-  } else {
-    app.use(morgan('combined'));
-  }
-
-  // Rate limiting
+  // ── 5. Global Rate Limiting ──
   app.use(apiLimiter);
 
-  // API routes
+  // ── 6. API Routes ──
   app.use(`/api/${config.server.apiVersion}`, routes);
 
-  // Root endpoint
+  // ── 6.5 Bull Board (Password protected) ──
+  app.use('/admin/queues', (req, res, next) => {
+    // Basic auth for queues
+    const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
+    const [login, password] = Buffer.from(b64auth, 'base64').toString().split(':');
+    
+    // In production, use env vars for admin credentials
+    if (login === 'admin' && password === (process.env.ADMIN_QUEUE_PASS || 'admin')) {
+      return next();
+    }
+    
+    res.set('WWW-Authenticate', 'Basic realm="401"');
+    res.status(401).send('Authentication required.');
+  }, serverAdapter.getRouter());
+
+
+  // ── 7. Root health endpoint ──
   app.get('/', (_req, res) => {
     res.json({
       success: true,
@@ -66,10 +62,10 @@ const createApp = (): Application => {
     });
   });
 
-  // 404 handler
+  // ── 8. 404 handler (AFTER all routes) ──
   app.use(notFoundHandler);
 
-  // Global error handler
+  // ── 9. Global error handler (MUST be LAST middleware) ──
   app.use(errorHandler);
 
   return app;

@@ -44,6 +44,16 @@ from app.routes.chatbot import router as chatbot_router
 from app.routes.recommendation import router as recommendation_router
 from app.routes.analytics import router as analytics_router
 
+# New advanced AI routes
+from app.routes.resume import router as resume_router
+from app.routes.performance import router as performance_router
+from app.routes.ranking import router as ranking_router
+from app.routes.risk import router as risk_router
+
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from app.services.risk_detector import run_daily_risk_detection
+
+
 
 # ── Lifespan: startup + shutdown logic ───────────────────────────────
 
@@ -93,10 +103,20 @@ async def lifespan(app: FastAPI):
     logger.info("  🚀 AI Microservice ready on http://%s:%s", settings.FASTAPI_HOST, settings.FASTAPI_PORT)
     logger.info("-" * 60)
 
+    # Start APScheduler
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(run_daily_risk_detection, 'cron', hour=20, minute=0)
+    scheduler.start()
+    app.state.scheduler = scheduler
+    logger.info("📅 APScheduler started (Risk Detection scheduled daily at 20:00).")
+
     yield
 
     # ── SHUTDOWN ─────────────────────────────────────────────────────
     logger.info("Shutting down AI Microservice...")
+    if hasattr(app.state, 'scheduler'):
+        app.state.scheduler.shutdown()
+        logger.info("APScheduler shut down.")
     if app.state.redis is not None:
         try:
             app.state.redis.close()
@@ -157,6 +177,13 @@ app.include_router(sentiment_router, prefix="/api/ai", tags=["Sentiment Analysis
 app.include_router(chatbot_router, prefix="/api/ai", tags=["AI Chatbot"])
 app.include_router(recommendation_router, prefix="/api/ai", tags=["Recommendations"])
 app.include_router(analytics_router, prefix="/api/ai", tags=["Analytics"])
+
+# Advanced AI features
+app.include_router(resume_router, prefix="/api/ai", tags=["Resume Parsing"])
+app.include_router(performance_router, prefix="/api/ai", tags=["XGBoost Performance"])
+app.include_router(ranking_router, prefix="/api/ai", tags=["Smart Ranking"])
+app.include_router(risk_router, prefix="/api/ai", tags=["Risk Detection"])
+
 
 
 # ── Health Check ────────────────────────────────────────────────────

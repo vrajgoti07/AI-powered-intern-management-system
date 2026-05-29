@@ -12,6 +12,7 @@ import {
   assignMentorSchema,
   moveInternSchema,
 } from '../validations/department.validation';
+import * as projectController from '../controllers/project.controller';
 
 const router = Router();
 
@@ -166,6 +167,83 @@ router.post(
   authorize('HR'),
   validate(moveInternSchema),
   departmentController.moveIntern
+);
+
+/**
+ * @route   GET /api/departments/:id/dashboard
+ * @desc    Get department dashboard metrics
+ * @access  HR, Department Head
+ */
+router.get(
+  '/:id/dashboard',
+  authorize('HR', 'DEPARTMENT_HEAD'),
+  departmentController.getDepartmentDashboard
+);
+
+/**
+ * @route   GET /api/departments/:id/interns
+ * @desc    Get interns in a department
+ * @access  HR, Department Head, Mentor
+ */
+router.get(
+  '/:id/interns',
+  authorize('HR', 'DEPARTMENT_HEAD', 'MENTOR'),
+  departmentController.getDepartmentInterns
+);
+
+/**
+ * @route   GET /api/departments/:id/reports
+ * @desc    Get department reports
+ * @access  HR, Department Head
+ */
+router.get(
+  '/:id/reports',
+  authorize('HR', 'DEPARTMENT_HEAD'),
+  departmentController.getDepartmentReports
+);
+
+/**
+ * @route   GET /api/departments/:id/attendance
+ * @desc    Get department attendance
+ * @access  HR, Department Head
+ */
+router.get(
+  '/:id/attendance',
+  authorize('HR', 'DEPARTMENT_HEAD'),
+  departmentController.getDepartmentAttendance
+);
+
+/**
+ * @route   DELETE /api/departments/:id/mentors/:mentorId
+ * @desc    Remove mentor from department
+ * @access  HR
+ */
+router.delete(
+  '/:id/mentors/:mentorId',
+  authorize('HR'),
+  departmentController.removeMentor
+);
+
+/**
+ * @route   POST /api/departments/:id/projects
+ * @desc    Create a new project in the department
+ * @access  HR, Department Head
+ */
+router.post(
+  '/:id/projects',
+  authorize('HR', 'DEPARTMENT_HEAD'),
+  projectController.createProject
+);
+
+/**
+ * @route   GET /api/departments/:id/projects
+ * @desc    Get all projects for a department
+ * @access  HR, Department Head, Mentor
+ */
+router.get(
+  '/:id/projects',
+  authorize('HR', 'DEPARTMENT_HEAD', 'MENTOR'),
+  projectController.getProjects
 );
 
 export default router;
