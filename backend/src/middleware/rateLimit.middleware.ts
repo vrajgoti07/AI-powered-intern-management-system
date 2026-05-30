@@ -12,7 +12,16 @@ const getRedisStore = (): RedisStore | undefined => {
   try {
     return new RedisStore({
       // @ts-expect-error - rate-limit-redis expects node-redis sendCommand but call() works exactly the same for ioredis
-      sendCommand: (...args: string[]) => redisClient.call(...args),
+      sendCommand: (...args: any[]) => {
+        if (Array.isArray(args[0])) {
+          const command = args[0][0] as string;
+          const restArgs = args[0].slice(1);
+          return redisClient.call(command, ...restArgs);
+        }
+        const command = args[0] as string;
+        const restArgs = args.slice(1);
+        return redisClient.call(command, ...restArgs);
+      },
       prefix: 'rl:',
     });
   } catch {
