@@ -11,7 +11,8 @@ const redis = config.redis.url
     });
 
 redis.on("connect", () => {
-  console.log("✅ Redis Connected");
+  const isUpstash = config.redis.url?.includes('upstash');
+  console.log(`✅ ${isUpstash ? 'Upstash ' : ''}Redis Connected`);
 });
 
 let lastErrorLoggedTime = 0;
