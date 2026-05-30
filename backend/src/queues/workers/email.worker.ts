@@ -13,7 +13,7 @@ export const emailWorker = new Worker(
     await emailService.sendTemplateEmail(job.name, data, to);
   },
   {
-    connection: redis,
+    connection: redis as any,
     concurrency: 5, // Process up to 5 emails concurrently
   }
 );

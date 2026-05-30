@@ -10,7 +10,7 @@ export const NOTIFICATION_QUEUE_NAME = 'notification-queue';
 
 // Create the BullMQ queue using our shared Redis instance
 export const notificationQueue = new Queue(NOTIFICATION_QUEUE_NAME, {
-  connection: redis,
+  connection: redis as any,
   defaultJobOptions: {
     attempts: 3, // Retry failed jobs up to 3 times
     backoff: {

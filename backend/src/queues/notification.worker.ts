@@ -150,7 +150,7 @@ export const notificationWorker = new Worker(
     }
   },
   {
-    connection: redis.duplicate(),
+    connection: redis.duplicate() as any,
   }
 );
 
