@@ -18,7 +18,8 @@ const prisma = basePrisma.$extends(softDeleteExtension);
 export const connectDatabase = async (): Promise<void> => {
   try {
     await prisma.$connect();
-    logger.info('✅ PostgreSQL database connected successfully');
+    const isNeon = process.env.DATABASE_URL?.includes('neon.tech');
+    logger.info(`✅ ${isNeon ? 'Neon ' : ''}PostgreSQL database connected successfully`);
   } catch (error) {
     logger.error('❌ Database connection failed:', error);
     process.exit(1);
