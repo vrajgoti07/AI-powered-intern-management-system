@@ -12,6 +12,9 @@ class EmailService {
       host: emailConfig.host,
       port: emailConfig.port,
       secure: emailConfig.port === 465,
+      connectionTimeout: 10000, // 10 seconds timeout instead of hanging
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
       auth: emailConfig.user ? {
         user: emailConfig.user,
         pass: emailConfig.pass,
