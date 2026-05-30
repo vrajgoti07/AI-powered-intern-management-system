@@ -1,16 +1,7 @@
 import os
 from typing import Dict, List, Any
-import fitz
 
 FAISS_INDEX_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "faiss_index")
-
-OPENAI_AVAILABLE = False
-try:
-    from langchain_openai import ChatOpenAI
-    from langchain_core.messages import HumanMessage, SystemMessage
-    OPENAI_AVAILABLE = True
-except ImportError:
-    pass
 
 class RAGChatbotService:
     def __init__(self):
@@ -42,6 +33,8 @@ class RAGChatbotService:
     def add_document(self, pdf_bytes: bytes, filename: str) -> int:
         """Extracts text, splits it, and adds to FAISS index."""
         self._lazy_load()
+        import fitz
+        from langchain_community.vectorstores import FAISS as FAISSStore
         text = ""
         with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
             for page in doc:
@@ -56,7 +49,7 @@ class RAGChatbotService:
         metadatas = [{"source": filename, "chunk": i} for i in range(len(chunks))]
         
         if self.vector_store is None:
-            self.vector_store = FAISS.from_texts(chunks, self.embeddings, metadatas=metadatas)
+            self.vector_store = FAISSStore.from_texts(chunks, self.embeddings, metadatas=metadatas)
         else:
             self.vector_store.add_texts(chunks, metadatas=metadatas)
             
@@ -80,26 +73,28 @@ Answer:"""
         from app.config.settings import settings
         openai_api_key = settings.OPENAI_API_KEY
         
-        if openai_api_key and OPENAI_AVAILABLE:
-            from langchain_openai import ChatOpenAI
-            from langchain_core.messages import HumanMessage, SystemMessage
-            # Use OpenAI
-            chat = ChatOpenAI(temperature=0, openai_api_key=openai_api_key, model="gpt-3.5-turbo")
-            messages = [
-                SystemMessage(content="You are a helpful HR Assistant."),
-                HumanMessage(content=prompt)
-            ]
-            response = chat.invoke(messages)
-            return response.content
-        else:
-            # Fallback to local Ollama (requires Ollama running locally with a model like llama3)
+        if openai_api_key:
             try:
-                from langchain_community.llms import Ollama
-                llm = Ollama(model="llama3")
-                response = llm.invoke(prompt)
-                return response
-            except Exception as e:
-                return f"Error connecting to LLM (Check if OPENAI_API_KEY is set or Ollama is running): {str(e)}"
+                from langchain_openai import ChatOpenAI
+                from langchain_core.messages import HumanMessage, SystemMessage
+                # Use OpenAI
+                chat = ChatOpenAI(temperature=0, openai_api_key=openai_api_key, model="gpt-3.5-turbo")
+                messages = [
+                    SystemMessage(content="You are a helpful HR Assistant."),
+                    HumanMessage(content=prompt)
+                ]
+                response = chat.invoke(messages)
+                return response.content
+            except ImportError:
+                pass  # Fall through to Ollama fallback
+        # Fallback to local Ollama (requires Ollama running locally with a model like llama3)
+        try:
+            from langchain_community.llms import Ollama
+            llm = Ollama(model="llama3")
+            response = llm.invoke(prompt)
+            return response
+        except Exception as e:
+            return f"Error connecting to LLM (Check if OPENAI_API_KEY is set or Ollama is running): {str(e)}"
 
     def query(self, question: str, user_id: str) -> Dict[str, Any]:
         self._lazy_load()
