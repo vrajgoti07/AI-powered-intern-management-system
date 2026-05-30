@@ -5,8 +5,8 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_community.llms import Ollama
 try:
-    from langchain_community.chat_models import ChatOpenAI
-    from langchain.schema import HumanMessage, SystemMessage
+    from langchain_openai import ChatOpenAI
+    from langchain_core.messages import HumanMessage, SystemMessage
     OPENAI_AVAILABLE = True
 except ImportError:
     OPENAI_AVAILABLE = False
@@ -70,7 +70,8 @@ Question: {question}
 
 Answer:"""
 
-        openai_api_key = os.environ.get("OPENAI_API_KEY")
+        from app.config.settings import settings
+        openai_api_key = settings.OPENAI_API_KEY
         
         if openai_api_key and OPENAI_AVAILABLE:
             # Use OpenAI

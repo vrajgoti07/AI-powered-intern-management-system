@@ -39,6 +39,16 @@ class Settings(BaseSettings):
         description="Redis connection URL for session and result caching",
     )
 
+    # --- External Services ---
+    OPENAI_API_KEY: str = Field(
+        default="",
+        description="OpenAI API Key for AI features",
+    )
+    DATABASE_URL: str = Field(
+        default="",
+        description="Database connection string",
+    )
+
     # --- Model & Data Directories ---
     MODEL_DIR: str = Field(
         default=str(_APP_DIR / "models" / "trained_models"),
