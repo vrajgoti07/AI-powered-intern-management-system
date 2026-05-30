@@ -21,7 +21,7 @@ const logFormat = winston.format.printf(({ level, message, timestamp, ...metadat
 const transports: winston.transport[] = [];
 
 if (config.server.isProduction) {
-  // Production: write to files
+  // Production: write to files as backup
   transports.push(
     new winston.transports.File({
       filename: path.join(process.cwd(), 'logs', 'error.log'),
@@ -35,18 +35,18 @@ if (config.server.isProduction) {
       maxFiles: 10,
     })
   );
-} else {
-  // Development: colorized console output
-  transports.push(
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize({ all: true }),
-        winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-        logFormat
-      ),
-    })
-  );
 }
+
+// Always log to console (required for Render/cloud platforms to capture logs)
+transports.push(
+  new winston.transports.Console({
+    format: winston.format.combine(
+      winston.format.colorize({ all: !config.server.isProduction }),
+      winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+      logFormat
+    ),
+  })
+);
 
 /**
  * Create Winston logger instance
