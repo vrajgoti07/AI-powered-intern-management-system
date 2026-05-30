@@ -357,18 +357,26 @@ export const deleteMentor = async (id: string): Promise<void> => {
     throw new AppError('Mentor not found', 404);
   }
 
-  // Check if mentor has assigned interns
+  // Unassign interns before deleting
   if (mentor.interns.length > 0) {
-    throw new AppError(
-      'Cannot delete mentor with assigned interns. Please reassign interns first.',
-      400
-    );
+    await prisma.intern.updateMany({
+      where: { mentorId: id },
+      data: { mentorId: null }
+    });
   }
 
-  // Delete mentor
-  await prisma.mentor.delete({
-    where: { id },
-  });
+  // Delete the user (which cascade deletes the Mentor profile)
+  // Catch any foreign key errors (e.g. from Tasks) and throw a clear message
+  try {
+    await prisma.user.delete({
+      where: { id: mentor.userId },
+    });
+  } catch (error: any) {
+    if (error.code === 'P2003') {
+      throw new AppError('Cannot delete mentor because they have assigned tasks or feedback records.', 400);
+    }
+    throw error;
+  }
 };
 
 /**
