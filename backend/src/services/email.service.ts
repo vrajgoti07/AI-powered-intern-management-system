@@ -1,18 +1,26 @@
 import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { emailConfig } from '../config/email';
+import { config } from '../config/env';
 import prisma from '../config/database';
 import { logger } from '../utils/logger';
 import { renderTemplate } from '../email_templates';
 
 class EmailService {
   private transporter: nodemailer.Transporter;
+  private resendClient: Resend | null = null;
 
   constructor() {
+    // Initialize Resend (HTTP-based, works on Render Free Tier)
+    if (config.email.resendApiKey) {
+      this.resendClient = new Resend(config.email.resendApiKey);
+    }
+
     this.transporter = nodemailer.createTransport({
       host: emailConfig.host,
       port: emailConfig.port,
       secure: emailConfig.port === 465,
-      connectionTimeout: 10000, // 10 seconds timeout instead of hanging
+      connectionTimeout: 10000,
       greetingTimeout: 10000,
       socketTimeout: 10000,
       auth: emailConfig.user ? {
@@ -23,9 +31,14 @@ class EmailService {
   }
 
   /**
-   * Verify SMTP connection
+   * Verify email connection
    */
   public async verifyConnection() {
+    if (this.resendClient) {
+      logger.info('✅ Resend email provider configured (HTTP API — bypasses SMTP port blocks)');
+      return true;
+    }
+
     try {
       await this.transporter.verify();
       logger.info('✅ SMTP Mail Transporter verified successfully and is ready to send emails.');
@@ -56,13 +69,24 @@ class EmailService {
     });
 
     try {
-      await this.transporter.sendMail({
-        from: emailConfig.from,
-        to,
-        subject,
-        html,
-        attachments,
-      });
+      // Try Resend first (HTTP API — works on Render Free Tier)
+      if (this.resendClient) {
+        await this.resendClient.emails.send({
+          from: emailConfig.from || 'InternFlow <onboarding@resend.dev>',
+          to,
+          subject,
+          html,
+        });
+      } else {
+        // Fallback to SMTP
+        await this.transporter.sendMail({
+          from: emailConfig.from,
+          to,
+          subject,
+          html,
+          attachments,
+        });
+      }
 
       await prisma.emailLog.update({
         where: { id: log.id },

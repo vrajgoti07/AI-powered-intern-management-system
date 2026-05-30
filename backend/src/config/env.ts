@@ -35,6 +35,7 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASSWORD: z.string().optional(),
   EMAIL_FROM: z.string().optional(),
+  RESEND_API_KEY: z.string().optional(),
   
   // Queue
   ADMIN_QUEUE_PASS: z.string().optional(),
@@ -100,6 +101,7 @@ export const config = {
     user: env.SMTP_USER,
     password: env.SMTP_PASSWORD,
     from: env.EMAIL_FROM,
+    resendApiKey: env.RESEND_API_KEY,
   },
   queue: {
     adminPassword: env.ADMIN_QUEUE_PASS,

@@ -1,15 +1,27 @@
 import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { config } from '../config/env';
 import { logger } from './logger';
 import fs from 'fs';
 import path from 'path';
 
 /**
- * Create email transporter
+ * Initialize Resend client (HTTP-based, works on Render Free Tier)
+ */
+const resendClient = config.email.resendApiKey
+  ? new Resend(config.email.resendApiKey)
+  : null;
+
+if (resendClient) {
+  logger.info('✅ Resend email provider configured (HTTP API — bypasses SMTP port blocks)');
+}
+
+/**
+ * Create SMTP email transporter (fallback for local dev)
  */
 const createTransporter = () => {
   if (!config.email.host || !config.email.user || !config.email.password) {
-    logger.warn('Email configuration is incomplete. Email functionality will be disabled.');
+    logger.warn('Email SMTP configuration is incomplete. SMTP email will be disabled.');
     return null;
   }
 
@@ -17,6 +29,9 @@ const createTransporter = () => {
     host: config.email.host,
     port: config.email.port,
     secure: config.email.port === 465,
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
     auth: {
       user: config.email.user,
       pass: config.email.password,
@@ -27,17 +42,34 @@ const createTransporter = () => {
 const transporter = createTransporter();
 
 
-
 /**
- * Send email
+ * Send email — tries Resend first (HTTP), falls back to SMTP
  */
 export const sendEmail = async (
   to: string,
   subject: string,
   html: string
 ): Promise<boolean> => {
+  // 1. Try Resend (HTTP API — works on Render Free Tier)
+  if (resendClient) {
+    try {
+      await resendClient.emails.send({
+        from: config.email.from || 'InternFlow <onboarding@resend.dev>',
+        to,
+        subject,
+        html,
+      });
+      logger.info(`Email sent via Resend to ${to}`);
+      return true;
+    } catch (error) {
+      logger.error('Resend email delivery failed:', error);
+      // Fall through to SMTP
+    }
+  }
+
+  // 2. Fallback to SMTP (nodemailer)
   if (!transporter) {
-    logger.warn('Email transporter not configured. Skipping email send.');
+    logger.warn('No email provider available. Skipping email send.');
     return false;
   }
 
@@ -48,10 +80,10 @@ export const sendEmail = async (
       subject,
       html,
     });
-    logger.info(`Email sent successfully to ${to}`);
+    logger.info(`Email sent via SMTP to ${to}`);
     return true;
   } catch (error) {
-    logger.error('Failed to send email:', error);
+    logger.error('SMTP email delivery failed:', error);
     return false;
   }
 };
@@ -355,8 +387,27 @@ export const sendAnnouncementEmail = async (
     'View Workspace Notification': 'Launch Dashboard Portal'
   });
 
+  const subject = `[${priority} Priority] ${title}`;
+
+  // Try Resend first
+  if (resendClient) {
+    try {
+      await resendClient.emails.send({
+        from: config.email.from || 'InternFlow <onboarding@resend.dev>',
+        to: emails,
+        subject,
+        html,
+      });
+      logger.info(`Announcement email sent via Resend to ${emails.length} recipients`);
+      return true;
+    } catch (error) {
+      logger.error('Resend announcement delivery failed:', error);
+    }
+  }
+
+  // Fallback to SMTP
   if (!transporter) {
-    logger.warn('Email transporter not configured. Skipping announcement email send.');
+    logger.warn('No email provider available. Skipping announcement email send.');
     return false;
   }
 
@@ -364,13 +415,13 @@ export const sendAnnouncementEmail = async (
     await transporter.sendMail({
       from: config.email.from || config.email.user,
       bcc: emails,
-      subject: `[${priority} Priority] ${title}`,
+      subject,
       html,
     });
-    logger.info(`Announcement email sent successfully to ${emails.length} recipients`);
+    logger.info(`Announcement email sent via SMTP to ${emails.length} recipients`);
     return true;
   } catch (error) {
-    logger.error('Failed to send announcement email:', error);
+    logger.error('SMTP announcement delivery failed:', error);
     return false;
   }
 };
@@ -395,7 +446,7 @@ export const sendLoginOtpEmail = async (
     'View Workspace Notification': `Code: ${otpCode}`
   });
 
-  if (!transporter) {
+  if (!transporter && !resendClient) {
     logger.info(`[MOCK EMAIL DELIVERY] OTP for ${email} (${name}) is: ${otpCode}`);
     return true;
   }

@@ -84,8 +84,15 @@ export const ApplyPage: React.FC = () => {
     } catch (error: any) {
       toast.dismiss(loadingToast);
       console.error('Submission error:', error);
-      const errMsg = error.response?.data?.message || "Failed to submit application. Please try again.";
-      toast.error(errMsg);
+      
+      if (error.response?.data?.message) {
+        // Backend returned a specific error message (e.g., duplicate email)
+        toast.error(error.response.data.message);
+      } else if (error.code === 'ERR_NETWORK') {
+        toast.error("Cannot connect to the server. Please check if the backend is running.");
+      } else {
+        toast.error("Failed to submit application. Please try again.");
+      }
     }
   };
 
