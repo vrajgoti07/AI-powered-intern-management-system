@@ -1,36 +1,37 @@
 import os
-from typing import List, Dict, Any
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.vectorstores import FAISS
-from langchain_community.llms import Ollama
+from typing import Dict, List, Any
+import fitz
+
+FAISS_INDEX_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "faiss_index")
+
+OPENAI_AVAILABLE = False
 try:
     from langchain_openai import ChatOpenAI
     from langchain_core.messages import HumanMessage, SystemMessage
     OPENAI_AVAILABLE = True
 except ImportError:
-    OPENAI_AVAILABLE = False
-
-# We'll use fitz directly for PDF parsing rather than LangChain's document loaders for consistency
-import fitz
-
-FAISS_INDEX_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "faiss_index")
+    pass
 
 class RAGChatbotService:
     def __init__(self):
         self.embeddings = None
-        self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+        self.text_splitter = None
         self.vector_store = None
         self.chat_history: Dict[str, List[Dict[str, str]]] = {}
         self._loaded = False
         
     def _lazy_load(self):
         if self._loaded: return
+        from langchain_community.embeddings import HuggingFaceEmbeddings
+        from langchain_text_splitters import RecursiveCharacterTextSplitter
+        
         self.embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
         self._load_vector_store()
         self._loaded = True
         
     def _load_vector_store(self):
+        from langchain_community.vectorstores import FAISS
         if os.path.exists(FAISS_INDEX_PATH) and os.path.isdir(FAISS_INDEX_PATH):
             try:
                 self.vector_store = FAISS.load_local(FAISS_INDEX_PATH, self.embeddings, allow_dangerous_deserialization=True)
@@ -80,6 +81,8 @@ Answer:"""
         openai_api_key = settings.OPENAI_API_KEY
         
         if openai_api_key and OPENAI_AVAILABLE:
+            from langchain_openai import ChatOpenAI
+            from langchain_core.messages import HumanMessage, SystemMessage
             # Use OpenAI
             chat = ChatOpenAI(temperature=0, openai_api_key=openai_api_key, model="gpt-3.5-turbo")
             messages = [
@@ -91,6 +94,7 @@ Answer:"""
         else:
             # Fallback to local Ollama (requires Ollama running locally with a model like llama3)
             try:
+                from langchain_community.llms import Ollama
                 llm = Ollama(model="llama3")
                 response = llm.invoke(prompt)
                 return response

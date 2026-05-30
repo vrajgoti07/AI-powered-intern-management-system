@@ -7,13 +7,13 @@ top performers, and department performance. Results are cached
 in Redis with a 10-minute TTL.
 """
 
+from __future__ import annotations
 import os
 import json
 import logging
 from typing import Dict, Any, Optional, List
 
-import pandas as pd
-import numpy as np
+
 
 from app.config.settings import settings
 
@@ -53,6 +53,7 @@ class AnalyticsService:
 
         # ── Load dataset ─────────────────────────────────────────────
         try:
+            import pandas as pd
             df = pd.read_csv(self._data_path)
             logger.info("Loaded performance dataset: %d rows", len(df))
         except FileNotFoundError:

@@ -6,12 +6,10 @@ then predicts performance level, risk assessment, and success
 probability for each incoming request.
 """
 
+from __future__ import annotations
 import os
 import logging
 from typing import Dict, Any
-
-import numpy as np
-import joblib
 
 from app.config.settings import settings
 from app.utils.helpers import normalize_confidence
@@ -25,13 +23,15 @@ class PredictionService:
     def __init__(self) -> None:
         self._pipeline = None
         self._label_encoder = None
-        self._load_models()
+        self._loaded = False
 
     def _load_models(self) -> None:
         """Load the performance model and label encoder from disk."""
+        if self._loaded: return
         model_path = os.path.join(settings.MODEL_DIR, "performance_model.pkl")
         encoder_path = os.path.join(settings.MODEL_DIR, "performance_label_encoder.pkl")
 
+        import joblib
         try:
             self._pipeline = joblib.load(model_path)
             logger.info("Performance model loaded from %s", model_path)
@@ -43,6 +43,7 @@ class PredictionService:
             logger.info("Label encoder loaded from %s", encoder_path)
         except FileNotFoundError:
             logger.warning("Label encoder not found at %s", encoder_path)
+        self._loaded = True
 
     def predict_performance(
         self,
@@ -66,6 +67,7 @@ class PredictionService:
             risk_level, internship_success_probability, key_drivers,
             and recommendations.
         """
+        self._load_models()
         # Sanitise inputs with sensible defaults
         attendance_rate = max(0.0, min(1.0, attendance_rate or 0.5))
         task_completion_rate = max(0.0, min(1.0, task_completion_rate or 0.5))
@@ -81,6 +83,7 @@ class PredictionService:
             )
 
         # Prepare feature vector (must match training column order)
+        import numpy as np
         features = np.array([[
             attendance_rate,
             task_completion_rate,

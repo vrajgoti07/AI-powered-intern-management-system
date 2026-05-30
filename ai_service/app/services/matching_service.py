@@ -6,12 +6,10 @@ matches incoming intern profiles by computing cosine similarity between
 the intern's combined profile text and each department embedding.
 """
 
+from __future__ import annotations
 import os
 import logging
 from typing import Dict, Any, List, Optional
-
-import numpy as np
-import joblib
 
 from app.config.settings import settings
 from app.utils.helpers import cosine_similarity_score, normalize_confidence
@@ -33,6 +31,7 @@ class MatchingService:
         vectors_path = os.path.join(settings.VECTOR_DIR, "department_vectors.pkl")
 
         try:
+            import joblib
             self._dept_data = joblib.load(vectors_path)
             logger.info(
                 "Loaded department vectors for %d departments from %s",
@@ -83,6 +82,7 @@ class MatchingService:
         # Encode the intern profile
         intern_embedding = self._model.encode([profile_text], convert_to_numpy=True)[0]
 
+        import numpy as np
         dept_names: List[str] = self._dept_data["department_names"]
         dept_embeddings: np.ndarray = self._dept_data["embeddings"]
         dept_technologies: Dict[str, List[str]] = self._dept_data.get("technologies", {})
