@@ -193,13 +193,16 @@ export class ChatController {
         res.status(400).json({ success: false, message: 'No file uploaded' });
         return;
       }
-      const fileUrl = (req.file as any).secure_url || (req.file as any).url || (req.file as any).path || '';
-      const secureUrl = fileUrl.startsWith('http')
-        ? fileUrl
-        : `http://localhost:5000/uploads/${(req.file as any).filename}`;
+      let fileUrl: string;
+      const filePath = (req.file as any).path || '';
+      if (filePath.startsWith('http')) {
+        fileUrl = filePath.replace(/^http:\/\//, 'https://');
+      } else {
+        fileUrl = `http://localhost:5000/uploads/${(req.file as any).filename}`;
+      }
 
       successResponse(res, 'File uploaded successfully', {
-        fileUrl: secureUrl,
+        fileUrl: fileUrl,
         fileName: req.file.originalname,
         fileType: req.file.mimetype,
         fileSize: req.file.size

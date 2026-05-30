@@ -259,10 +259,13 @@ export const uploadOnboardingDoc = async (
     };
 
     const field = fieldMap[docType] || 'resumeUrl';
-    let fileUrl = (req.file as any).secure_url || (req.file as any).url || (req.file as any).path;
-
-    // Convert local absolute path to relative web URL if using diskStorage fallback
-    if (!(req.file as any).secure_url && (req.file as any).filename) {
+    let fileUrl: string;
+    const filePath = (req.file as any).path || '';
+    if (filePath.startsWith('http')) {
+      // Cloudinary URL — use directly (convert to https if needed)
+      fileUrl = filePath.replace(/^http:\/\//, 'https://');
+    } else {
+      // Local disk fallback
       fileUrl = `http://localhost:5000/uploads/${(req.file as any).filename}`;
     }
 

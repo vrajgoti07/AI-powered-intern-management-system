@@ -226,7 +226,7 @@ export const Settings: React.FC = () => {
     if (!window.confirm('Are you sure you want to remove your profile photo?')) return;
     const deleteToast = toast.loading('Removing profile photo...');
     try {
-      const res = await api.put('/settings/profile', { avatarUrl: null });
+      const res = await api.put('/settings/profile', { avatarUrl: 'REMOVE' });
       if (res.data.success) {
         const stored = localStorage.getItem('internflow_user');
         if (stored) {
@@ -273,7 +273,9 @@ export const Settings: React.FC = () => {
     e.preventDefault();
     setSavingProfile(true);
     try {
-      const res = await api.put('/settings/profile', profileData);
+      // Exclude avatarUrl from the payload — avatar is managed separately via upload/remove buttons
+      const { avatarUrl: _ignored, ...profilePayload } = profileData;
+      const res = await api.put('/settings/profile', profilePayload);
       if (res.data.success) {
         toast.success('Profile details updated successfully!');
 

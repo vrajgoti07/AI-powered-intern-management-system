@@ -8,7 +8,7 @@ import {
   assignInternToMentorSchema,
   activityQuerySchema,
 } from '../validations/mentorDetails.validation';
-import { uploadValidation } from '../middleware/uploadValidation';
+import { uploadCertificate } from '../utils/upload';
 
 const router = Router();
 
@@ -98,7 +98,7 @@ router.get('/:id/documents', mentorDetailsController.getMentorDocuments);
  */
 router.post(
   '/:id/documents',
-  uploadValidation,
+  uploadCertificate.single('file'),
   mentorDetailsController.uploadMentorDocument
 );
 

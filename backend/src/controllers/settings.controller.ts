@@ -52,13 +52,32 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
     const role = req.user!.role;
     const { name, phone, dob, college, degree, branch, cgpa, skills, address, workAddress, designation, experience, bio, expertise } = req.body;
 
-    // Handle uploaded file url (like profile pictures or resumes) if uploaded via static middleware
+    // Handle uploaded file url (profile pictures or resumes)
+    // Cloudinary multer adapter sets `path` = Cloudinary URL, `filename` = public_id
+    // Local disk storage sets `path` = local filesystem path, `filename` = generated name
     let fileUrl = '';
     if (req.file) {
-      fileUrl = (req.file as any).secure_url || (req.file as any).url || (req.file as any).path;
-      if (!(req.file as any).secure_url && (req.file as any).filename) {
+      // Cloudinary typically sets `path`, `url`, or `secure_url` to the remote URL.
+      const rawUrl = (req.file as any).secure_url || (req.file as any).url || (req.file as any).path || '';
+      
+      if (rawUrl.startsWith('http')) {
+        fileUrl = rawUrl.replace(/^http:\/\//, 'https://');
+      } else if ((req.file as any).filename) {
         fileUrl = `http://localhost:5000/uploads/${(req.file as any).filename}`;
       }
+    }
+
+    // Determine avatarUrl update:
+    // - Only clear it when explicitly requested via remove action (string "REMOVE" or "null")
+    // - Only set it when a file is uploaded with isAvatarUpload flag
+    // - Otherwise leave it untouched (undefined = no change in Prisma)
+    const isExplicitRemove = req.body.avatarUrl === 'REMOVE' || req.body.avatarUrl === 'null';
+    const isAvatarUpload = req.body.isAvatarUpload === 'true' || req.body.isAvatarUpload === true;
+    let avatarUpdate: string | null | undefined = undefined;
+    if (isExplicitRemove) {
+      avatarUpdate = null;
+    } else if (isAvatarUpload && fileUrl) {
+      avatarUpdate = fileUrl;
     }
 
     // 1. Update basic User profile name and avatar
@@ -66,7 +85,7 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
       where: { id: userId },
       data: {
         name: name || undefined,
-        avatarUrl: req.body.avatarUrl === null ? null : (req.body.isAvatarUpload && fileUrl ? fileUrl : undefined)
+        avatarUrl: avatarUpdate
       }
     });
 

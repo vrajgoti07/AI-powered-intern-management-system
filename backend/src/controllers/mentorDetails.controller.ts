@@ -173,9 +173,18 @@ export const uploadMentorDocument = async (
       return;
     }
 
+    // Cloudinary typically sets `path`, `url`, or `secure_url` to the remote URL.
+    const rawUrl = file.secure_url || file.url || file.path || '';
+    let fileUrl = '';
+    if (rawUrl.startsWith('http')) {
+      fileUrl = rawUrl.replace(/^http:\/\//, 'https://');
+    } else if (file.filename) {
+      fileUrl = `http://localhost:5000/uploads/${file.filename}`;
+    }
+
     const document = await mentorDetailsService.uploadMentorDocument(req.params.id as string, {
       fileName: file.originalname || file.original_filename || 'document',
-      fileUrl: file.path || file.secure_url || file.url || '',
+      fileUrl: fileUrl,
       fileType: req.body.fileType || 'certificate',
       fileSize: file.size || file.bytes || 0,
     });
