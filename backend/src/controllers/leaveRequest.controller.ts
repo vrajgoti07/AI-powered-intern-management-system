@@ -277,6 +277,37 @@ export class LeaveRequestController {
       });
     }
   }
+
+  /**
+   * Get Leave Balance
+   */
+  async getLeaveBalance(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.id;
+      
+      // Hardcoded yearly allowances
+      const allowances = { 'Sick Leave': 10, 'Casual Leave': 5, 'Earned Leave': 15 };
+      
+      // Calculate taken leaves
+      const approvedLeaves = await (require('../config/database').default).leave.findMany({
+        where: { userId, status: 'APPROVED' }
+      });
+
+      const balances = { ...allowances };
+      
+      approvedLeaves.forEach((leave: any) => {
+        const type = leave.leaveType as keyof typeof allowances;
+        if (balances[type] !== undefined) {
+          const days = Math.floor((new Date(leave.endDate).getTime() - new Date(leave.startDate).getTime()) / (1000 * 3600 * 24)) + 1;
+          balances[type] -= days;
+        }
+      });
+
+      successResponse(res, 'Leave balance calculated successfully', balances);
+    } catch (error: any) {
+      res.status(400).json({ success: false, message: error.message || 'Failed to fetch balance' });
+    }
+  }
 }
 
 export default new LeaveRequestController();

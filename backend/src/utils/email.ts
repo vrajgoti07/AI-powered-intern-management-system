@@ -26,16 +26,7 @@ const createTransporter = () => {
 
 const transporter = createTransporter();
 
-// Proactively verify the transporter on startup to alert developers of SMTP issues
-if (transporter) {
-  transporter.verify()
-    .then(() => {
-      logger.info('✅ SMTP Mail Transporter verified successfully and is ready to send emails.');
-    })
-    .catch((err) => {
-      logger.error('❌ SMTP Mail Transporter verification failed on boot:', err);
-    });
-}
+
 
 /**
  * Send email

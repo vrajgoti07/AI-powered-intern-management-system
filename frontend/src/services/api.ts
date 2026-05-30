@@ -35,7 +35,7 @@ api.interceptors.response.use(
       if (refreshToken) {
         try {
           // Attempt to refresh the access token using standard Axios to bypass custom interceptor loops
-          const res = await axios.post('http://localhost:5000/api/v1/auth/refresh-token', {
+          const res = await axios.post(`${import.meta.env.VITE_API_URL}/auth/refresh-token`, {
             refreshToken,
           });
 

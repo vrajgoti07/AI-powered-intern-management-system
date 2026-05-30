@@ -8,6 +8,7 @@ import { Sidebar } from '../../../components/common/Sidebar';
 import { Navbar } from '../../../components/common/Navbar';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../../hooks/useAuth';
+import api from '../../../services/api';
 
 export const ReportsCertificates: React.FC = () => {
   const { user } = useAuth();
@@ -106,9 +107,22 @@ export const ReportsCertificates: React.FC = () => {
                       <span className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5"><Sparkles className="w-4 h-4 text-indigo-600" /> Certificate Template Preview</span>
                       <div className="flex gap-2">
                         <button 
-                          onClick={() => {
-                            toast.success("Certificate saved to desktop!");
-                            setShowCertificate(false);
+                          onClick={async () => {
+                            try {
+                              const internId = (user as any)?.intern?.id;
+                              if(!internId) return toast.error("Intern profile not found");
+                              
+                              const res = await api.post(`/documents/certificate/${internId}`);
+                              const documentId = res.data?.data?.id;
+                              
+                              if(documentId) {
+                                window.open(`${import.meta.env.VITE_API_URL.replace(/\/api\/v1\/?$/, '')}/documents/download/${documentId}`, '_blank');
+                                toast.success("Certificate downloaded successfully!");
+                                setShowCertificate(false);
+                              }
+                            } catch(err) {
+                              toast.error("Failed to generate certificate.");
+                            }
                           }}
                           className="flex items-center gap-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition-colors cursor-pointer"
                         >

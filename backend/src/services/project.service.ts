@@ -119,3 +119,22 @@ export const assignInternToProject = async (projectId: string, internId: string,
     }
   });
 };
+/**
+ * Get project by ID
+ */
+export const getProjectById = async (projectId: string) => {
+  return prisma.project.findUnique({
+    where: { id: projectId },
+    include: {
+      interns: {
+        include: {
+          intern: {
+            include: {
+              user: { select: { id: true, name: true, email: true, avatarUrl: true } }
+            }
+          }
+        }
+      }
+    }
+  });
+};

@@ -114,14 +114,17 @@ export class AIController {
       });
 
       // Map to expected format
-      const internsData = interns.map(i => ({
-        intern_id: i.id,
-        name: i.user?.name || 'Unknown',
-        attendance_rate: i.attendance || 0,
-        task_completion_rate: (i.score || 0) / 100, // proxy
-        avg_task_rating: 4.0, // mock or fetch from tasks
-        communication_score: 4.0,
-        skill_growth_score: 0.8
+      const internsData = await Promise.all(interns.map(async i => {
+        const avg_task_rating = (i.score || 0) / 20;
+        return {
+          intern_id: i.id,
+          name: i.user?.name || 'Unknown',
+          attendance_rate: i.attendance || 0,
+          task_completion_rate: (i.score || 0) / 100, // proxy
+          avg_task_rating: avg_task_rating, 
+          communication_score: (i.score || 0) / 20,
+          skill_growth_score: 0.8
+        };
       }));
 
       const result = await aiService.getInternRanking(internsData, departmentId as string);
@@ -144,14 +147,24 @@ export class AIController {
         }
       });
 
-      const internsData = interns.map(i => ({
-        intern_id: i.id,
-        name: i.user?.name || 'Unknown',
-        attendance_rate: i.attendance || 0,
-        days_since_last_activity: 1, // mock or calculate based on last active
-        avg_task_rating: 4.0,
-        sentiment_score: 0.5,
-        productivity_trend: 0
+      const internsData = await Promise.all(interns.map(async i => {
+        const lastActiveTask = await prisma.task.findFirst({ 
+          where: { internId: i.id }, 
+          orderBy: { updatedAt: 'desc' } 
+        });
+        const days_since_last_activity = lastActiveTask 
+          ? Math.floor((Date.now() - new Date(lastActiveTask.updatedAt).getTime()) / (1000 * 3600 * 24))
+          : 0;
+
+        return {
+          intern_id: i.id,
+          name: i.user?.name || 'Unknown',
+          attendance_rate: i.attendance || 0,
+          days_since_last_activity: days_since_last_activity,
+          avg_task_rating: (i.score || 0) / 20,
+          sentiment_score: 0.5,
+          productivity_trend: 0
+        };
       }));
 
       const result = await aiService.evaluateInternRisks(internsData);

@@ -9,6 +9,28 @@ const router = Router();
 router.use(authenticate);
 
 /**
+ * @route   GET /api/projects
+ * @desc    Fetch all projects
+ * @access  HR, Department Head, Mentor
+ */
+router.get(
+  '/',
+  authorize('HR', 'DEPARTMENT_HEAD', 'MENTOR'),
+  projectController.getProjects
+);
+
+/**
+ * @route   GET /api/projects/:id
+ * @desc    Fetch project by ID
+ * @access  HR, Department Head, Mentor
+ */
+router.get(
+  '/:id',
+  authorize('HR', 'DEPARTMENT_HEAD', 'MENTOR'),
+  projectController.getProjectById
+);
+
+/**
  * @route   PUT /api/projects/:id
  * @desc    Update project details
  * @access  HR, Department Head, Mentor

@@ -10,7 +10,7 @@ export const AttendanceForm: React.FC = () => {
     control,
     formState: { errors, isSubmitting },
   } = useForm<AttendanceFormData>({
-    resolver: zodResolver(attendanceSchema),
+    resolver: zodResolver(attendanceSchema) as any,
     defaultValues: {
       status: 'PRESENT',
     }
@@ -19,12 +19,12 @@ export const AttendanceForm: React.FC = () => {
   const status = useWatch({ control, name: 'status' });
   const requiresTimes = status === 'PRESENT' || status === 'LATE' || status === 'HALF_DAY';
 
-  const onSubmit = async (data: AttendanceFormData) => {
+  const onSubmit = async (data: any) => {
     console.log(data);
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-md mx-auto p-6 bg-white rounded shadow-md">
+    <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-4 max-w-md mx-auto p-6 bg-white rounded shadow-md">
       <div>
         <label className="block text-sm font-medium text-gray-700">Date</label>
         <input

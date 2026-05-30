@@ -55,7 +55,6 @@ router.use('/onboarding', onboardingRoutes);
 router.use('/tasks', taskRoutes);
 router.use('/attendance', attendanceNewRoutes);
 router.use('/leave', leaveRequestRoutes);
-router.use('/leaves', leaveRequestRoutes);
 router.use('/messages', chatRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/ai', aiRoutes);

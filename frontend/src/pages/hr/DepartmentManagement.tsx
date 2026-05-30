@@ -278,6 +278,18 @@ export const DepartmentManagement: React.FC = () => {
     }
   };
 
+  const handleRemoveHead = async (dept: any) => {
+    if (!window.confirm(`Are you sure you want to remove the division head for ${dept.name}?`)) return;
+    try {
+      await api.put(`/departments/${dept.id}`, { headId: null });
+      toast.success(`Division Head removed from ${dept.name}!`);
+      queryClient.invalidateQueries({ queryKey: ['departments'] });
+      refreshData();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to remove head');
+    }
+  };
+
   const handleTransferMember = async (e: React.FormEvent) => {
     e.preventDefault();
     const { memberType, memberId, targetDeptId } = transferForm;
@@ -396,6 +408,15 @@ export const DepartmentManagement: React.FC = () => {
                       </div>
                       
                       <div className="flex items-center gap-1.5">
+                        {d.head && (
+                          <button
+                            onClick={() => handleRemoveHead(d)}
+                            className="p-2 hover:bg-red-50 rounded-xl text-slate-400 hover:text-red-500 transition-all cursor-pointer border border-transparent hover:border-red-100 bg-white"
+                            title="Remove Division Head"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => { setSelectedDept(d); setIsNewAssignModalOpen(true); }}
                           className="px-2 py-1 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 text-indigo-600 rounded-lg text-[9px] font-black uppercase tracking-wider cursor-pointer shadow-sm"

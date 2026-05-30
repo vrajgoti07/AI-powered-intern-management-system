@@ -9,6 +9,7 @@ import { initSimpleSocket } from './socket/index';
 import './queues/notification.worker';
 import './queues/workers/email.worker';
 import { startScheduledJobs } from './jobs/scheduledJobs';
+import { emailService } from './services/email.service';
 
 /**
  * Start Server
@@ -32,6 +33,9 @@ const startServer = async () => {
 
     // Start scheduled background jobs
     startScheduledJobs();
+
+    // Verify Email SMTP Connection
+    emailService.verifyConnection();
 
     // Start listening
     server.listen(config.server.port, () => {

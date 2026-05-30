@@ -20,6 +20,20 @@ class EmailService {
   }
 
   /**
+   * Verify SMTP connection
+   */
+  public async verifyConnection() {
+    try {
+      await this.transporter.verify();
+      logger.info('✅ SMTP Mail Transporter verified successfully and is ready to send emails.');
+      return true;
+    } catch (error) {
+      logger.error('❌ SMTP Mail Transporter verification failed on boot:', error);
+      return false;
+    }
+  }
+
+  /**
    * Internal method to send an email and log it
    */
   public async sendEmail(

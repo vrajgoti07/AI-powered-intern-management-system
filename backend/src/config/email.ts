@@ -9,10 +9,10 @@ const emailConfigSchema = z.object({
 });
 
 const envVars = {
-  host: process.env.EMAIL_HOST,
-  port: process.env.EMAIL_PORT,
-  user: process.env.EMAIL_USER,
-  pass: process.env.EMAIL_PASS,
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  user: process.env.SMTP_USER,
+  pass: process.env.SMTP_PASSWORD,
   from: process.env.EMAIL_FROM,
 };
 

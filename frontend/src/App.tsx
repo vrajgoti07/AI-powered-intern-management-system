@@ -47,21 +47,21 @@ const InternDashboard = React.lazy(() => import('./pages/intern/InternDashboard'
 const MyTasks = React.lazy(() => import('./pages/intern/MyTasks').then(m => ({ default: m.MyTasks })));
 // const Attendance = React.lazy(() => import('./pages/intern/Attendance').then(m => ({ default: m.Attendance })));
 const Settings = React.lazy(() => import('./pages/shared/Settings').then(m => ({ default: m.Settings })));
-// const AIChatbot = React.lazy(() => import('./pages/intern/AIChatbot').then(m => ({ default: m.AIChatbot })));
+const AIChatbot = React.lazy(() => import('./pages/intern/AIChatbot').then(m => ({ default: m.AIChatbot })));
 const OnboardingWorkflow = React.lazy(() => import('./pages/intern/onboarding/OnboardingWorkflow').then(m => ({ default: m.OnboardingWorkflow })));
 // const TaskLifecycle = React.lazy(() => import('./pages/intern/TaskLifecycle').then(m => ({ default: m.TaskLifecycle })));
 const PortfolioDashboard = React.lazy(() => import('./pages/intern/PortfolioDashboard').then(m => ({ default: m.PortfolioDashboard })));
 
 // Shared Pages across portals
-// const AIMatching = React.lazy(() => import('./pages/ai-matching/AIMatching').then(m => ({ default: m.AIMatching })));
-// const TaskCalendarView = React.lazy(() => import('./pages/shared/TaskCalendarView').then(m => ({ default: m.TaskCalendarView })));
+const AIMatching = React.lazy(() => import('./pages/ai-matching/AIMatching').then(m => ({ default: m.AIMatching })));
+const TaskCalendarView = React.lazy(() => import('./pages/shared/TaskCalendarView').then(m => ({ default: m.TaskCalendarView })));
 const PerformanceAnalytics = React.lazy(() => import('./pages/shared/PerformanceAnalytics').then(m => ({ default: m.PerformanceAnalytics })));
-// const AIFeedback = React.lazy(() => import('./pages/shared/feedback/AIFeedback').then(m => ({ default: m.AIFeedback })));
+const AIFeedback = React.lazy(() => import('./pages/shared/feedback/AIFeedback').then(m => ({ default: m.AIFeedback })));
 const CommunicationSystem = React.lazy(() => import('./pages/shared/chat/CommunicationSystem').then(m => ({ default: m.CommunicationSystem })));
 const AttendanceLeave = React.lazy(() => import('./pages/shared/attendance/AttendanceLeave').then(m => ({ default: m.AttendanceLeave })));
-// const ReportsCertificates = React.lazy(() => import('./pages/shared/reports/ReportsCertificates').then(m => ({ default: m.ReportsCertificates })));
+const ReportsCertificates = React.lazy(() => import('./pages/shared/reports/ReportsCertificates').then(m => ({ default: m.ReportsCertificates })));
 const LifecycleTimeline = React.lazy(() => import('./pages/shared/lifecycle/LifecycleTimeline').then(m => ({ default: m.LifecycleTimeline })));
-// const SecurityPortal = React.lazy(() => import('./pages/public/SecurityPortal').then(m => ({ default: m.SecurityPortal })));
+const SecurityPortal = React.lazy(() => import('./pages/public/SecurityPortal').then(m => ({ default: m.SecurityPortal })));
 
 // Super Admin Pages
 const SuperAdmin = React.lazy(() => import('./pages/admin/SuperAdmin').then(m => ({ default: m.SuperAdmin })));
@@ -371,17 +371,29 @@ const App: React.FC = () => {
                 />
                 <Route
                   path="/intern/chatbot"
-                  element={<Navigate to="/shared/communication" replace />}
+                  element={
+                    <ProtectedRoute allowedRole="intern" requireActiveIntern>
+                      <AIChatbot />
+                    </ProtectedRoute>
+                  }
                 />
 
                 {/* Shared Secure Portals */}
                 <Route
                   path="/shared/ai-matching"
-                  element={<Navigate to="/shared/performance-analytics" replace />}
+                  element={
+                    <ProtectedRoute allowedRoles={['hr', 'mentor', 'intern']}>
+                      <AIMatching />
+                    </ProtectedRoute>
+                  }
                 />
                 <Route
                   path="/shared/task-calendar"
-                  element={<Navigate to="/intern/tasks" replace />}
+                  element={
+                    <ProtectedRoute allowedRoles={['intern', 'mentor']} requireActiveIntern>
+                      <TaskCalendarView />
+                    </ProtectedRoute>
+                  }
                 />
                 <Route
                   path="/shared/performance-analytics"
@@ -393,7 +405,11 @@ const App: React.FC = () => {
                 />
                 <Route
                   path="/shared/ai-feedback"
-                  element={<Navigate to="/shared/performance-analytics" replace />}
+                  element={
+                    <ProtectedRoute allowedRoles={['intern', 'mentor']} requireActiveIntern>
+                      <AIFeedback />
+                    </ProtectedRoute>
+                  }
                 />
                 <Route
                   path="/shared/communication"
@@ -413,7 +429,11 @@ const App: React.FC = () => {
                 />
                 <Route
                   path="/shared/reports-certificates"
-                  element={<Navigate to="/shared/performance-analytics" replace />}
+                  element={
+                    <ProtectedRoute allowedRoles={['intern', 'hr', 'mentor']} requireActiveIntern>
+                      <ReportsCertificates />
+                    </ProtectedRoute>
+                  }
                 />
                 <Route
                   path="/shared/lifecycle-timeline"
@@ -425,7 +445,11 @@ const App: React.FC = () => {
                 />
                 <Route
                   path="/shared/security"
-                  element={<Navigate to="/intern/settings" replace />}
+                  element={
+                    <ProtectedRoute allowedRoles={['intern', 'mentor', 'hr', 'admin']}>
+                      <SecurityPortal />
+                    </ProtectedRoute>
+                  }
                 />
 
                 {/* Super Admin Secured Route Panel */}

@@ -190,6 +190,19 @@ async function main() {
     },
   });
 
+  // Super Admin
+  console.log('Creating Super Admin...');
+  await prisma.user.create({
+    data: {
+      email: 'superadmin@intern.com',
+      password: await hashPassword('admin123'),
+      name: 'Super Admin',
+      role: UserRole.SUPER_ADMIN,
+      isActive: true,
+      isEmailVerified: true,
+    },
+  });
+
   // 6. Create Mentor User
   console.log('Creating Mentor...');
   const mentorUser = await prisma.user.create({

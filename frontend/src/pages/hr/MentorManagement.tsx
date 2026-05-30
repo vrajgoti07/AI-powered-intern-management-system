@@ -6,7 +6,7 @@ import { Navbar } from '../../components/common/Navbar';
 import { Avatar } from '../../components/common/Avatar';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { Modal } from '../../components/common/Modal';
-import { Search, Star, Plus, Link, Sparkles, Eye } from 'lucide-react';
+import { Search, Star, Plus, Link, Sparkles, Eye, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 
@@ -94,6 +94,19 @@ export const MentorManagement: React.FC = () => {
     }
   };
 
+  const handleDeleteMentor = async (mentorId: string) => {
+    if (!window.confirm("Are you sure you want to delete this mentor?")) return;
+    try {
+      await api.delete(`/mentors/${mentorId}`);
+      toast.success("Mentor deleted successfully!");
+      await refreshData();
+    } catch (error: any) {
+      console.error(error);
+      const errMsg = error.response?.data?.message || "Failed to delete mentor";
+      toast.error(errMsg);
+    }
+  };
+
   const openAssignModal = (mentor: any) => {
     setSelectedMentor(mentor);
     setShowAssignModal(true);
@@ -140,9 +153,18 @@ export const MentorManagement: React.FC = () => {
               >
                 <div className="flex items-start justify-between">
                   <Avatar name={m.name} size="md" />
-                  <span className="flex items-center gap-0.5 bg-amber-50 text-amber-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-100">
-                    <Star className="w-3 h-3 fill-amber-500 text-amber-500" /> {m.rating.toFixed(1)}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-0.5 bg-amber-50 text-amber-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-100">
+                      <Star className="w-3 h-3 fill-amber-500 text-amber-500" /> {m.rating.toFixed(1)}
+                    </span>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleDeleteMentor(m.id); }}
+                      className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                      title="Delete Mentor"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="space-y-1">

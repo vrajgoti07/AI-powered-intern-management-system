@@ -17,6 +17,13 @@ router.post(
   feedbackController.createFeedback
 );
 
+// Mentor submits feedback for Intern
+router.post(
+  '/mentor',
+  authorize('MENTOR'),
+  feedbackController.createMentorFeedback
+);
+
 // HR retrieves feedbacks
 router.get(
   '/hr',

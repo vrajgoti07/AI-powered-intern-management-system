@@ -21,6 +21,28 @@ export class FeedbackController {
     }
   }
 
+  async createMentorFeedback(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { rating, comment, category, internId } = req.body;
+
+      if (!internId) {
+        res.status(400).json({ success: false, message: "internId is required" });
+        return;
+      }
+
+      const feedback = await feedbackService.createFeedback({
+        internUserId: internId, // Reusing field name although it's targeted for intern
+        rating,
+        comment,
+        category,
+      });
+
+      successResponse(res, 'Mentor feedback submitted successfully', feedback);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getHRFeedbacks(_req: Request, res: Response, next: NextFunction) {
     try {
       const feedbacks = await feedbackService.getHRFeedbacks();

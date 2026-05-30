@@ -54,3 +54,20 @@ export const assignIntern = async (
     next(error);
   }
 };
+
+export const getProjectById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const project = await projectService.getProjectById(req.params.id as string);
+    if (!project) {
+      res.status(404).json({ success: false, message: 'Project not found' });
+      return;
+    }
+    successResponse(res, 'Project retrieved successfully', project);
+  } catch (error) {
+    next(error);
+  }
+};

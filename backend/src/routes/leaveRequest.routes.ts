@@ -18,6 +18,7 @@ router.put('/:id/reject', authorize('HR', 'MENTOR'), leaveRequestController.reje
 router.post('/request', authorize('INTERN'), leaveRequestController.requestLeave);
 router.put('/mentor-approve', authorize('MENTOR'), leaveRequestController.mentorApprove);
 router.put('/hr-approve', authorize('HR'), leaveRequestController.hrApprove);
+router.get('/balance', authorize('INTERN'), leaveRequestController.getLeaveBalance);
 router.get('/all', leaveRequestController.getAll);
 router.put('/reject', authorize('MENTOR', 'HR'), leaveRequestController.rejectLeave);
 

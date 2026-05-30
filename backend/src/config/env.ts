@@ -36,6 +36,9 @@ const envSchema = z.object({
   SMTP_PASSWORD: z.string().optional(),
   EMAIL_FROM: z.string().optional(),
   
+  // Queue
+  ADMIN_QUEUE_PASS: z.string().optional(),
+  
   // Rate Limiting
   RATE_LIMIT_WINDOW_MS: z.string().default('900000'),
   RATE_LIMIT_MAX_REQUESTS: z.string().default('100'),
@@ -97,6 +100,9 @@ export const config = {
     user: env.SMTP_USER,
     password: env.SMTP_PASSWORD,
     from: env.EMAIL_FROM,
+  },
+  queue: {
+    adminPassword: env.ADMIN_QUEUE_PASS,
   },
   rateLimit: {
     windowMs: parseInt(env.RATE_LIMIT_WINDOW_MS, 10),

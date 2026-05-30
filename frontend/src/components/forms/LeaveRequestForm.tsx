@@ -9,7 +9,7 @@ export const LeaveRequestForm: React.FC = () => {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<LeaveRequestFormData>({
-    resolver: zodResolver(leaveRequestSchema),
+    resolver: zodResolver(leaveRequestSchema) as any,
   });
 
   const onSubmit = async (data: LeaveRequestFormData) => {
@@ -17,7 +17,7 @@ export const LeaveRequestForm: React.FC = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-md mx-auto p-6 bg-white rounded shadow-md">
+    <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-4 max-w-md mx-auto p-6 bg-white rounded shadow-md">
       <div>
         <label className="block text-sm font-medium text-gray-700">Leave Type</label>
         <select

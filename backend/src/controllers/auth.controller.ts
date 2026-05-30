@@ -35,7 +35,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
         name: name,
         email: email,
         temporaryPassword: password, // Note: storing/sending raw password. Only good if it's generated/temporary.
-        loginUrl: process.env.FRONTEND_URL || 'http://localhost:3000/login',
+        loginUrl: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`,
       }
     });
   }
