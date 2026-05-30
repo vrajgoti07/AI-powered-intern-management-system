@@ -7,18 +7,19 @@ const redis = config.redis.url
       host: config.redis.host,
       port: config.redis.port,
       password: config.redis.password,
-      maxRetriesPerRequest: null, // Required by BullMQ
+      maxRetriesPerRequest: null,
     });
 
 redis.on("connect", () => {
-  const isUpstash = config.redis.url?.includes('upstash');
-  console.log(`✅ ${isUpstash ? 'Upstash ' : ''}Redis Connected`);
+  const isUpstash = config.redis.url?.includes("upstash");
+  console.log(`✅ ${isUpstash ? "Upstash " : ""}Redis Connected`);
 });
 
 let lastErrorLoggedTime = 0;
 
 redis.on("error", (err: any) => {
   const now = Date.now();
+
   if (now - lastErrorLoggedTime > 30000) {
     console.log("❌ Redis Error (throttled to 30s):", err.message || err);
     lastErrorLoggedTime = now;
