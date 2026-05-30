@@ -25,10 +25,11 @@ class MatchingService:
     def __init__(self) -> None:
         self._model = None
         self._dept_data: Optional[Dict[str, Any]] = None
-        self._load_models()
+        self._loaded = False
 
     def _load_models(self) -> None:
         """Load the sentence-transformer model and department vectors."""
+        if self._loaded: return
         vectors_path = os.path.join(settings.VECTOR_DIR, "department_vectors.pkl")
 
         try:
@@ -52,6 +53,7 @@ class MatchingService:
         except Exception as exc:
             logger.error("Failed to load SentenceTransformer: %s", exc)
             self._model = None
+        self._loaded = True
 
     def match_role(
         self,
@@ -65,6 +67,7 @@ class MatchingService:
         Returns the best department match with similarity score, recommended
         role, suggested technologies, and a human-readable rationale.
         """
+        self._load_models()
         if self._model is None or self._dept_data is None:
             logger.warning("Models not loaded — returning fallback match")
             return self._fallback_match(skills)

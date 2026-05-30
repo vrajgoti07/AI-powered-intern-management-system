@@ -35,10 +35,11 @@ class SentimentService:
 
     def __init__(self) -> None:
         self._pipeline = None
-        self._load_model()
+        self._model_loaded = False
 
     def _load_model(self) -> None:
         """Load the HuggingFace sentiment-analysis pipeline."""
+        if self._model_loaded: return
         try:
             from transformers import pipeline as hf_pipeline
             self._pipeline = hf_pipeline(
@@ -47,9 +48,11 @@ class SentimentService:
                 device=-1,  # Force CPU
             )
             logger.info("Sentiment pipeline (DistilBERT) loaded successfully")
+            self._model_loaded = True
         except Exception as exc:
             logger.error("Failed to load sentiment pipeline: %s", exc)
             self._pipeline = None
+            self._model_loaded = True
 
     def analyze_sentiment(self, feedback_text: str) -> Dict[str, Any]:
         """Analyse a piece of feedback text and return structured results.
@@ -63,6 +66,7 @@ class SentimentService:
             return self._empty_result()
 
         # ── 1. Run transformer pipeline ──────────────────────────────
+        self._load_model()
         if self._pipeline is not None:
             try:
                 result = self._pipeline(text[:512])[0]  # Truncate to model max

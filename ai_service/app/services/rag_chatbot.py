@@ -18,12 +18,17 @@ FAISS_INDEX_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "faiss_
 
 class RAGChatbotService:
     def __init__(self):
-        self.embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        self.embeddings = None
         self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
         self.vector_store = None
         self.chat_history: Dict[str, List[Dict[str, str]]] = {}
+        self._loaded = False
         
+    def _lazy_load(self):
+        if self._loaded: return
+        self.embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
         self._load_vector_store()
+        self._loaded = True
         
     def _load_vector_store(self):
         if os.path.exists(FAISS_INDEX_PATH) and os.path.isdir(FAISS_INDEX_PATH):
@@ -35,6 +40,7 @@ class RAGChatbotService:
                 
     def add_document(self, pdf_bytes: bytes, filename: str) -> int:
         """Extracts text, splits it, and adds to FAISS index."""
+        self._lazy_load()
         text = ""
         with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
             for page in doc:
@@ -92,6 +98,7 @@ Answer:"""
                 return f"Error connecting to LLM (Check if OPENAI_API_KEY is set or Ollama is running): {str(e)}"
 
     def query(self, question: str, user_id: str) -> Dict[str, Any]:
+        self._lazy_load()
         if self.vector_store is None:
             return {
                 "answer": "The knowledge base is empty. Please upload HR documents first.",
