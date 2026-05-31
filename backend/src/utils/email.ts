@@ -51,25 +51,35 @@ export const sendEmail = async (
   html: string
 ): Promise<boolean> => {
   // 1. Try Resend (HTTP API — works on Render Free Tier)
+  // IMPORTANT: Resend free tier without a verified domain ONLY allows sending
+  // to the account owner's email. To send to any recipient, verify a domain at resend.com/domains.
   if (resendClient) {
     try {
-      await resendClient.emails.send({
-        from: config.email.from || 'InternFlow <onboarding@resend.dev>',
+      const result = await resendClient.emails.send({
+        from: 'InternFlow <onboarding@resend.dev>',
+        replyTo: config.email.from || config.email.user || undefined,
         to,
         subject,
         html,
       });
-      logger.info(`Email sent via Resend to ${to}`);
-      return true;
-    } catch (error) {
-      logger.error('Resend email delivery failed:', error);
+
+      // Resend SDK doesn't throw on API errors — it returns { data: null, error: {...} }
+      if (result.error) {
+        logger.error(`Resend API error (${result.error.name}): ${result.error.message}`);
+        // Fall through to SMTP
+      } else {
+        logger.info(`Email sent via Resend to ${to} (id: ${result.data?.id})`);
+        return true;
+      }
+    } catch (error: any) {
+      logger.error('Resend email delivery exception:', error?.message || error);
       // Fall through to SMTP
     }
   }
 
   // 2. Fallback to SMTP (nodemailer)
   if (!transporter) {
-    logger.warn('No email provider available. Skipping email send.');
+    logger.warn(`No email provider available. Email to ${to} was NOT sent. Subject: ${subject}`);
     return false;
   }
 
@@ -82,8 +92,8 @@ export const sendEmail = async (
     });
     logger.info(`Email sent via SMTP to ${to}`);
     return true;
-  } catch (error) {
-    logger.error('SMTP email delivery failed:', error);
+  } catch (error: any) {
+    logger.error(`SMTP email delivery failed to ${to}:`, error?.message || error);
     return false;
   }
 };
@@ -389,19 +399,26 @@ export const sendAnnouncementEmail = async (
 
   const subject = `[${priority} Priority] ${title}`;
 
-  // Try Resend first
+  // Try Resend first (must use onboarding@resend.dev on free tier)
   if (resendClient) {
     try {
-      await resendClient.emails.send({
-        from: config.email.from || 'InternFlow <onboarding@resend.dev>',
+      const result = await resendClient.emails.send({
+        from: 'InternFlow <onboarding@resend.dev>',
+        replyTo: config.email.from || config.email.user || undefined,
         to: emails,
         subject,
         html,
       });
-      logger.info(`Announcement email sent via Resend to ${emails.length} recipients`);
-      return true;
-    } catch (error) {
-      logger.error('Resend announcement delivery failed:', error);
+
+      if (result.error) {
+        logger.error(`Resend announcement error (${result.error.name}): ${result.error.message}`);
+        // Fall through to SMTP
+      } else {
+        logger.info(`Announcement email sent via Resend to ${emails.length} recipients (id: ${result.data?.id})`);
+        return true;
+      }
+    } catch (error: any) {
+      logger.error('Resend announcement delivery failed:', error?.message || error);
     }
   }
 
