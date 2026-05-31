@@ -1,6 +1,10 @@
 import axios from 'axios';
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://internflow-backend-7n8i.onrender.com/api/v1';
+let envApiUrl = import.meta.env.VITE_API_URL || 'https://internflow-backend-7n8i.onrender.com/api/v1';
+if (envApiUrl && !envApiUrl.endsWith('/api/v1')) {
+  envApiUrl = `${envApiUrl.replace(/\/+$/, '')}/api/v1`;
+}
+export const API_BASE_URL = envApiUrl;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
