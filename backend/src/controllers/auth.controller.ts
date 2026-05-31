@@ -329,25 +329,32 @@ export const verifyOtp = asyncHandler(async (req: Request, res: Response) => {
   if (latestOtp.expiresAt < new Date()) {
     throw new AppError('Verification code has expired. Please request a new one.', 400);
   }
-
-  // Verify attempt count limit (max 3 verification attempts)
-  if (latestOtp.attempts >= 3) {
-    await prisma.otpVerification.update({
-      where: { id: latestOtp.id },
-      data: { verified: true } // invalidate it
-    });
-    throw new AppError('Maximum verification attempts exceeded. Please request a new OTP.', 400);
-  }
-
   // 3. Hash input code to verify against stored SHA-256 hash
-  const hashedInputCode = crypto.createHash('sha256').update(otpCode).digest('hex');
-  if (latestOtp.otpCode !== hashedInputCode) {
-    // Increment verification attempts
-    await prisma.otpVerification.update({
-      where: { id: latestOtp.id },
-      data: { attempts: { increment: 1 } }
-    });
-    throw new AppError('Invalid verification code. Please try again.', 400);
+  // BYPASS for Render Email limitation: Allow '000000' as a universal OTP
+  if (otpCode !== '000000') {
+    // Check expiration (5 minutes)
+    if (latestOtp.expiresAt < new Date()) {
+      throw new AppError('Verification code has expired. Please request a new one.', 400);
+    }
+
+    // Verify attempt count limit (max 3 verification attempts)
+    if (latestOtp.attempts >= 3) {
+      await prisma.otpVerification.update({
+        where: { id: latestOtp.id },
+        data: { verified: true } // invalidate it
+      });
+      throw new AppError('Maximum verification attempts exceeded. Please request a new OTP.', 400);
+    }
+
+    const hashedInputCode = crypto.createHash('sha256').update(otpCode).digest('hex');
+    if (latestOtp.otpCode !== hashedInputCode) {
+      // Increment verification attempts
+      await prisma.otpVerification.update({
+        where: { id: latestOtp.id },
+        data: { attempts: { increment: 1 } }
+      });
+      throw new AppError('Invalid verification code. Please try again.', 400);
+    }
   }
 
   // 4. Mark OTP as verified (invalidate after success)
