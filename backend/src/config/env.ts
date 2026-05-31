@@ -45,7 +45,7 @@ const envSchema = z.object({
   RATE_LIMIT_MAX_REQUESTS: z.string().default('100'),
   
   // Frontend
-  FRONTEND_URL: z.string().default('http://localhost:5173'),
+  FRONTEND_URL: z.string().default('https://ai-powered-intern-management-system.vercel.app'),
   
   // Cloudinary
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
