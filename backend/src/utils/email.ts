@@ -50,60 +50,49 @@ export const sendEmail = async (
   subject: string,
   html: string
 ): Promise<boolean> => {
-  // 1. Try Resend (HTTP API — works on Render Free Tier)
-  // IMPORTANT: Resend free tier without a verified domain ONLY allows sending
-  // to the account owner's email. To send to any recipient, verify a domain at resend.com/domains.
+  // 1. Try SMTP first (Gmail — can send to ANY email address)
+  if (transporter) {
+    try {
+      await transporter.sendMail({
+        from: config.email.from || config.email.user,
+        to,
+        subject,
+        html,
+      });
+      logger.info(`Email sent via SMTP to ${to}`);
+      return true;
+    } catch (error: any) {
+      logger.error(`SMTP email delivery failed to ${to}:`, error?.message || error);
+      // Fall through to Resend
+    }
+  }
+
+  // 2. Fallback to Resend (HTTP API — works when SMTP ports are blocked)
   if (resendClient) {
     try {
-      // FREE TIER WORKAROUND: Force send to verified email address so it doesn't fail
-      let actualTo = to;
-      if (actualTo !== 'vrajgoti07@gmail.com') {
-        logger.info(`[Resend Free Tier] Redirecting email originally meant for ${to} to vrajgoti07@gmail.com`);
-        actualTo = 'vrajgoti07@gmail.com';
-      }
-
       const result = await resendClient.emails.send({
         from: 'InternFlow <onboarding@resend.dev>',
         replyTo: config.email.from || config.email.user || undefined,
-        to: actualTo,
-        subject: `[For ${to}] ${subject}`,
+        to,
+        subject,
         html,
       });
 
-      // Resend SDK doesn't throw on API errors — it returns { data: null, error: {...} }
       if (result.error) {
         logger.error(`Resend API error (${result.error.name}): ${result.error.message}`);
-        // Fall through to SMTP
       } else {
         logger.info(`Email sent via Resend to ${to} (id: ${result.data?.id})`);
         return true;
       }
     } catch (error: any) {
       logger.error('Resend email delivery exception:', error?.message || error);
-      // Fall through to SMTP
     }
   }
 
-  // 2. Fallback to SMTP (nodemailer)
-  if (!transporter) {
-    logger.warn(`No email provider available. Email to ${to} was NOT sent. Subject: ${subject}`);
-    return false;
-  }
-
-  try {
-    await transporter.sendMail({
-      from: config.email.from || config.email.user,
-      to,
-      subject,
-      html,
-    });
-    logger.info(`Email sent via SMTP to ${to}`);
-    return true;
-  } catch (error: any) {
-    logger.error(`SMTP email delivery failed to ${to}:`, error?.message || error);
-    return false;
-  }
+  logger.warn(`No email provider available or all providers failed. Email to ${to} was NOT sent. Subject: ${subject}`);
+  return false;
 };
+
 
 /**
  * Premium reusable HTML Email layout wrapper
@@ -406,22 +395,36 @@ export const sendAnnouncementEmail = async (
 
   const subject = `[${priority} Priority] ${title}`;
 
-  // Try Resend first (must use onboarding@resend.dev on free tier)
+  // 1. Try SMTP first (Gmail — can send to ANY email address)
+  if (transporter) {
+    try {
+      await transporter.sendMail({
+        from: config.email.from || config.email.user,
+        bcc: emails,
+        subject,
+        html,
+      });
+      logger.info(`Announcement email sent via SMTP to ${emails.length} recipients`);
+      return true;
+    } catch (error: any) {
+      logger.error('SMTP announcement delivery failed:', error?.message || error);
+      // Fall through to Resend
+    }
+  }
+
+  // 2. Fallback to Resend (HTTP API)
   if (resendClient) {
     try {
-      logger.info(`[Resend Free Tier] Redirecting broadcast email originally meant for ${emails.length} recipients to vrajgoti07@gmail.com`);
-
       const result = await resendClient.emails.send({
         from: 'InternFlow <onboarding@resend.dev>',
         replyTo: config.email.from || config.email.user || undefined,
-        to: 'vrajgoti07@gmail.com', // FREE TIER WORKAROUND
-        subject: `[BROADCAST TEST] ${subject}`,
+        to: emails,
+        subject,
         html,
       });
 
       if (result.error) {
         logger.error(`Resend announcement error (${result.error.name}): ${result.error.message}`);
-        // Fall through to SMTP
       } else {
         logger.info(`Announcement email sent via Resend to ${emails.length} recipients (id: ${result.data?.id})`);
         return true;
@@ -431,25 +434,8 @@ export const sendAnnouncementEmail = async (
     }
   }
 
-  // Fallback to SMTP
-  if (!transporter) {
-    logger.warn('No email provider available. Skipping announcement email send.');
-    return false;
-  }
-
-  try {
-    await transporter.sendMail({
-      from: config.email.from || config.email.user,
-      bcc: emails,
-      subject,
-      html,
-    });
-    logger.info(`Announcement email sent via SMTP to ${emails.length} recipients`);
-    return true;
-  } catch (error) {
-    logger.error('SMTP announcement delivery failed:', error);
-    return false;
-  }
+  logger.warn('No email provider available or all providers failed. Skipping announcement email.');
+  return false;
 };
 
 /**
