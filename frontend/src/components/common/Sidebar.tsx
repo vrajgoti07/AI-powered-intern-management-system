@@ -109,7 +109,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onClose }) => {
         ${collapsed
           ? '-translate-x-full md:translate-x-0 md:w-20'
           : 'translate-x-0 w-64 md:w-64'}
-        bg-[#0f172a] flex flex-col h-screen
+        bg-[#0f172a] flex flex-col h-[100dvh]
         transition-all duration-300 flex-shrink-0
       `}>
       {/* Brand Logo */}
@@ -151,6 +151,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onClose }) => {
             </Link>
           );
         })}
+
+        {/* Dedicated mobile logout item */}
+        {!collapsed && (
+          <div className="md:hidden pt-4 border-t border-white/[0.08] mt-4">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 text-rose-450 hover:bg-rose-950/30 hover:text-rose-300 cursor-pointer border-0 bg-transparent text-left"
+            >
+              <LogOut className="w-5 h-5 flex-shrink-0 text-rose-400" />
+              <span>Logout</span>
+            </button>
+          </div>
+        )}
       </nav>
 
       {/* User Section at Footer */}
