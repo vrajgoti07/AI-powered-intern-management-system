@@ -183,6 +183,10 @@ export const getInternByUserId = async (
 ): Promise<void> => {
   try {
     const intern = await internService.getInternByUserId(req.params.userId as string);
+    if (!intern) {
+      successResponse(res, 'No intern profile found for this user', null);
+      return;
+    }
     successResponse(res, 'Intern profile retrieved successfully', intern);
   } catch (error) {
     next(error);

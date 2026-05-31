@@ -568,7 +568,7 @@ export const updateInternSkills = async (
 /**
  * Get intern by user ID
  */
-export const getInternByUserId = async (userId: string): Promise<InternWithRelations> => {
+export const getInternByUserId = async (userId: string): Promise<InternWithRelations | null> => {
   const intern = await prisma.intern.findUnique({
     where: { userId },
     include: {
@@ -597,11 +597,7 @@ export const getInternByUserId = async (userId: string): Promise<InternWithRelat
     },
   });
 
-  if (!intern) {
-    throw new AppError('Intern profile not found', 404);
-  }
-
-  return intern;
+  return intern || null;
 };
 
 /**
