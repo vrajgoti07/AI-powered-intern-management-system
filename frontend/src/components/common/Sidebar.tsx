@@ -14,9 +14,10 @@ import { Logo } from './Logo';
 
 interface SidebarProps {
   collapsed: boolean;
+  onClose?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onClose }) => {
   const { user, logout } = useAuth();
   const { data: myInternData } = useInternByUser(user?.role?.toLowerCase() === 'intern' ? (user?.id || '') : '');
   const isIntern = user?.role?.toLowerCase() === 'intern';
@@ -87,8 +88,30 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
 
   const navItems = getNavItems();
 
+  React.useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      document.body.style.overflow = !collapsed ? 'hidden' : '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [collapsed]);
+
   return (
-    <aside className={`${collapsed ? "w-20" : "w-64"} bg-[#0f172a] flex flex-col h-screen transition-all duration-300 flex-shrink-0 z-40`}>
+    <>
+      {!collapsed && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={onClose}
+        />
+      )}
+      <aside className={`
+        fixed md:static inset-y-0 left-0 z-50
+        ${collapsed
+          ? '-translate-x-full md:translate-x-0 md:w-20'
+          : 'translate-x-0 w-64 md:w-64'}
+        bg-[#0f172a] flex flex-col h-screen
+        transition-all duration-300 flex-shrink-0
+      `}>
       {/* Brand Logo */}
       <div className={`flex items-center gap-3 px-5 py-6 border-b border-white/[0.08] ${collapsed ? "justify-center px-0" : ""}`}>
         <Logo size="sm" showText={false} />
@@ -161,5 +184,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
         </div>
       )}
     </aside>
+    </>
   );
 };

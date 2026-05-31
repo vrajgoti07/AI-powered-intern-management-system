@@ -179,7 +179,7 @@ export const AIChatbot: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
-      <Sidebar collapsed={sidebarCollapsed} />
+      <Sidebar collapsed={sidebarCollapsed} onClose={() => setSidebarCollapsed(true)} />
       
       <main className="flex-1 flex flex-col overflow-hidden">
         <Navbar onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} title="AI Help Desk Chatbot" />
@@ -264,7 +264,7 @@ export const AIChatbot: React.FC = () => {
             </div>
 
             {/* Input form in premium container */}
-            <form onSubmit={handleFormSubmit} className="p-4 border-t border-slate-100/80 flex items-center gap-3 bg-white/95 backdrop-blur-md flex-shrink-0 shadow-[0_-4px_24px_rgba(0,0,0,0.02)] z-10">
+            <form onSubmit={handleFormSubmit} className="p-4 border-t border-slate-100/80 flex items-center gap-3 bg-white/95 backdrop-blur-md flex-shrink-0 shadow-[0_-4px_24px_rgba(0,0,0,0.02)] z-10 sticky bottom-0 bg-white">
               <div className="relative flex items-center flex-1 bg-slate-50 border border-slate-200/80 rounded-2xl focus-within:ring-4 focus-within:ring-indigo-50 focus-within:bg-white focus-within:border-indigo-500 transition-all duration-300 px-4 py-2.5 gap-2.5 shadow-sm">
                 {/* Voice Mic Button */}
                 <button 
@@ -286,7 +286,7 @@ export const AIChatbot: React.FC = () => {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Ask about tasks, attendance, scores..."
-                  className="flex-1 text-xs font-semibold bg-transparent focus:outline-none border-none outline-none text-slate-700 placeholder-slate-400 py-1"
+                  className="flex-1 text-base text-xs font-semibold bg-transparent focus:outline-none border-none outline-none text-slate-700 placeholder-slate-400 py-1"
                 />
               </div>
 
@@ -294,7 +294,7 @@ export const AIChatbot: React.FC = () => {
               <button 
                 type="submit"
                 disabled={isTyping || !input.trim()}
-                className="p-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-lg shadow-indigo-200 hover:shadow-indigo-350 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200 flex items-center justify-center cursor-pointer disabled:opacity-40 disabled:shadow-none disabled:transform-none flex-shrink-0"
+                className="p-3.5 min-h-[44px] bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-lg shadow-indigo-200 hover:shadow-indigo-350 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200 flex items-center justify-center cursor-pointer disabled:opacity-40 disabled:shadow-none disabled:transform-none flex-shrink-0"
                 title="Send message"
               >
                 <Send className="w-4 h-4 fill-white text-white" />

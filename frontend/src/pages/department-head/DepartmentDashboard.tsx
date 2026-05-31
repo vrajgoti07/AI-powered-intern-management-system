@@ -98,7 +98,7 @@ export const DepartmentDashboard: React.FC = () => {
   if (!id) {
     return (
       <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
-        <Sidebar collapsed={sidebarCollapsed} />
+        <Sidebar collapsed={sidebarCollapsed} onClose={() => setSidebarCollapsed(true)} />
         <main className="flex-1 flex flex-col overflow-hidden">
           <Navbar onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} title="Department Dashboard" />
           <div className="flex-1 p-6 flex items-center justify-center">
@@ -135,12 +135,12 @@ export const DepartmentDashboard: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
-      <Sidebar collapsed={sidebarCollapsed} />
+      <Sidebar collapsed={sidebarCollapsed} onClose={() => setSidebarCollapsed(true)} />
       
       <main className="flex-1 flex flex-col overflow-hidden">
         <Navbar onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} title={isDeptLoading ? 'Loading Division...' : `Division: ${department.name || ''}`} />
 
-        <div className="flex-1 p-6 overflow-y-auto space-y-6">
+        <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-6">
           
           {/* Header breadcrumb card */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-slate-100 shadow-sm text-left">

@@ -82,7 +82,7 @@ export const AIMatching: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
-      <Sidebar collapsed={sidebarCollapsed} />
+      <Sidebar collapsed={sidebarCollapsed} onClose={() => setSidebarCollapsed(true)} />
       
       <main className="flex-1 flex flex-col overflow-hidden">
         <Navbar onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} title="AI Matching & Skill Analytics" />
@@ -93,7 +93,7 @@ export const AIMatching: React.FC = () => {
           {/* Hero Banner */}
           <div className="bg-gradient-to-r from-slate-900 to-indigo-950 rounded-3xl p-6 text-white text-left relative overflow-hidden shadow-xl border border-indigo-900/60">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.15),transparent)] animate-pulse" />
-            <div className="relative z-10 space-y-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="relative z-10 space-y-2 flex flex-col sm:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1">
                 <span className="text-[10px] font-extrabold uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-3 py-1 rounded-full flex items-center gap-1.5 w-fit">
                   <Sparkles className="w-3.5 h-3.5" /> Core Intelligence Engine Active
@@ -116,7 +116,7 @@ export const AIMatching: React.FC = () => {
           </div>
 
           {/* Grid Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             
             {/* Left Block: Radar Match Vector */}
             <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm text-left flex flex-col justify-between space-y-4">

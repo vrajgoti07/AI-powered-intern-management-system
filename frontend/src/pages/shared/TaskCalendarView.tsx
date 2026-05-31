@@ -141,7 +141,7 @@ export const TaskCalendarView: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
-      <Sidebar collapsed={sidebarCollapsed} />
+      <Sidebar collapsed={sidebarCollapsed} onClose={() => setSidebarCollapsed(true)} />
       
       <main className="flex-1 flex flex-col overflow-hidden">
         <Navbar onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} title="Task Deadline Schedule" />
@@ -422,90 +422,92 @@ export const TaskCalendarView: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.3 }}
-                    className="bg-white border border-slate-100 rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.015)] space-y-6"
+                    className="bg-white border border-slate-100 rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.015)] space-y-6 overflow-x-auto"
                   >
-                    {/* Day Headers */}
-                    <div className="grid grid-cols-7 gap-3 text-center text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
-                      <div>Sun</div>
-                      <div>Mon</div>
-                      <div>Tue</div>
-                      <div>Wed</div>
-                      <div>Thu</div>
-                      <div>Fri</div>
-                      <div>Sat</div>
-                    </div>
+                    <div className="min-w-[320px] space-y-6">
+                      {/* Day Headers */}
+                      <div className="grid grid-cols-7 gap-3 text-center text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
+                        <div>Sun</div>
+                        <div>Mon</div>
+                        <div>Tue</div>
+                        <div>Wed</div>
+                        <div>Thu</div>
+                        <div>Fri</div>
+                        <div>Sat</div>
+                      </div>
 
-                    {/* Grid cells */}
-                    <div className="grid grid-cols-7 gap-3">
-                      {/* Pad empty cells for the starting day of this month */}
-                      {Array.from({ length: firstDayOfMonth }).map((_, idx) => (
-                        <div key={`empty-${idx}`} className="bg-slate-50/20 border border-slate-100/10 rounded-2xl min-h-[90px]" />
-                      ))}
+                      {/* Grid cells */}
+                      <div className="grid grid-cols-7 gap-3">
+                        {/* Pad empty cells for the starting day of this month */}
+                        {Array.from({ length: firstDayOfMonth }).map((_, idx) => (
+                          <div key={`empty-${idx}`} className="bg-slate-50/20 border border-slate-100/10 rounded-2xl min-h-[90px]" />
+                        ))}
 
-                      {days.map(d => {
-                        const dayTasks = getTasksForDay(d);
-                        const hasToday = isToday(d);
+                        {days.map(d => {
+                          const dayTasks = getTasksForDay(d);
+                          const hasToday = isToday(d);
 
-                        return (
-                          <div 
-                            key={d} 
-                            className={`border rounded-2xl p-2.5 min-h-[95px] text-left transition-all duration-300 flex flex-col justify-between group relative ${
-                              hasToday
-                                ? 'bg-gradient-to-b from-indigo-50/50 to-white border-indigo-600 shadow-lg shadow-indigo-100/40 ring-2 ring-indigo-100'
-                                : dayTasks.length > 0
-                                ? 'bg-indigo-50/10 border-indigo-100 hover:border-indigo-200 hover:shadow-md'
-                                : 'bg-white border-slate-100 hover:bg-slate-50/50 hover:border-slate-200'
-                            }`}
-                          >
-                            <div className="flex justify-between items-center w-full">
-                              <span className={`text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center ${
-                                hasToday 
-                                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-200'
-                                  : 'text-slate-500'
-                              }`}>
-                                {d}
-                              </span>
+                          return (
+                            <div 
+                              key={d} 
+                              className={`border rounded-2xl p-2.5 min-h-[95px] text-left transition-all duration-300 flex flex-col justify-between group relative ${
+                                hasToday
+                                  ? 'bg-gradient-to-b from-indigo-50/50 to-white border-indigo-600 shadow-lg shadow-indigo-100/40 ring-2 ring-indigo-100'
+                                  : dayTasks.length > 0
+                                  ? 'bg-indigo-50/10 border-indigo-100 hover:border-indigo-200 hover:shadow-md'
+                                  : 'bg-white border-slate-100 hover:bg-slate-50/50 hover:border-slate-200'
+                              }`}
+                            >
+                              <div className="flex justify-between items-center w-full">
+                                <span className={`text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center ${
+                                  hasToday 
+                                    ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-200'
+                                    : 'text-slate-500'
+                                }`}>
+                                  {d}
+                                </span>
 
-                              {/* Soft glowing visual marker for dates with multiple tasks */}
-                              {dayTasks.length > 0 && (
-                                <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                              )}
+                                {/* Soft glowing visual marker for dates with multiple tasks */}
+                                {dayTasks.length > 0 && (
+                                  <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                                )}
+                              </div>
+                              
+                              {/* Inner Scrollable Task list inside Cell */}
+                              <div className="space-y-1 mt-2 max-h-[68px] overflow-y-auto scrollbar-none flex-1">
+                                {dayTasks.map((task: any) => {
+                                  const isDone = task.status === 'COMPLETED';
+                                  const isHigh = !isDone && task.priority === 'HIGH';
+                                  const isMed = !isDone && task.priority === 'MEDIUM';
+                                  const isLow = !isDone && task.priority === 'LOW';
+
+                                  return (
+                                    <div 
+                                      key={task.id} 
+                                      onClick={() => setSelectedTask(task)}
+                                      className={`text-[8.5px] font-extrabold px-1.5 py-1 rounded-lg leading-normal truncate cursor-pointer transition-all duration-200 flex items-center gap-1 hover:scale-[1.02] ${
+                                        isDone ? 'bg-emerald-50 border border-emerald-100 text-emerald-700' :
+                                        isHigh ? 'bg-rose-50 border border-rose-100 text-rose-700' :
+                                        isMed ? 'bg-amber-50 border border-amber-100 text-amber-700' :
+                                        'bg-blue-50 border border-blue-100 text-blue-700'
+                                      }`}
+                                      title={task.title}
+                                    >
+                                      <span className={`w-1 h-1 rounded-full flex-shrink-0 ${
+                                        isDone ? 'bg-emerald-500' :
+                                        isHigh ? 'bg-rose-500' :
+                                        isMed ? 'bg-amber-500' :
+                                        'bg-blue-500'
+                                      }`} />
+                                      <span className="truncate">{task.title}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
                             </div>
-                            
-                            {/* Inner Scrollable Task list inside Cell */}
-                            <div className="space-y-1 mt-2 max-h-[68px] overflow-y-auto scrollbar-none flex-1">
-                              {dayTasks.map((task: any) => {
-                                const isDone = task.status === 'COMPLETED';
-                                const isHigh = !isDone && task.priority === 'HIGH';
-                                const isMed = !isDone && task.priority === 'MEDIUM';
-                                const isLow = !isDone && task.priority === 'LOW';
-
-                                return (
-                                  <div 
-                                    key={task.id} 
-                                    onClick={() => setSelectedTask(task)}
-                                    className={`text-[8.5px] font-extrabold px-1.5 py-1 rounded-lg leading-normal truncate cursor-pointer transition-all duration-200 flex items-center gap-1 hover:scale-[1.02] ${
-                                      isDone ? 'bg-emerald-50 border border-emerald-100 text-emerald-700' :
-                                      isHigh ? 'bg-rose-50 border border-rose-100 text-rose-700' :
-                                      isMed ? 'bg-amber-50 border border-amber-100 text-amber-700' :
-                                      'bg-blue-50 border border-blue-100 text-blue-700'
-                                    }`}
-                                    title={task.title}
-                                  >
-                                    <span className={`w-1 h-1 rounded-full flex-shrink-0 ${
-                                      isDone ? 'bg-emerald-500' :
-                                      isHigh ? 'bg-rose-500' :
-                                      isMed ? 'bg-amber-500' :
-                                      'bg-blue-500'
-                                    }`} />
-                                    <span className="truncate">{task.title}</span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
                   </motion.div>
                 ) : (

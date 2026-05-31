@@ -370,7 +370,7 @@ export const Settings: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
-      <Sidebar collapsed={sidebarCollapsed} />
+      <Sidebar collapsed={sidebarCollapsed} onClose={() => setSidebarCollapsed(true)} />
 
       <main className="flex-grow flex flex-col overflow-hidden bg-slate-50/50">
         <Navbar onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} title="Workspace Settings" />

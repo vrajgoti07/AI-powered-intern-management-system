@@ -207,6 +207,7 @@ export const CommunicationSystem: React.FC = () => {
   const mentorDisplay = `${mentorName} (Mentor)`;
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [showList, setShowList] = useState(true);
   
   // Hub Active Tab
   const [activeTab, setActiveTab] = useState<'chat' | 'tutor' | 'tickets' | 'forum'>('chat');
@@ -1299,7 +1300,7 @@ export const CommunicationSystem: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
-      <Sidebar collapsed={sidebarCollapsed} />
+      <Sidebar collapsed={sidebarCollapsed} onClose={() => setSidebarCollapsed(true)} />
       
       <main className="flex-1 flex flex-col overflow-hidden bg-slate-50/50">
         <Navbar onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} title="Internal Messaging Network" />
@@ -1363,7 +1364,7 @@ export const CommunicationSystem: React.FC = () => {
                 >
                   <div className="grid grid-cols-1 lg:grid-cols-4 gap-0 w-full h-full min-h-0">
                     {/* Channels list sidebar */}
-                    <div className="lg:col-span-1 border-r border-slate-100 p-5 flex flex-col gap-6 h-full bg-slate-50/20 overflow-y-auto min-h-0">
+                    <div className={`${showList ? 'flex' : 'hidden'} lg:flex lg:col-span-1 border-r border-slate-100 p-5 flex flex-col gap-6 h-full bg-slate-50/20 overflow-y-auto min-h-0`}>
                       <div className="space-y-4">
                         <h4 className="font-extrabold text-slate-800 text-[10px] uppercase tracking-wider pb-2 border-b border-slate-100 flex items-center gap-1.5">
                           <MessageSquare className="w-3.5 h-3.5 text-slate-400" /> Channels
@@ -1372,7 +1373,7 @@ export const CommunicationSystem: React.FC = () => {
                           {['#general', '#tech-support', '#stipend-queries'].map(chan => (
                             <div 
                               key={chan} 
-                              onClick={() => setChatChannel(chan)}
+                              onClick={() => { setChatChannel(chan); setShowList(false); }}
                               className={`flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer text-xs font-bold transition-all duration-205 ${
                                 chatChannel === chan 
                                   ? 'bg-blue-50 text-[#2563eb]' 
@@ -1400,7 +1401,7 @@ export const CommunicationSystem: React.FC = () => {
                                 return (
                                   <div
                                     key={intern.id}
-                                    onClick={() => setSelectedInternId(intern.id)}
+                                    onClick={() => { setSelectedInternId(intern.id); setShowList(false); }}
                                     className={`flex items-center gap-2.5 px-3 py-2 rounded-xl cursor-pointer transition-all duration-200 border ${
                                       active 
                                         ? 'bg-[#2563eb] text-white border-[#2563eb] shadow-sm font-extrabold' 
@@ -1428,10 +1429,18 @@ export const CommunicationSystem: React.FC = () => {
                     </div>
 
                     {/* Chat message window */}
-                    <div className="lg:col-span-3 p-5 flex flex-col justify-between h-full relative min-h-0">
+                    <div className={`${!showList ? 'flex' : 'hidden'} lg:flex lg:col-span-3 p-5 flex flex-col justify-between h-full relative min-h-0`}>
                       
                       {/* Chat Header */}
                       <div className="pb-3 border-b border-slate-100 flex justify-between items-center flex-shrink-0">
+                        <button
+                          onClick={() => setShowList(true)}
+                          className="flex lg:hidden items-center gap-1 text-[10px]
+                          font-extrabold text-slate-500 hover:text-slate-800
+                          mr-3 cursor-pointer bg-transparent border-0 p-0 flex-shrink-0"
+                        >
+                          ← Back
+                        </button>
                         <span className="font-extrabold text-slate-800 text-xs flex items-center gap-1"><Hash className="w-4 h-4 text-[#2563eb]" /> {chatChannel.slice(1)}</span>
                         <span className="text-[9px] text-emerald-600 font-extrabold bg-emerald-50 border border-emerald-100 px-2.5 py-0.5 rounded-full">Active Stream</span>
                       </div>

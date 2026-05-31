@@ -213,13 +213,13 @@ export const HRDashboard: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
-      <Sidebar collapsed={sidebarCollapsed} />
+      <Sidebar collapsed={sidebarCollapsed} onClose={() => setSidebarCollapsed(true)} />
       
       <main className="flex-1 flex flex-col overflow-hidden">
         <Navbar onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} />
         
         {/* Scroll Container */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
           
           {/* KPI Dashboard Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
