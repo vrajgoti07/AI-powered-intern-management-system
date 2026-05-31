@@ -1322,7 +1322,7 @@ export const CommunicationSystem: React.FC = () => {
 
             {/* Conditionally show tabs ONLY for interns (hide completely for mentors) */}
             {!isMentor && (
-              <div className="flex items-center gap-1.5 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/40">
+              <div className="flex items-center gap-1.5 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/40 w-full max-w-full overflow-x-auto scrollbar-none whitespace-nowrap">
                 {[
                   { key: 'chat', label: 'Live Chat', icon: MessageSquare },
                   { key: 'tutor', label: 'AI Tutor', icon: Brain },
@@ -1334,8 +1334,8 @@ export const CommunicationSystem: React.FC = () => {
                   return (
                     <button
                       key={tab.key}
-                      onClick={() => setActiveTab(tab.key as any)}
-                      className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer border-0 outline-none ${
+                      onClick={() => { setActiveTab(tab.key as any); setShowList(true); }}
+                      className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer border-0 outline-none ${
                         active 
                           ? 'bg-[#2563eb] text-white shadow-md shadow-blue-100' 
                           : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
@@ -1381,6 +1381,11 @@ export const CommunicationSystem: React.FC = () => {
                               }`}
                             >
                               <Hash className="w-3.5 h-3.5" /> {chan.slice(1)}
+                              {chatChannel === chan && (
+                                <span className="lg:hidden ml-auto text-[8px] bg-[#2563eb] text-white font-extrabold px-1.5 py-0.5 rounded-md uppercase tracking-wider animate-pulse">
+                                  Tap to Open
+                                </span>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -1413,8 +1418,15 @@ export const CommunicationSystem: React.FC = () => {
                                     }`}>
                                       {intern.user?.name?.charAt(0) || 'I'}
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-[11px] font-bold truncate leading-tight">{intern.user?.name}</p>
+                                    <div className="flex-grow flex-1 min-w-0">
+                                      <div className="flex justify-between items-center">
+                                        <p className="text-[11px] font-bold truncate leading-tight">{intern.user?.name}</p>
+                                        {active && (
+                                          <span className="lg:hidden text-[8px] bg-white text-[#2563eb] font-extrabold px-1.5 py-0.5 rounded-md uppercase tracking-wider">
+                                            Open
+                                          </span>
+                                        )}
+                                      </div>
                                       <p className={`text-[8px] truncate leading-normal mt-0.5 ${active ? 'text-white/70' : 'text-slate-400'}`}>
                                         {intern.college}
                                       </p>

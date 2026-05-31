@@ -682,7 +682,7 @@ export const Settings: React.FC = () => {
                     </div>
 
                     {/* Symmetrical Security sub-tabs */}
-                    <div className="flex border-b border-slate-100 gap-6">
+                    <div className="flex border-b border-slate-100 gap-4 sm:gap-6 overflow-x-auto scrollbar-none whitespace-nowrap w-full">
                       {[
                         { id: 'verification', label: 'Login Verification', icon: ShieldCheck },
                         { id: 'sessions', label: 'Active Sessions', icon: Laptop },
@@ -694,7 +694,7 @@ export const Settings: React.FC = () => {
                           <button
                             key={sub.id}
                             onClick={() => setSecuritySubTab(sub.id as any)}
-                            className={`pb-3 text-xs font-black uppercase tracking-wider cursor-pointer border-b-2 flex items-center gap-1.5 transition-all
+                            className={`flex-shrink-0 pb-3 text-xs font-black uppercase tracking-wider cursor-pointer border-b-2 flex items-center gap-1.5 transition-all
                               ${isSubActive
                                 ? 'border-[#2563eb] text-[#2563eb]'
                                 : 'border-transparent text-slate-400 hover:text-slate-600'
