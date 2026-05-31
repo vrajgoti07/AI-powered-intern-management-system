@@ -8,14 +8,14 @@ import { Sidebar } from '../../components/common/Sidebar';
 import { Navbar } from '../../components/common/Navbar';
 import toast from 'react-hot-toast';
 import { useTasks } from '../../hooks/queries';
-import api from '../../services/api';
+import api, { API_BASE_URL } from '../../services/api';
 import dayjs from 'dayjs';
 import { useQueryClient } from '@tanstack/react-query';
 
 const getFileUrl = (url: string | null) => {
   if (!url) return '#';
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  const baseUrl = import.meta.env.VITE_API_URL.replace(/\/api\/v1\/?$/, '');
+  const baseUrl = API_BASE_URL.replace(/\/api\/v1\/?$/, '');
   return `${baseUrl}/${url.replace(/\\/g, '/')}`;
 };
 

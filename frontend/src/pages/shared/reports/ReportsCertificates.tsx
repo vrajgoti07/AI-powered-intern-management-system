@@ -8,7 +8,7 @@ import { Sidebar } from '../../../components/common/Sidebar';
 import { Navbar } from '../../../components/common/Navbar';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../../hooks/useAuth';
-import api from '../../../services/api';
+import api, { API_BASE_URL } from '../../../services/api';
 
 export const ReportsCertificates: React.FC = () => {
   const { user } = useAuth();
@@ -116,7 +116,7 @@ export const ReportsCertificates: React.FC = () => {
                               const documentId = res.data?.data?.id;
                               
                               if(documentId) {
-                                window.open(`${import.meta.env.VITE_API_URL.replace(/\/api\/v1\/?$/, '')}/documents/download/${documentId}`, '_blank');
+                                window.open(`${API_BASE_URL.replace(/\/api\/v1\/?$/, '')}/documents/download/${documentId}`, '_blank');
                                 toast.success("Certificate downloaded successfully!");
                                 setShowCertificate(false);
                               }
