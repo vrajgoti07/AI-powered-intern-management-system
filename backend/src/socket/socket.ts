@@ -30,7 +30,7 @@ const userConnections = new Map<string, Set<string>>();
 export const initSocket = (httpServer: HttpServer): SocketIOServer => {
   io = new SocketIOServer(httpServer, {
     cors: {
-      origin: config.cors.origin,
+      origin: config.cors.origin.split(',').map((o: string) => o.trim()).filter(Boolean),
       credentials: true,
       methods: ['GET', 'POST'],
     },

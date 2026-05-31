@@ -7,7 +7,7 @@ import { logger } from '../utils/logger';
 import { renderTemplate } from '../email_templates';
 
 class EmailService {
-  private transporter: nodemailer.Transporter;
+  private transporter: nodemailer.Transporter | null = null;
   private resendClient: Resend | null = null;
 
   constructor() {
@@ -16,18 +16,22 @@ class EmailService {
       this.resendClient = new Resend(config.email.resendApiKey);
     }
 
-    this.transporter = nodemailer.createTransport({
-      host: emailConfig.host,
-      port: emailConfig.port,
-      secure: emailConfig.port === 465,
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 10000,
-      auth: emailConfig.user ? {
-        user: emailConfig.user,
-        pass: emailConfig.pass,
-      } : undefined,
-    });
+    // Only create SMTP transporter if Resend is NOT configured
+    // (Render free tier blocks SMTP ports, so skip it when Resend is available)
+    if (!this.resendClient && emailConfig.host && emailConfig.user) {
+      this.transporter = nodemailer.createTransport({
+        host: emailConfig.host,
+        port: emailConfig.port,
+        secure: emailConfig.port === 465,
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 10000,
+        auth: {
+          user: emailConfig.user,
+          pass: emailConfig.pass,
+        },
+      });
+    }
   }
 
   /**
@@ -39,12 +43,17 @@ class EmailService {
       return true;
     }
 
+    if (!this.transporter) {
+      logger.warn('⚠️  No email provider configured (set RESEND_API_KEY for Render, or SMTP_HOST/SMTP_USER for local). Emails will NOT be sent.');
+      return false;
+    }
+
     try {
       await this.transporter.verify();
       logger.info('✅ SMTP Mail Transporter verified successfully and is ready to send emails.');
       return true;
     } catch (error) {
-      logger.error('❌ SMTP Mail Transporter verification failed on boot:', error);
+      logger.warn('⚠️  SMTP connection failed (expected on Render free tier). Set RESEND_API_KEY for production email delivery.');
       return false;
     }
   }
@@ -77,7 +86,7 @@ class EmailService {
           subject,
           html,
         });
-      } else {
+      } else if (this.transporter) {
         // Fallback to SMTP
         await this.transporter.sendMail({
           from: emailConfig.from,
@@ -86,6 +95,8 @@ class EmailService {
           html,
           attachments,
         });
+      } else {
+        throw new Error('No email provider configured. Set RESEND_API_KEY or SMTP credentials.');
       }
 
       await prisma.emailLog.update({
