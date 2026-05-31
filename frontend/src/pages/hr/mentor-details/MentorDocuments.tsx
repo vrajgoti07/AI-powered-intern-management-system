@@ -95,8 +95,15 @@ export const MentorDocuments: React.FC<Props> = ({ mentorId }) => {
   };
 
   const isImageOrPdf = (url: string) => {
-    const lower = url.toLowerCase();
-    return lower.includes('.pdf') || lower.includes('.jpg') || lower.includes('.jpeg') || lower.includes('.png') || lower.includes('image');
+    const cleanUrl = url.split('?')[0].toLowerCase();
+    return (
+      cleanUrl.endsWith('.pdf') ||
+      cleanUrl.endsWith('.jpg') ||
+      cleanUrl.endsWith('.jpeg') ||
+      cleanUrl.endsWith('.png') ||
+      cleanUrl.endsWith('.gif') ||
+      cleanUrl.endsWith('.webp')
+    );
   };
 
   if (loading) {
@@ -153,7 +160,7 @@ export const MentorDocuments: React.FC<Props> = ({ mentorId }) => {
             <div key={doc.id} className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm hover:shadow-md transition-shadow group">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                  {doc.fileUrl.includes('image') || doc.fileUrl.match(/\.(jpg|jpeg|png)/) ? (
+                  {/\.(jpg|jpeg|png|gif|webp)$/i.test(doc.fileUrl.split('?')[0]) ? (
                     <FileImage className="w-5 h-5 text-indigo-400" />
                   ) : (
                     <File className="w-5 h-5 text-slate-400" />
@@ -206,7 +213,7 @@ export const MentorDocuments: React.FC<Props> = ({ mentorId }) => {
       <Modal isOpen={showPreviewModal} onClose={() => setShowPreviewModal(false)} title={previewDoc?.fileName || 'Preview'}>
         {previewDoc && (
           <div className="max-h-[70vh] overflow-auto">
-            {previewDoc.fileUrl.match(/\.(jpg|jpeg|png|gif|webp)/i) || previewDoc.fileUrl.includes('image') ? (
+            {/\.(jpg|jpeg|png|gif|webp)$/i.test(previewDoc.fileUrl.split('?')[0]) ? (
               <img src={previewDoc.fileUrl} alt={previewDoc.fileName} className="w-full rounded-xl" />
             ) : (
               <iframe src={previewDoc.fileUrl} className="w-full h-[60vh] rounded-xl border border-slate-200" title="Document Preview" />

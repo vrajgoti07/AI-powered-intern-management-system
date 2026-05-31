@@ -19,9 +19,9 @@ import { useQueryClient } from '@tanstack/react-query';
  */
 const fixDocUrl = (url: string | null | undefined): string | null => {
   if (!url) return null;
-  if (url.includes('res.cloudinary.com') && /\.(pdf|doc|docx|zip)$/i.test(url)) {
-    if (!url.includes('fl_attachment')) {
-      return url.replace('/upload/', '/upload/fl_attachment:false/');
+  if (url.includes('res.cloudinary.com')) {
+    if (url.includes('fl_attachment:false')) {
+      return url.replace('fl_attachment:false/', '').replace('/fl_attachment:false', '');
     }
   }
   return url;

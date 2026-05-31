@@ -18,11 +18,10 @@ function fixCloudinaryDocUrls<T>(intern: T): T {
   const obj = intern as any;
   for (const field of DOC_URL_FIELDS) {
     const url = obj[field];
-    if (url && typeof url === 'string' && url.includes('res.cloudinary.com') && /\.(pdf|doc|docx|zip)(\?|$)/i.test(url)) {
-      // Don't change image to raw as it 404s for old files. 
-      // Instead, just append fl_attachment:false to ensure it displays in browser instead of downloading.
-      if (!url.includes('fl_attachment')) {
-        obj[field] = url.replace('/upload/', '/upload/fl_attachment:false/');
+    if (url && typeof url === 'string' && url.includes('res.cloudinary.com')) {
+      // Clean up any legacy fl_attachment:false that was previously injected or stored
+      if (url.includes('fl_attachment:false')) {
+        obj[field] = url.replace('fl_attachment:false/', '').replace('/fl_attachment:false', '');
       }
     }
   }
