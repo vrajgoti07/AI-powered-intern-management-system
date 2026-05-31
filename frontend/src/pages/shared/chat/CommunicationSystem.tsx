@@ -1350,7 +1350,7 @@ export const CommunicationSystem: React.FC = () => {
             )}
           </div>
 
-          <div className="flex-1 bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col text-left min-h-0 h-0">
+          <div className="flex-grow flex-1 bg-white rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col text-left min-h-0 h-full lg:h-0">
             <AnimatePresence mode="wait">
               
               {/* TAB 1: Live Channels Chat */}

@@ -561,14 +561,14 @@ export const AttendanceLeave: React.FC = () => {
                     </div>
 
                     {/* Calendar Week Headers */}
-                    <div className="grid grid-cols-7 gap-3 text-center text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
+                    <div className="grid grid-cols-7 gap-1 sm:gap-3 text-center text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
                       <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
                     </div>
 
-                    <div className="grid grid-cols-7 gap-3">
+                    <div className="grid grid-cols-7 gap-1 sm:gap-3">
                       {/* Pad empty cells for month starting day */}
                       {Array.from({ length: firstDayIndex }).map((_, idx) => (
-                        <div key={`empty-${idx}`} className="bg-slate-50/20 border border-slate-100/10 rounded-2xl min-h-[55px]" />
+                        <div key={`empty-${idx}`} className="bg-slate-50/20 border border-slate-100/10 rounded-xl sm:rounded-2xl min-h-[50px] sm:min-h-[55px]" />
                       ))}
 
                       {calendarDays.map(d => {
@@ -589,16 +589,16 @@ export const AttendanceLeave: React.FC = () => {
                         return (
                           <div 
                             key={d.day} 
-                            className={`border rounded-2xl p-2.5 min-h-[60px] text-left flex flex-col justify-between transition-all duration-300 hover:shadow-md hover:scale-[1.01] relative group ${indicator}`}
+                            className={`border rounded-xl sm:rounded-2xl p-1.5 sm:p-2.5 min-h-[50px] sm:min-h-[60px] text-left flex flex-col justify-between transition-all duration-300 hover:shadow-md hover:scale-[1.01] relative group ${indicator}`}
                           >
                             <div className="flex justify-between items-center w-full">
                               <span className="text-[10px] font-black">{d.day}</span>
-                              {(d.status === 'Present' || d.status === 'Late') && <BadgeCheck className="w-4 h-4 text-emerald-500" />}
-                              {d.status === 'Absent' && <BadgeAlert className="w-4 h-4 text-rose-500" />}
+                              {(d.status === 'Present' || d.status === 'Late') && <BadgeCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" />}
+                              {d.status === 'Absent' && <BadgeAlert className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-500" />}
                             </div>
 
                             {d.status !== 'Future' && d.status !== 'Weekend' && d.status !== 'None' && (
-                              <span className={`text-[7.5px] font-extrabold tracking-widest uppercase mt-2 px-1.5 py-0.5 rounded-md w-fit ${
+                              <span className={`hidden sm:inline-flex text-[7.5px] font-extrabold tracking-widest uppercase mt-2 px-1.5 py-0.5 rounded-md w-fit ${
                                 d.status === 'Leave' ? 'bg-fuchsia-100 text-fuchsia-800' :
                                 d.status === 'Holiday' ? 'bg-indigo-100 text-indigo-800' :
                                 d.status === 'Late' ? 'bg-teal-100 text-teal-800' :
@@ -611,7 +611,7 @@ export const AttendanceLeave: React.FC = () => {
                             )}
 
                             {d.status === 'None' && (
-                              <span className="text-[7.5px] font-extrabold tracking-widest uppercase mt-2 px-1.5 py-0.5 rounded-md w-fit bg-amber-100 text-amber-800">
+                              <span className="hidden sm:inline-flex text-[7.5px] font-extrabold tracking-widest uppercase mt-2 px-1.5 py-0.5 rounded-md w-fit bg-amber-100 text-amber-800">
                                 Unmarked
                               </span>
                             )}
