@@ -137,11 +137,11 @@ export const authLimiter = async (req: Request, res: Response, next: NextFunctio
 
 // ──────────────────────────────────────
 // 3. Password Reset Rate Limiter
-//    10 requests per hour per IP
+//    100 requests per hour per IP
 // ──────────────────────────────────────
 export const passwordResetLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 10,
+  max: 100,
   message: rateLimitResponse('Too many password reset attempts. Please try again after 1 hour.'),
   standardHeaders: 'draft-7',
   legacyHeaders: false,
