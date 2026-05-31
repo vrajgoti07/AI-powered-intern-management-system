@@ -18,8 +18,9 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
   const { user, logout } = useAuth();
-  const { data: myInternData } = useInternByUser(user?.id || '');
-  const { data: onboardingStatus } = useOnboardingStatus();
+  const { data: myInternData } = useInternByUser(user?.role?.toLowerCase() === 'intern' ? (user?.id || '') : '');
+  const isIntern = user?.role?.toLowerCase() === 'intern';
+  const { data: onboardingStatus } = useOnboardingStatus(isIntern);
   const location = useLocation();
   const navigate = useNavigate();
 

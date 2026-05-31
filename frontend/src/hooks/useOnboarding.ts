@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 
-export const useOnboardingStatus = () => {
+export const useOnboardingStatus = (enabled: boolean = true) => {
   return useQuery({
     queryKey: ['onboardingStatus'],
     queryFn: async () => {
@@ -10,6 +10,7 @@ export const useOnboardingStatus = () => {
       return data.data; // OnboardingProgress object
     },
     staleTime: 0, // Always fetch latest to prevent bypassing locks
+    enabled,
   });
 };
 
