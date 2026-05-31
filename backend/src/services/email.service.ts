@@ -63,7 +63,7 @@ class EmailService {
     });
 
     if (response.ok) {
-      const data = await response.json();
+      const data: any = await response.json();
       logger.info(`Email sent via Brevo to ${to} (messageId: ${data.messageId})`);
       return true;
     } else {

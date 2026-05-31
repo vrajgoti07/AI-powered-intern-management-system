@@ -76,7 +76,7 @@ const sendViaBrevo = async (to: string | string[], subject: string, html: string
     });
 
     if (response.ok) {
-      const data = await response.json();
+      const data: any = await response.json();
       const recipient = Array.isArray(to) ? `${to.length} recipients` : to;
       logger.info(`Email sent via Brevo to ${recipient} (messageId: ${data.messageId})`);
       return true;
