@@ -342,13 +342,13 @@ export const DepartmentManagement: React.FC = () => {
                   placeholder="Search divisions..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full text-xs font-semibold pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white transition-all duration-300"
+                  className="w-full text-xs font-semibold pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white transition-all duration-300 text-base"
                 />
               </div>
 
               <button
                 onClick={() => setShowTransferModal(true)}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all duration-300 shadow-sm cursor-pointer"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all duration-300 shadow-sm cursor-pointer min-h-[44px]"
               >
                 <ArrowRightLeft className="w-4 h-4 text-slate-500" />
                 Transfer Member
@@ -356,7 +356,7 @@ export const DepartmentManagement: React.FC = () => {
 
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all duration-300 shadow-md cursor-pointer"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all duration-300 shadow-md cursor-pointer min-h-[44px]"
               >
                 <Plus className="w-4 h-4" />
                 Create Division
@@ -489,7 +489,7 @@ export const DepartmentManagement: React.FC = () => {
                 placeholder="e.g. Artificial Intelligence"
                 value={createForm.name}
                 onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
-                className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white"
+                className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white text-base"
               />
             </div>
             
@@ -501,7 +501,7 @@ export const DepartmentManagement: React.FC = () => {
                 maxLength={10}
                 value={createForm.code}
                 onChange={(e) => setCreateForm({ ...createForm, code: e.target.value })}
-                className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white uppercase"
+                className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white uppercase text-base"
               />
             </div>
 
@@ -510,7 +510,7 @@ export const DepartmentManagement: React.FC = () => {
               <select
                 value={createForm.color}
                 onChange={(e) => setCreateForm({ ...createForm, color: e.target.value })}
-                className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white cursor-pointer"
+                className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white cursor-pointer text-base"
               >
                 <option value="indigo">Indigo</option>
                 <option value="purple">Purple</option>
@@ -528,7 +528,7 @@ export const DepartmentManagement: React.FC = () => {
               placeholder="Outline department scope, resources, and operating workflows..."
               value={createForm.description}
               onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
-              className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white resize-none"
+              className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white resize-none text-base"
             />
           </div>
 
@@ -537,7 +537,7 @@ export const DepartmentManagement: React.FC = () => {
             <select
               value={createForm.headId}
               onChange={(e) => setCreateForm({ ...createForm, headId: e.target.value })}
-              className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white cursor-pointer"
+              className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white cursor-pointer text-base"
             >
               <option value="">Do not assign yet</option>
               {state.mentors.map(m => (
@@ -556,7 +556,7 @@ export const DepartmentManagement: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md cursor-pointer"
+              className="px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md cursor-pointer min-h-[44px]"
             >
               Create Division
             </button>
@@ -592,11 +592,10 @@ export const DepartmentManagement: React.FC = () => {
             <button
               type="button"
               onClick={() => setAssignMode('new')}
-              className={`py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+              className={`${`py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
                 assignMode === 'new' 
                   ? 'bg-white text-indigo-600 shadow-sm border border-slate-100' 
-                  : 'text-slate-400 hover:text-slate-600'
-              }`}
+                  : 'text-slate-400 hover:text-slate-600'} min-h-[44px]`}`}
             >
               Register & Assign New Head
             </button>
@@ -619,7 +618,7 @@ export const DepartmentManagement: React.FC = () => {
                 <select
                   value={assignHeadForm.headId}
                   onChange={(e) => setAssignHeadForm({ headId: e.target.value })}
-                  className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white cursor-pointer"
+                  className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white cursor-pointer text-base"
                 >
                   <option value="">Select a manager</option>
                   {state.mentors.map(m => (
@@ -643,7 +642,7 @@ export const DepartmentManagement: React.FC = () => {
                 <button
                   type="submit"
                   disabled={!assignHeadForm.headId}
-                  className="px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all shadow-md cursor-pointer"
+                  className="px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all shadow-md cursor-pointer min-h-[44px]"
                 >
                   Confirm Assignment
                 </button>
@@ -658,7 +657,7 @@ export const DepartmentManagement: React.FC = () => {
                   placeholder="e.g. Vikram Seth"
                   value={newHeadForm.name}
                   onChange={(e) => setNewHeadForm({ ...newHeadForm, name: e.target.value })}
-                  className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white"
+                  className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white text-base"
                   required
                 />
               </div>
@@ -670,7 +669,7 @@ export const DepartmentManagement: React.FC = () => {
                   placeholder="vikram@company.com"
                   value={newHeadForm.email}
                   onChange={(e) => setNewHeadForm({ ...newHeadForm, email: e.target.value })}
-                  className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white"
+                  className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white text-base"
                   required
                 />
               </div>
@@ -701,7 +700,7 @@ export const DepartmentManagement: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md cursor-pointer"
+                  className="px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md cursor-pointer min-h-[44px]"
                 >
                   Register & Assign Head
                 </button>
@@ -751,7 +750,7 @@ export const DepartmentManagement: React.FC = () => {
             <select
               value={transferForm.memberId}
               onChange={(e) => setTransferForm({ ...transferForm, memberId: e.target.value })}
-              className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white cursor-pointer"
+              className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white cursor-pointer text-base"
             >
               <option value="">Select a person</option>
               {transferForm.memberType === 'intern' 
@@ -770,7 +769,7 @@ export const DepartmentManagement: React.FC = () => {
             <select
               value={transferForm.targetDeptId}
               onChange={(e) => setTransferForm({ ...transferForm, targetDeptId: e.target.value })}
-              className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white cursor-pointer"
+              className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white cursor-pointer text-base"
             >
               <option value="">Select destination department</option>
               {state.departments.map(d => (
@@ -790,7 +789,7 @@ export const DepartmentManagement: React.FC = () => {
             <button
               type="submit"
               disabled={!transferForm.memberId || !transferForm.targetDeptId}
-              className="px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all shadow-md cursor-pointer"
+              className="px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all shadow-md cursor-pointer min-h-[44px]"
             >
               Transfer Member
             </button>

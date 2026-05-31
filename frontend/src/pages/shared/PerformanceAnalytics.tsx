@@ -439,7 +439,7 @@ export const PerformanceAnalytics: React.FC = () => {
                 <select
                   value={selectedInternId}
                   onChange={(e) => setSelectedInternId(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 px-4 py-2.5 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-150 focus:border-indigo-500 transition-all cursor-pointer shadow-sm"
+                  className="w-full bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 px-4 py-2.5 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-150 focus:border-indigo-500 transition-all cursor-pointer shadow-sm text-base"
                 >
                   {Array.isArray(internsList) && internsList.map((intern: any) => (
                     <option key={intern.id} value={intern.id}>
@@ -950,7 +950,7 @@ export const PerformanceAnalytics: React.FC = () => {
                               ? "E.g., Aarav displays high diligence compiling the custom maps components but requires guidance normalizing indexing trees."
                               : "Write your internal progress thoughts, challenges, and milestones..."
                             }
-                            className="w-full p-4 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-xs font-medium rounded-2xl resize-none outline-none leading-relaxed transition-all"
+                            className="w-full p-4 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-xs font-medium rounded-2xl resize-none outline-none leading-relaxed transition-all text-base"
                           />
                         </div>
 

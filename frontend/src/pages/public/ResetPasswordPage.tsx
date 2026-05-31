@@ -175,7 +175,7 @@ export const ResetPasswordPage: React.FC = () => {
                         onChange={e => setPassword(e.target.value)}
                         placeholder="Create a strong password"
                         autoComplete="new-password"
-                        className="w-full text-sm font-semibold pl-11 pr-11 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 focus:bg-white transition-all placeholder:text-slate-400 text-slate-800"
+                        className="w-full text-sm font-semibold pl-11 pr-11 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 focus:bg-white transition-all placeholder:text-slate-400 text-slate-800 text-base"
                         required
                       />
                       <button
@@ -220,13 +220,12 @@ export const ResetPasswordPage: React.FC = () => {
                         onChange={e => setConfirm(e.target.value)}
                         placeholder="Confirm your password"
                         autoComplete="new-password"
-                        className={`w-full text-sm font-semibold pl-11 pr-11 py-4 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:bg-white transition-all placeholder:text-slate-400 text-slate-800
+                        className={`${`w-full text-sm font-semibold pl-11 pr-11 py-4 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:bg-white transition-all placeholder:text-slate-400 text-slate-800
                           ${confirm.length > 0
                             ? matches
                               ? 'border-emerald-400 focus:ring-emerald-400'
                               : 'border-red-400 focus:ring-red-400'
-                            : 'border-slate-200 focus:ring-blue-500 focus:border-blue-400'
-                          }`}
+                            : 'border-slate-200 focus:ring-blue-500 focus:border-blue-400'} text-base`}`}
                         required
                       />
                       <button

@@ -70,7 +70,7 @@ export const InternForm: React.FC<InternFormProps> = ({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="John Doe"
-            className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base"
             required
           />
         </div>
@@ -81,7 +81,7 @@ export const InternForm: React.FC<InternFormProps> = ({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="aarav@example.com"
-            className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base"
             required
           />
         </div>
@@ -95,7 +95,7 @@ export const InternForm: React.FC<InternFormProps> = ({
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="+91 98765 43210"
-            className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base"
           />
         </div>
         <div>
@@ -104,7 +104,7 @@ export const InternForm: React.FC<InternFormProps> = ({
             type="date" 
             value={dob}
             onChange={(e) => setDob(e.target.value)}
-            className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base"
           />
         </div>
       </div>
@@ -117,7 +117,7 @@ export const InternForm: React.FC<InternFormProps> = ({
             value={college}
             onChange={(e) => setCollege(e.target.value)}
             placeholder="IIT Delhi"
-            className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base"
             required
           />
         </div>
@@ -129,7 +129,7 @@ export const InternForm: React.FC<InternFormProps> = ({
             value={cgpa}
             onChange={(e) => setCgpa(e.target.value)}
             placeholder="9.1"
-            className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base"
             required
           />
         </div>
@@ -143,7 +143,7 @@ export const InternForm: React.FC<InternFormProps> = ({
             value={degree}
             onChange={(e) => setDegree(e.target.value)}
             placeholder="B.Tech"
-            className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
           />
         </div>
         <div>
@@ -153,7 +153,7 @@ export const InternForm: React.FC<InternFormProps> = ({
             value={branch}
             onChange={(e) => setBranch(e.target.value)}
             placeholder="Computer Science"
-            className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
           />
         </div>
       </div>
@@ -164,7 +164,7 @@ export const InternForm: React.FC<InternFormProps> = ({
           <select 
             value={deptId}
             onChange={(e) => setDeptId(e.target.value)}
-            className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
             required
           >
             <option value="">-- Select Department --</option>
@@ -178,7 +178,7 @@ export const InternForm: React.FC<InternFormProps> = ({
           <select 
             value={mentorId}
             onChange={(e) => setMentorId(e.target.value)}
-            className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
           >
             <option value="">-- Choose Mentor (None) --</option>
             {mentors.map((m: any) => (
@@ -195,7 +195,7 @@ export const InternForm: React.FC<InternFormProps> = ({
           value={skills}
           onChange={(e) => setSkills(e.target.value)}
           placeholder="React, Node.js, Git, HTML"
-          className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base"
         />
       </div>
 
@@ -203,13 +203,13 @@ export const InternForm: React.FC<InternFormProps> = ({
         <button 
           type="button" 
           onClick={onCancel}
-          className="px-4 py-2.5 text-xs font-bold text-slate-500 hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors cursor-pointer"
+          className="px-4 py-2.5 text-xs font-bold text-slate-500 hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors cursor-pointer min-h-[44px]"
         >
           Cancel
         </button>
         <button 
           type="submit"
-          className="px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-100 cursor-pointer"
+          className="px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-100 cursor-pointer min-h-[44px]"
         >
           Save Intern
         </button>

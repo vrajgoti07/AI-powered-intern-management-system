@@ -131,13 +131,13 @@ export const MentorManagement: React.FC = () => {
               placeholder="Search by mentor name, department..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium shadow-sm"
+              className="w-full pl-9 pr-4 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium shadow-sm text-base"
             />
           </div>
 
           <button 
             onClick={() => setShowAddMentorModal(true)}
-            className="flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md cursor-pointer"
+            className="flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md cursor-pointer min-h-[44px]"
           >
             <Plus className="w-4 h-4" /> Register Mentor
           </button>
@@ -204,7 +204,7 @@ export const MentorManagement: React.FC = () => {
                   </button>
                   <button 
                     onClick={() => openAssignModal(m)}
-                    className="flex-1 flex items-center justify-center gap-1 py-2.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-[10px] font-extrabold text-slate-600 transition-colors cursor-pointer"
+                    className="flex-1 flex items-center justify-center gap-1 py-2.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-[10px] font-extrabold text-slate-600 transition-colors cursor-pointer min-h-[44px]"
                   >
                     <Link className="w-3.5 h-3.5" /> Assign
                   </button>
@@ -226,7 +226,7 @@ export const MentorManagement: React.FC = () => {
               value={mName}
               onChange={(e) => setMName(e.target.value)}
               placeholder="e.g. Vikram Seth"
-              className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
               required
             />
           </div>
@@ -238,7 +238,7 @@ export const MentorManagement: React.FC = () => {
               value={mEmail}
               onChange={(e) => setMEmail(e.target.value)}
               placeholder="vikram@company.com"
-              className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
               required
             />
           </div>
@@ -248,7 +248,7 @@ export const MentorManagement: React.FC = () => {
             <select 
               value={mDept}
               onChange={(e) => setMDept(e.target.value)}
-              className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
             >
               <option value="Engineering">Engineering</option>
               <option value="Design">Design</option>
@@ -268,7 +268,7 @@ export const MentorManagement: React.FC = () => {
             </button>
             <button 
               type="submit"
-              className="px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md cursor-pointer"
+              className="px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md cursor-pointer min-h-[44px]"
             >
               Register Mentor
             </button>
@@ -291,7 +291,7 @@ export const MentorManagement: React.FC = () => {
             <select 
               value={selectedInternId}
               onChange={(e) => setSelectedInternId(e.target.value)}
-              className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
               required
             >
               <option value="">-- Choose Intern --</option>
@@ -311,7 +311,7 @@ export const MentorManagement: React.FC = () => {
             </button>
             <button 
               type="submit"
-              className="px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md cursor-pointer"
+              className="px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md cursor-pointer min-h-[44px]"
             >
               Assign Intern
             </button>

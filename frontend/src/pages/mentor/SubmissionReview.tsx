@@ -270,7 +270,7 @@ export const SubmissionReview: React.FC = () => {
                     <div className="flex justify-end gap-3 pt-2">
                       <button 
                         onClick={handleSubmitEvaluation}
-                        className="flex items-center gap-1 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-colors cursor-pointer"
+                        className="flex items-center gap-1 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-colors cursor-pointer min-h-[44px]"
                       >
                         {selectedSub.status === 'COMPLETED' ? 'Update Evaluation Grade' : 'Submit Evaluation Grade'}{' '}
                         <ArrowRight className="w-4 h-4" />

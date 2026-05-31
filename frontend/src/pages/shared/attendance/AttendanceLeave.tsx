@@ -336,11 +336,10 @@ export const AttendanceLeave: React.FC = () => {
             {user?.role === 'intern' && (
               <button 
                 onClick={() => setActiveTab('request')}
-                className={`flex items-center gap-2 px-5 py-2.5 text-xs font-extrabold rounded-xl transition-all duration-300 ${
+                className={`${`flex items-center gap-2 px-5 py-2.5 text-xs font-extrabold rounded-xl transition-all duration-300 ${
                   activeTab === 'request' 
                     ? 'bg-white text-indigo-600 shadow-md shadow-indigo-100/50' 
-                    : 'text-slate-500 hover:text-slate-700'
-                }`}
+                    : 'text-slate-500 hover:text-slate-700'} min-h-[44px]`}`}
               >
                 <Send className="w-4 h-4" /> Apply for Leave
               </button>
@@ -445,7 +444,7 @@ export const AttendanceLeave: React.FC = () => {
                                   onChange={(e) => setNotes(e.target.value)}
                                   placeholder="What are you working on today?"
                                   rows={2}
-                                  className="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all resize-none"
+                                  className="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all resize-none text-base"
                                 />
                               </div>
                             )}
@@ -455,7 +454,7 @@ export const AttendanceLeave: React.FC = () => {
                                 <button
                                   onClick={handleCheckIn}
                                   disabled={isPunching}
-                                  className="w-full flex items-center justify-center gap-1.5 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-100 cursor-pointer transition-all active:scale-[0.98]"
+                                  className="w-full flex items-center justify-center gap-1.5 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-100 cursor-pointer transition-all active:scale-[0.98] min-h-[44px]"
                                 >
                                   <Play className="w-3 h-3 fill-white text-white" /> Record Check-In
                                 </button>
@@ -463,7 +462,7 @@ export const AttendanceLeave: React.FC = () => {
                                 <button
                                   onClick={handleCheckOut}
                                   disabled={isPunching}
-                                  className="w-full flex items-center justify-center gap-1.5 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-indigo-100 cursor-pointer transition-all active:scale-[0.98]"
+                                  className="w-full flex items-center justify-center gap-1.5 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-indigo-100 cursor-pointer transition-all active:scale-[0.98] min-h-[44px]"
                                 >
                                   Record Check-Out
                                 </button>
@@ -647,7 +646,7 @@ export const AttendanceLeave: React.FC = () => {
                           <select 
                             value={leaveType}
                             onChange={(e) => setLeaveType(e.target.value)}
-                            className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all"
+                            className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all text-base"
                           >
                             <option value="SICK">Sick Leave</option>
                             <option value="CASUAL">Casual Leave</option>
@@ -663,7 +662,7 @@ export const AttendanceLeave: React.FC = () => {
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
                             required
-                            className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all" 
+                            className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all text-base" 
                           />
                         </div>
 
@@ -674,7 +673,7 @@ export const AttendanceLeave: React.FC = () => {
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
                             required
-                            className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all" 
+                            className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all text-base" 
                           />
                         </div>
                       </div>
@@ -687,7 +686,7 @@ export const AttendanceLeave: React.FC = () => {
                           value={reason}
                           onChange={(e) => setReason(e.target.value)}
                           required
-                          className="w-full text-xs font-semibold px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all resize-none"
+                          className="w-full text-xs font-semibold px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all resize-none text-base"
                         ></textarea>
                       </div>
 
@@ -695,7 +694,7 @@ export const AttendanceLeave: React.FC = () => {
                         <button 
                           type="submit"
                           disabled={isSubmitting}
-                          className="flex items-center gap-1.5 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-indigo-100 hover:shadow-xl hover:shadow-indigo-200/50 cursor-pointer transition-all active:scale-[0.98]"
+                          className="flex items-center gap-1.5 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-indigo-100 hover:shadow-xl hover:shadow-indigo-200/50 cursor-pointer transition-all active:scale-[0.98] min-h-[44px]"
                         >
                           {isSubmitting ? 'Submitting request...' : <><Send className="w-4 h-4" /> Submit Leave Request</>}
                         </button>

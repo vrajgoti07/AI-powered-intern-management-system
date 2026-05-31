@@ -124,7 +124,7 @@ export const ReportsCertificates: React.FC = () => {
                               toast.error("Failed to generate certificate.");
                             }
                           }}
-                          className="flex items-center gap-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition-colors cursor-pointer"
+                          className="flex items-center gap-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition-colors cursor-pointer min-h-[44px]"
                         >
                           <Download className="w-4 h-4" /> Download Certificate
                         </button>

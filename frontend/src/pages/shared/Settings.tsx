@@ -396,7 +396,7 @@ export const Settings: React.FC = () => {
                   type="file"
                   ref={avatarInputRef}
                   onChange={handleAvatarChange}
-                  className="hidden"
+                  className="hidden text-base"
                   accept="image/*"
                 />
 
@@ -491,7 +491,7 @@ export const Settings: React.FC = () => {
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Full Name</label>
                             <input
                               type="text" name="name" value={profileData.name} onChange={handleInputChange}
-                              className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800"
+                              className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800 text-base"
                               required
                             />
                           </div>
@@ -503,14 +503,14 @@ export const Settings: React.FC = () => {
                                 <input
                                   type="text" name="phone" value={profileData.phone} onChange={handleInputChange}
                                   placeholder="+91 XXXXX XXXXX"
-                                  className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800"
+                                  className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800 text-base"
                                 />
                               </div>
                               <div>
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">College / University</label>
                                 <input
                                   type="text" name="college" value={profileData.college} onChange={handleInputChange}
-                                  className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800"
+                                  className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800 text-base"
                                   required
                                 />
                               </div>
@@ -519,7 +519,7 @@ export const Settings: React.FC = () => {
                                 <input
                                   type="text" name="degree" value={profileData.degree} onChange={handleInputChange}
                                   placeholder="e.g. B.Tech Computer Science"
-                                  className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800"
+                                  className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800 text-base"
                                 />
                               </div>
                               <div>
@@ -527,7 +527,7 @@ export const Settings: React.FC = () => {
                                 <input
                                   type="text" name="branch" value={profileData.branch} onChange={handleInputChange}
                                   placeholder="e.g. Information Technology"
-                                  className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800"
+                                  className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800 text-base"
                                 />
                               </div>
                               <div>
@@ -535,7 +535,7 @@ export const Settings: React.FC = () => {
                                 <input
                                   type="text" name="cgpa" value={profileData.cgpa} onChange={handleInputChange}
                                   placeholder="e.g. 9.15"
-                                  className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800"
+                                  className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800 text-base"
                                 />
                               </div>
                               <div className="sm:col-span-2">
@@ -543,21 +543,21 @@ export const Settings: React.FC = () => {
                                 <input
                                   type="text" name="skills" value={profileData.skills} onChange={handleInputChange}
                                   placeholder="e.g. React, Node.js, Prisma, PostgreSQL"
-                                  className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800"
+                                  className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800 text-base"
                                 />
                               </div>
                               <div className="sm:col-span-2">
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Residential Address</label>
                                 <input
                                   type="text" name="address" value={profileData.address} onChange={handleInputChange}
-                                  className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800"
+                                  className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800 text-base"
                                 />
                               </div>
                               <div className="sm:col-span-2">
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Workplace Address</label>
                                 <input
                                   type="text" name="workAddress" value={profileData.workAddress} onChange={handleInputChange}
-                                  className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800"
+                                  className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800 text-base"
                                 />
                               </div>
                             </>
@@ -569,28 +569,28 @@ export const Settings: React.FC = () => {
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Phone Number</label>
                                 <input
                                   type="text" name="phone" value={profileData.phone} onChange={handleInputChange}
-                                  className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800"
+                                  className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800 text-base"
                                 />
                               </div>
                               <div>
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Professional Designation</label>
                                 <input
                                   type="text" name="designation" value={profileData.designation} onChange={handleInputChange}
-                                  className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800"
+                                  className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800 text-base"
                                 />
                               </div>
                               <div>
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Years of Experience</label>
                                 <input
                                   type="number" name="experience" value={profileData.experience} onChange={handleInputChange}
-                                  className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800"
+                                  className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800 text-base"
                                 />
                               </div>
                               <div className="sm:col-span-2">
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Professional Bio</label>
                                 <textarea
                                   name="bio" value={profileData.bio} onChange={handleInputChange} rows={3}
-                                  className="w-full text-xs font-semibold p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800"
+                                  className="w-full text-xs font-semibold p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800 text-base"
                                 />
                               </div>
                               <div className="sm:col-span-2">
@@ -598,7 +598,7 @@ export const Settings: React.FC = () => {
                                 <input
                                   type="text" name="expertise" value={profileData.expertise} onChange={handleInputChange}
                                   placeholder="e.g. Distributed Systems, Cloud Architecture, Node.js"
-                                  className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800"
+                                  className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800 text-base"
                                 />
                               </div>
                             </>
@@ -634,7 +634,7 @@ export const Settings: React.FC = () => {
                             <div className="flex items-center gap-2 flex-shrink-0">
                               <input
                                 type="file" ref={resumeInputRef} onChange={handleResumeChange}
-                                className="hidden" accept=".pdf,.doc,.docx"
+                                className="hidden text-base" accept=".pdf,.doc,.docx"
                               />
                               <button
                                 type="button" onClick={triggerResumeUpload}
@@ -955,7 +955,7 @@ export const Settings: React.FC = () => {
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Active Workspace Theme</label>
                           <select
                             value={preferences.theme} onChange={(e) => setPreferences(p => ({ ...p, theme: e.target.value }))}
-                            className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800"
+                            className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800 text-base"
                           >
                             <option value="light">Classic Professional Light</option>
                             <option value="dark">Executive Slate Dark (Coming Soon)</option>
@@ -965,7 +965,7 @@ export const Settings: React.FC = () => {
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Display Layout Density</label>
                           <select
                             value={preferences.density} onChange={(e) => setPreferences(p => ({ ...p, density: e.target.value }))}
-                            className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800"
+                            className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800 text-base"
                           >
                             <option value="compact">High-Density Compact</option>
                             <option value="comfortable">Comfortable Rounded</option>
@@ -975,7 +975,7 @@ export const Settings: React.FC = () => {
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Grid Pagination Size</label>
                           <select
                             value={preferences.pageSize} onChange={(e) => setPreferences(p => ({ ...p, pageSize: e.target.value }))}
-                            className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800"
+                            className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800 text-base"
                           >
                             <option value="10">10 Rows</option>
                             <option value="25">25 Rows</option>

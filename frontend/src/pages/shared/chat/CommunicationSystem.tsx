@@ -1812,7 +1812,7 @@ export const CommunicationSystem: React.FC = () => {
                                 }
                                 value={emojiSearch}
                                 onChange={(e) => setEmojiSearch(e.target.value)}
-                                className="w-full text-[11px] font-semibold px-3 py-2 bg-white border border-slate-250 rounded-xl outline-none text-slate-800 placeholder-slate-400 focus:border-blue-400"
+                                className="w-full text-[11px] font-semibold px-3 py-2 bg-white border border-slate-250 rounded-xl outline-none text-slate-800 placeholder-slate-400 focus:border-blue-400 text-base"
                               />
                             </div>
 
@@ -1939,7 +1939,7 @@ export const CommunicationSystem: React.FC = () => {
                           type="file" 
                           ref={fileInputRef}
                           onChange={handleFileChange}
-                          className="hidden"
+                          className="hidden text-base"
                         />
 
                         {/* Main Chat input form */}
@@ -2014,7 +2014,7 @@ export const CommunicationSystem: React.FC = () => {
                                     });
                                   }
                                 }}
-                                className="flex-1 text-[12px] font-semibold bg-transparent focus:outline-none border-none outline-none text-slate-800 placeholder-slate-400 py-1 px-1" 
+                                className="flex-1 text-[12px] font-semibold bg-transparent focus:outline-none border-none outline-none text-slate-800 placeholder-slate-400 py-1 px-1 text-base" 
                               />
                             </div>
                           )}
@@ -2164,7 +2164,7 @@ export const CommunicationSystem: React.FC = () => {
                         value={botInput}
                         onChange={(e) => setBotInput(e.target.value)}
                         placeholder="Ask about tasks, attendance, scores..."
-                        className="flex-1 text-xs font-semibold bg-transparent focus:outline-none border-none outline-none text-slate-700 placeholder-slate-400 py-1"
+                        className="flex-1 text-xs font-semibold bg-transparent focus:outline-none border-none outline-none text-slate-700 placeholder-slate-400 py-1 text-base"
                       />
                     </div>
 
@@ -2208,7 +2208,7 @@ export const CommunicationSystem: React.FC = () => {
                           <select 
                             value={ticketCategory}
                             onChange={(e) => setTicketCategory(e.target.value)}
-                            className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-xl outline-none"
+                            className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-xl outline-none text-base"
                           >
                             <option>Hardware/IT</option>
                             <option>Stipend</option>
@@ -2222,7 +2222,7 @@ export const CommunicationSystem: React.FC = () => {
                           <select 
                             value={ticketPriority}
                             onChange={(e) => setTicketPriority(e.target.value)}
-                            className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-xl outline-none"
+                            className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-xl outline-none text-base"
                           >
                             <option>Low</option>
                             <option>Medium</option>
@@ -2237,7 +2237,7 @@ export const CommunicationSystem: React.FC = () => {
                               placeholder="Describe your issue..."
                               value={ticketTitle}
                               onChange={(e) => setTicketTitle(e.target.value)}
-                              className="flex-1 text-xs font-semibold px-4 py-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500" 
+                              className="flex-1 text-xs font-semibold px-4 py-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-base" 
                             />
                             <button type="submit" className="px-4 py-2 bg-[#2563eb] text-white font-extrabold rounded-xl hover:bg-blue-700 shadow-md cursor-pointer">Create</button>
                           </div>
@@ -2307,7 +2307,7 @@ export const CommunicationSystem: React.FC = () => {
                             placeholder="Search post..."
                             value={forumSearch}
                             onChange={(e) => setForumSearch(e.target.value)}
-                            className="text-[11px] font-semibold pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl outline-none"
+                            className="text-[11px] font-semibold pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl outline-none text-base"
                           />
                         </div>
                         <button 
@@ -2326,7 +2326,7 @@ export const CommunicationSystem: React.FC = () => {
                           <select 
                             value={newPostCategory}
                             onChange={(e) => setNewPostCategory(e.target.value)}
-                            className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-xl outline-none"
+                            className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-xl outline-none text-base"
                           >
                             <option>General</option>
                             <option>Testing</option>
@@ -2345,7 +2345,7 @@ export const CommunicationSystem: React.FC = () => {
                               placeholder="What would you like to discuss?"
                               value={newPostTitle}
                               onChange={(e) => setNewPostTitle(e.target.value)}
-                              className="flex-1 text-xs font-semibold px-4 py-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500" 
+                              className="flex-1 text-xs font-semibold px-4 py-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-base" 
                             />
                             <button type="submit" className="px-4 py-2 bg-[#2563eb] text-white font-extrabold rounded-xl hover:bg-blue-700 shadow-md cursor-pointer">Post</button>
                           </div>
@@ -2420,7 +2420,7 @@ export const CommunicationSystem: React.FC = () => {
                   value={pollQuestion}
                   onChange={(e) => setPollQuestion(e.target.value)}
                   placeholder="e.g. Which sprint milestone should we tackle next?"
-                  className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-400 focus:bg-white transition-all"
+                  className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-400 focus:bg-white transition-all text-base"
                 />
               </div>
               <div className="space-y-2">
@@ -2437,7 +2437,7 @@ export const CommunicationSystem: React.FC = () => {
                         setPollOptions(updated);
                       }}
                       placeholder={`Option ${idx + 1}${idx < 2 ? ' (Required)' : ' (Optional)'}`}
-                      className="flex-1 text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-400 focus:bg-white transition-all"
+                      className="flex-1 text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-400 focus:bg-white transition-all text-base"
                     />
                     {pollOptions.length > 2 && (
                       <button 
@@ -2488,7 +2488,7 @@ export const CommunicationSystem: React.FC = () => {
                   value={eventTitle}
                   onChange={(e) => setEventTitle(e.target.value)}
                   placeholder="e.g. Mid-term Review Presentation"
-                  className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-400 focus:bg-white transition-all"
+                  className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-400 focus:bg-white transition-all text-base"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -2499,7 +2499,7 @@ export const CommunicationSystem: React.FC = () => {
                     required
                     value={eventDate}
                     onChange={(e) => setEventDate(e.target.value)}
-                    className="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-400 focus:bg-white transition-all"
+                    className="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-400 focus:bg-white transition-all text-base"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -2509,7 +2509,7 @@ export const CommunicationSystem: React.FC = () => {
                     required
                     value={eventTime}
                     onChange={(e) => setEventTime(e.target.value)}
-                    className="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-400 focus:bg-white transition-all"
+                    className="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-400 focus:bg-white transition-all text-base"
                   />
                 </div>
               </div>
@@ -2521,7 +2521,7 @@ export const CommunicationSystem: React.FC = () => {
                   value={eventLocation}
                   onChange={(e) => setEventLocation(e.target.value)}
                   placeholder="e.g. Zoom Link or Conference Room B"
-                  className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-400 focus:bg-white transition-all"
+                  className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-400 focus:bg-white transition-all text-base"
                 />
               </div>
               <div className="flex gap-3 justify-end pt-3 border-t border-slate-100">

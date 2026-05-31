@@ -92,7 +92,7 @@ export const OnboardingVerification: React.FC = () => {
                   placeholder="Search candidate..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full text-xs font-semibold pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white"
+                  className="w-full text-xs font-semibold pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white text-base"
                 />
               </div>
 
@@ -361,20 +361,20 @@ export const OnboardingVerification: React.FC = () => {
                           placeholder="Add review feedback comments..."
                           value={notes}
                           onChange={(e) => setNotes(e.target.value)}
-                          className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-150 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white resize-none"
+                          className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-150 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white resize-none text-base"
                         ></textarea>
                       </div>
 
                       <div className="flex items-center gap-3 justify-end">
                         <button
                           onClick={() => handleAction(selectedCandidate.id, 'TERMINATED')}
-                          className="flex items-center gap-1 px-4 py-2.5 border border-red-200 text-red-600 hover:bg-red-50 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                          className="flex items-center gap-1 px-4 py-2.5 border border-red-200 text-red-600 hover:bg-red-50 font-bold text-xs rounded-xl transition-colors cursor-pointer min-h-[44px]"
                         >
                           <X className="w-4 h-4" /> Reject Profile
                         </button>
                         <button
                           onClick={() => handleAction(selectedCandidate.id, 'ACTIVE')}
-                          className="flex items-center gap-1 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-colors cursor-pointer"
+                          className="flex items-center gap-1 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-colors cursor-pointer min-h-[44px]"
                         >
                           <Check className="w-4 h-4" /> Verify & Approve
                         </button>

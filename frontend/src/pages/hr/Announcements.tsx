@@ -103,7 +103,7 @@ export const Announcements: React.FC = () => {
             <h2 className="text-sm md:text-base font-extrabold text-slate-800 tracking-tight">Active Broadcast Notices</h2>
             <button 
               onClick={() => setShowAddForm(!showAddForm)}
-              className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md cursor-pointer min-h-[44px]"
             >
               <Plus className="w-4 h-4" /> {showAddForm ? "View Bulletins" : "Create Broadcast"}
             </button>
@@ -174,7 +174,7 @@ export const Announcements: React.FC = () => {
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
                       placeholder="e.g. Daily Standup Timing Shift"
-                      className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
                       required
                     />
                   </div>
@@ -185,7 +185,7 @@ export const Announcements: React.FC = () => {
                       value={content}
                       onChange={(e) => setContent(e.target.value)}
                       placeholder="Write instructions, links and critical details clearly..."
-                      className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl h-28 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                      className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl h-28 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none text-base"
                       required
                     />
                   </div>
@@ -196,7 +196,7 @@ export const Announcements: React.FC = () => {
                       <select 
                         value={priority}
                         onChange={(e) => setPriority(e.target.value as any)}
-                        className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
                       >
                         <option value="High">High</option>
                         <option value="Medium">Medium</option>
@@ -209,7 +209,7 @@ export const Announcements: React.FC = () => {
                       <select 
                         value={audience}
                         onChange={(e) => setAudience(e.target.value as any)}
-                        className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
                       >
                         <option value="All">All Cohorts</option>
                         <option value="Interns">Interns Only</option>
@@ -221,7 +221,7 @@ export const Announcements: React.FC = () => {
 
                   <button 
                     type="submit"
-                    className="w-full px-4 py-3.5 text-xs font-extrabold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md cursor-pointer transition-all"
+                    className="w-full px-4 py-3.5 text-xs font-extrabold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md cursor-pointer transition-all min-h-[44px]"
                   >
                     Broadcast Bulletin
                   </button>

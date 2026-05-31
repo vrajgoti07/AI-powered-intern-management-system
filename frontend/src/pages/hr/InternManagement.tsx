@@ -127,7 +127,7 @@ export const InternManagement: React.FC = () => {
                 placeholder="Search by intern name, university..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium shadow-sm"
+                className="w-full pl-9 pr-4 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium shadow-sm text-base"
               />
             </div>
 
@@ -195,7 +195,7 @@ export const InternManagement: React.FC = () => {
 
               <button 
                 onClick={() => setShowAddModal(true)}
-                className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-100 cursor-pointer"
+                className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-100 cursor-pointer min-h-[44px]"
               >
                 <UserPlus className="w-4 h-4" /> Add Intern
               </button>

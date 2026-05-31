@@ -78,7 +78,7 @@ export const RegisterPage: React.FC = () => {
                 placeholder="John Doe"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 text-base"
               />
             </div>
           </div>
@@ -92,7 +92,7 @@ export const RegisterPage: React.FC = () => {
                 placeholder="aarav@internflow.com"
                 value={formData.email}
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 text-base"
               />
             </div>
           </div>
@@ -104,7 +104,7 @@ export const RegisterPage: React.FC = () => {
               <select
                 value={formData.dept}
                 onChange={(e) => setFormData(prev => ({ ...prev, dept: e.target.value }))}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-300 font-semibold"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-300 font-semibold text-base"
               >
                 <option>Engineering</option>
                 <option>Design</option>
@@ -123,7 +123,7 @@ export const RegisterPage: React.FC = () => {
                 placeholder="••••••••"
                 value={formData.password}
                 onChange={(e) => handlePasswordChange(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-950/60 border border-slate-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 text-base"
               />
             </div>
 
@@ -150,7 +150,7 @@ export const RegisterPage: React.FC = () => {
               id="agree"
               checked={formData.agree}
               onChange={(e) => setFormData(prev => ({ ...prev, agree: e.target.checked }))}
-              className="w-4 h-4 rounded border-slate-800 bg-slate-950 text-indigo-600 focus:ring-indigo-500"
+              className="w-4 h-4 rounded border-slate-800 bg-slate-950 text-indigo-600 focus:ring-indigo-500 text-base"
             />
             <label htmlFor="agree" className="text-[10px] text-slate-400 font-bold select-none cursor-pointer">
               I agree to comply with organizational confidentiality security protocols.
@@ -159,7 +159,7 @@ export const RegisterPage: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full flex items-center justify-center gap-1.5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-indigo-900/20 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-center gap-1.5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-indigo-900/20 transition-colors cursor-pointer min-h-[44px]"
           >
             <Sparkles className="w-4 h-4" /> Initialize Candidate Account
           </button>

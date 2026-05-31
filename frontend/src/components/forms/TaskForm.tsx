@@ -45,7 +45,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({ interns = [], onSubmit, onCa
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. Design Landing Page Mockups"
-          className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base"
           required
         />
       </div>
@@ -56,7 +56,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({ interns = [], onSubmit, onCa
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Describe the task instructions, criteria, and outcomes..."
-          className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl h-24 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+          className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl h-24 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none text-base"
           required
         />
       </div>
@@ -67,7 +67,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({ interns = [], onSubmit, onCa
           <select 
             value={internId}
             onChange={(e) => setInternId(e.target.value)}
-            className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
             required
           >
             <option value="">-- Select Intern --</option>
@@ -82,7 +82,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({ interns = [], onSubmit, onCa
           <select 
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
-            className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
           >
             <option value="High">High Priority</option>
             <option value="Medium">Medium Priority</option>
@@ -97,7 +97,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({ interns = [], onSubmit, onCa
           type="date" 
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
-          className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
           required
         />
       </div>
@@ -106,13 +106,13 @@ export const TaskForm: React.FC<TaskFormProps> = ({ interns = [], onSubmit, onCa
         <button 
           type="button" 
           onClick={onCancel}
-          className="px-4 py-2.5 text-xs font-bold text-slate-500 hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors cursor-pointer"
+          className="px-4 py-2.5 text-xs font-bold text-slate-500 hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors cursor-pointer min-h-[44px]"
         >
           Cancel
         </button>
         <button 
           type="submit"
-          className="px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-100 cursor-pointer"
+          className="px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-100 cursor-pointer min-h-[44px]"
         >
           Create Task
         </button>

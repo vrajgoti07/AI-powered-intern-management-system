@@ -218,7 +218,7 @@ export const LoginPage: React.FC = () => {
                     <input
                       type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                       placeholder="email@example.com"
-                      className="w-full text-sm font-semibold px-4.5 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all placeholder:text-slate-400 text-slate-800"
+                      className="w-full text-sm font-semibold px-4.5 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all placeholder:text-slate-400 text-slate-800 text-base"
                       required
                     />
                   </div>
@@ -231,7 +231,7 @@ export const LoginPage: React.FC = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full text-sm font-semibold px-4.5 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all placeholder:text-slate-400 text-slate-800 pr-12"
+                        className="w-full text-sm font-semibold px-4.5 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all placeholder:text-slate-400 text-slate-800 pr-12 text-base"
                         required
                       />
                       <button
@@ -246,7 +246,7 @@ export const LoginPage: React.FC = () => {
 
                   <div className="flex items-center justify-between pt-1">
                     <div className="flex items-center">
-                      <input id="remember-me" type="checkbox" defaultChecked className="h-4.5 w-4.5 text-blue-600 focus:ring-blue-500 border-slate-300 rounded cursor-pointer accent-blue-600" />
+                      <input id="remember-me" type="checkbox" defaultChecked className="h-4.5 w-4.5 text-blue-600 focus:ring-blue-500 border-slate-300 rounded cursor-pointer accent-blue-600 text-base" />
                       <label htmlFor="remember-me" className="ml-2 block text-xs font-bold text-slate-400 cursor-pointer">Remember me</label>
                     </div>
                     <button type="button" onClick={() => navigate('/forgot-password')} className="text-xs text-blue-600 font-extrabold hover:underline cursor-pointer">Forgot password?</button>
@@ -255,7 +255,7 @@ export const LoginPage: React.FC = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full px-6 py-4 text-sm font-bold text-white bg-[#2563eb] hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-200/50 flex items-center justify-center gap-2 cursor-pointer group animate-fade-in disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full px-6 py-4 text-sm font-bold text-white bg-[#2563eb] hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-200/50 flex items-center justify-center gap-2 cursor-pointer group animate-fade-in disabled:opacity-60 disabled:cursor-not-allowed min-h-[44px]"
                   >
                     {isSubmitting ? 'Verifying...' : 'Sign In'}
                     {!isSubmitting && <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
@@ -280,7 +280,7 @@ export const LoginPage: React.FC = () => {
                       value={otpCode}
                       onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                       placeholder="000 000"
-                      className="w-full text-center text-3xl font-black tracking-[0.4em] px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-[#2563eb] placeholder:text-slate-200"
+                      className="w-full text-center text-3xl font-black tracking-[0.4em] px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-[#2563eb] placeholder:text-slate-200 text-base"
                       required
                     />
                   </div>
@@ -303,7 +303,7 @@ export const LoginPage: React.FC = () => {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full px-6 py-4 text-sm font-black uppercase tracking-wider text-white bg-[#2563eb] hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-200/50 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="w-full px-6 py-4 text-sm font-black uppercase tracking-wider text-white bg-[#2563eb] hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-200/50 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed min-h-[44px]"
                     >
                       {isSubmitting ? 'Verifying...' : 'Verify Passcode & Enter'}
                     </button>
@@ -311,7 +311,7 @@ export const LoginPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setIsOtpStage(false)}
-                      className="w-full py-3 text-xs font-extrabold text-slate-400 hover:text-slate-600 transition-colors cursor-pointer text-center"
+                      className="w-full py-3 text-xs font-extrabold text-slate-400 hover:text-slate-600 transition-colors cursor-pointer text-center min-h-[44px]"
                     >
                       Back to credentials
                     </button>

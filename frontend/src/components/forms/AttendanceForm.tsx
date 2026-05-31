@@ -30,7 +30,7 @@ export const AttendanceForm: React.FC = () => {
         <input
           type="date"
           {...register('date')}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-base"
         />
         {errors.date && <p className="mt-1 text-sm text-red-600">{errors.date.message}</p>}
       </div>
@@ -39,7 +39,7 @@ export const AttendanceForm: React.FC = () => {
         <label className="block text-sm font-medium text-gray-700">Status</label>
         <select
           {...register('status')}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-base"
         >
           <option value="PRESENT">Present</option>
           <option value="ABSENT">Absent</option>
@@ -56,7 +56,7 @@ export const AttendanceForm: React.FC = () => {
             <input
               type="time"
               {...register('checkIn')}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-base"
             />
             {errors.checkIn && <p className="mt-1 text-sm text-red-600">{errors.checkIn.message}</p>}
           </div>
@@ -66,7 +66,7 @@ export const AttendanceForm: React.FC = () => {
             <input
               type="time"
               {...register('checkOut')}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-base"
             />
             {errors.checkOut && <p className="mt-1 text-sm text-red-600">{errors.checkOut.message}</p>}
           </div>
@@ -78,7 +78,7 @@ export const AttendanceForm: React.FC = () => {
         <textarea
           {...register('notes')}
           rows={2}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-base"
         />
         {errors.notes && <p className="mt-1 text-sm text-red-600">{errors.notes.message}</p>}
       </div>

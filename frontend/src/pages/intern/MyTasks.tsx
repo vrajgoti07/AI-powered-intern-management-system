@@ -644,7 +644,7 @@ export const MyTasks: React.FC = () => {
                               value={discFileUrl}
                               onChange={(e) => setDiscFileUrl(e.target.value)}
                               placeholder="https://..."
-                              className="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              className="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-base"
                             />
                           </div>
                           <div className="space-y-1">
@@ -655,11 +655,11 @@ export const MyTasks: React.FC = () => {
                               placeholder="Describe your work..."
                               value={discNotes}
                               onChange={(e) => setDiscNotes(e.target.value)}
-                              className="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              className="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-base"
                             />
                           </div>
                         </div>
-                        <button type="submit" disabled={isDiscSubmitting} className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-colors disabled:opacity-50">
+                        <button type="submit" disabled={isDiscSubmitting} className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-colors disabled:opacity-50 min-h-[44px]">
                           {isDiscSubmitting ? 'Submitting...' : 'Submit Deliverable'}
                         </button>
                       </form>
@@ -698,7 +698,7 @@ export const MyTasks: React.FC = () => {
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
-                        className="flex-1 text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white" 
+                        className="flex-1 text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white text-base" 
                       />
                       <button onClick={handleAddComment} disabled={!newComment.trim()} className="p-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md transition-colors disabled:opacity-50">
                         <Send className="w-4.5 h-4.5" />
@@ -850,7 +850,7 @@ export const MyTasks: React.FC = () => {
                     value={fileUrl}
                     onChange={(e) => setFileUrl(e.target.value)}
                     placeholder="https://github.com/myusername/project/pull/1"
-                    className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white"
+                    className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white text-base"
                     required
                   />
                 </div>
@@ -861,7 +861,7 @@ export const MyTasks: React.FC = () => {
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Describe what you worked on, test logs and validation steps..."
-                    className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl h-24 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white resize-none"
+                    className="w-full text-xs font-semibold px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl h-24 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white resize-none text-base"
                     required
                   />
                 </div>
@@ -879,7 +879,7 @@ export const MyTasks: React.FC = () => {
                   <button 
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-6 py-2.5 text-xs font-extrabold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-100 hover:shadow-lg cursor-pointer disabled:opacity-50"
+                    className="px-6 py-2.5 text-xs font-extrabold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md shadow-indigo-100 hover:shadow-lg cursor-pointer disabled:opacity-50 min-h-[44px]"
                   >
                     {isSubmitting ? 'Submitting...' : 'Submit Milestone'}
                   </button>

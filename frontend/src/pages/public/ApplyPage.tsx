@@ -205,7 +205,7 @@ export const ApplyPage: React.FC = () => {
               Your details are protected using zero-trust framework standards.
             </p>
           </div>
-          <button onClick={() => navigate('/')} className="w-full text-[11px] font-bold text-white/40 hover:text-white/70 flex items-center justify-center gap-1.5 cursor-pointer transition-colors py-1.5">
+          <button onClick={() => navigate('/')} className="w-full text-[11px] font-bold text-white/40 hover:text-white/70 flex items-center justify-center gap-1.5 cursor-pointer transition-colors py-1.5 min-h-[44px]">
             <ArrowLeft className="w-3.5 h-3.5" /> Back to Homepage
           </button>
         </div>
@@ -278,21 +278,21 @@ export const ApplyPage: React.FC = () => {
                       <div className="grid grid-cols-2 gap-5">
                         <div>
                           <label className={labelClass}>Full Name *</label>
-                          <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. John Doe" className={inputClass} />
+                          <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. John Doe" className={`${inputClass} text-base`} />
                         </div>
                         <div>
                           <label className={labelClass}>Email Address *</label>
-                          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="e.g. aarav@example.com" className={inputClass} />
+                          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="e.g. aarav@example.com" className={`${inputClass} text-base`} />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-5">
                         <div>
                           <label className={labelClass}>Phone Number *</label>
-                          <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. +91 98765 43210" className={inputClass} />
+                          <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. +91 98765 43210" className={`${inputClass} text-base`} />
                         </div>
                         <div>
                           <label className={labelClass}>Date of Birth</label>
-                          <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className={inputClass} />
+                          <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className={`${inputClass} text-base`} />
                         </div>
                       </div>
                     </div>
@@ -302,26 +302,26 @@ export const ApplyPage: React.FC = () => {
                     <div className="space-y-5" style={{ animation: 'fadeIn 0.3s ease-out' }}>
                       <div>
                         <label className={labelClass}>University / College *</label>
-                        <input type="text" value={college} onChange={(e) => setCollege(e.target.value)} placeholder="e.g. IIT Delhi" className={inputClass} />
+                        <input type="text" value={college} onChange={(e) => setCollege(e.target.value)} placeholder="e.g. IIT Delhi" className={`${inputClass} text-base`} />
                       </div>
                       <div className="grid grid-cols-2 gap-5">
                         <div>
                           <label className={labelClass}>Degree</label>
-                          <input type="text" value={degree} onChange={(e) => setDegree(e.target.value)} placeholder="e.g. B.Tech" className={inputClass} />
+                          <input type="text" value={degree} onChange={(e) => setDegree(e.target.value)} placeholder="e.g. B.Tech" className={`${inputClass} text-base`} />
                         </div>
                         <div>
                           <label className={labelClass}>Branch / Field</label>
-                          <input type="text" value={branch} onChange={(e) => setBranch(e.target.value)} placeholder="e.g. Computer Science" className={inputClass} />
+                          <input type="text" value={branch} onChange={(e) => setBranch(e.target.value)} placeholder="e.g. Computer Science" className={`${inputClass} text-base`} />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-5">
                         <div>
                           <label className={labelClass}>CGPA *</label>
-                          <input type="number" step="0.01" value={cgpa} onChange={(e) => setCgpa(e.target.value)} placeholder="e.g. 9.1" className={inputClass} />
+                          <input type="number" step="0.01" value={cgpa} onChange={(e) => setCgpa(e.target.value)} placeholder="e.g. 9.1" className={`${inputClass} text-base`} />
                         </div>
                         <div>
                           <label className={labelClass}>Skills (comma separated)</label>
-                          <input type="text" value={skills} onChange={(e) => setSkills(e.target.value)} placeholder="e.g. React, Node, Python" className={inputClass} />
+                          <input type="text" value={skills} onChange={(e) => setSkills(e.target.value)} placeholder="e.g. React, Node, Python" className={`${inputClass} text-base`} />
                         </div>
                       </div>
                     </div>
@@ -332,7 +332,7 @@ export const ApplyPage: React.FC = () => {
                       <div className="grid grid-cols-2 gap-5">
                         <div>
                           <label className={labelClass}>Preferred Department</label>
-                          <select value={dept} onChange={(e) => setDept(e.target.value)} className={inputClass}>
+                          <select value={dept} onChange={(e) => setDept(e.target.value)} className={`${inputClass} text-base`}>
                             <option value="Engineering">Engineering</option>
                             <option value="Design">Design</option>
                             <option value="Marketing">Marketing</option>
@@ -342,7 +342,7 @@ export const ApplyPage: React.FC = () => {
                         </div>
                         <div>
                           <label className={labelClass}>Duration</label>
-                          <select value={duration} onChange={(e) => setDuration(e.target.value)} className={inputClass}>
+                          <select value={duration} onChange={(e) => setDuration(e.target.value)} className={`${inputClass} text-base`}>
                             <option value="3 Months">3 Months</option>
                             <option value="4 Months">4 Months</option>
                             <option value="6 Months">6 Months</option>
@@ -351,11 +351,11 @@ export const ApplyPage: React.FC = () => {
                       </div>
                       <div>
                         <label className={labelClass}>Earliest Start Date *</label>
-                        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={inputClass} />
+                        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={`${inputClass} text-base`} />
                       </div>
                       <div>
                         <label className={labelClass}>Why do you want to join us? *</label>
-                        <textarea value={whyJoin} onChange={(e) => setWhyJoin(e.target.value)} placeholder="Share your professional goals, motivations, and what excites you about this internship opportunity..." className={`${inputClass} h-32 resize-none`} />
+                        <textarea value={whyJoin} onChange={(e) => setWhyJoin(e.target.value)} placeholder="Share your professional goals, motivations, and what excites you about this internship opportunity..." className={`${`${inputClass} text-base`} h-32 resize-none`} />
                       </div>
                     </div>
                   )}
@@ -389,7 +389,7 @@ export const ApplyPage: React.FC = () => {
                       )}
                       
                       <label className="flex items-start gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 cursor-pointer select-none">
-                        <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="h-4.5 w-4.5 text-blue-600 border-slate-300 rounded mt-0.5 flex-shrink-0 accent-blue-600 cursor-pointer" />
+                        <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="h-4.5 w-4.5 text-blue-600 border-slate-300 rounded mt-0.5 flex-shrink-0 accent-blue-600 cursor-pointer text-base" />
                         <span className="text-xs font-semibold text-slate-500 leading-relaxed">
                           I certify that all details submitted in this application are completely accurate. I agree to receive official program communications.
                         </span>
@@ -402,16 +402,16 @@ export const ApplyPage: React.FC = () => {
                 {/* Card Footer */}
                 <div className="bg-slate-50/50 border-t border-slate-100 px-8 py-5 flex items-center justify-between">
                   {step > 1 ? (
-                    <button type="button" onClick={prevStep} className="px-5 py-3 text-xs font-bold text-slate-500 hover:text-blue-600 hover:bg-white border border-slate-200 rounded-xl transition-all cursor-pointer flex items-center gap-1.5">
+                    <button type="button" onClick={prevStep} className="px-5 py-3 text-xs font-bold text-slate-500 hover:text-blue-600 hover:bg-white border border-slate-200 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 min-h-[44px]">
                       <ArrowLeft className="w-4 h-4" /> Back
                     </button>
                   ) : <div />}
                   {step < 4 ? (
-                    <button type="button" onClick={nextStep} className="px-6 py-3.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-100 flex items-center gap-1.5 cursor-pointer">
+                    <button type="button" onClick={nextStep} className="px-6 py-3.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-100 flex items-center gap-1.5 cursor-pointer min-h-[44px]">
                       Continue <ArrowRight className="w-4 h-4" />
                     </button>
                   ) : (
-                    <button type="button" onClick={handleSubmit} className="px-6 py-3.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-100 flex items-center gap-1.5 cursor-pointer">
+                    <button type="button" onClick={handleSubmit} className="px-6 py-3.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-100 flex items-center gap-1.5 cursor-pointer min-h-[44px]">
                       <CheckCircle2 className="w-4 h-4" /> Submit Application
                     </button>
                   )}
@@ -442,10 +442,10 @@ export const ApplyPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-2 pt-2">
-                  <button onClick={() => navigate('/')} className="w-full px-5 py-3.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5">
+                  <button onClick={() => navigate('/')} className="w-full px-5 py-3.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px]">
                     Return to Homepage
                   </button>
-                  <button onClick={() => navigate('/login')} className="w-full px-5 py-3 text-xs font-bold text-slate-500 hover:text-blue-600 hover:bg-slate-50 border border-slate-200 rounded-xl transition-all cursor-pointer">
+                  <button onClick={() => navigate('/login')} className="w-full px-5 py-3 text-xs font-bold text-slate-500 hover:text-blue-600 hover:bg-slate-50 border border-slate-200 rounded-xl transition-all cursor-pointer min-h-[44px]">
                     Go to Login Portal
                   </button>
                 </div>

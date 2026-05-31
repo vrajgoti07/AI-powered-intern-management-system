@@ -91,7 +91,7 @@ export const TaskManagement: React.FC = () => {
         <div className="p-6 pb-0 text-left">
           <button 
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md cursor-pointer min-h-[44px]"
           >
             <Plus className="w-4 h-4" /> Create & Assign Task
           </button>
@@ -230,7 +230,7 @@ export const TaskManagement: React.FC = () => {
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
               <button 
                 onClick={() => handleDeleteTask(selectedTask.id)}
-                className="px-4 py-2.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-all cursor-pointer mr-auto"
+                className="px-4 py-2.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-all cursor-pointer mr-auto min-h-[44px]"
               >
                 Delete Task
               </button>
@@ -246,13 +246,13 @@ export const TaskManagement: React.FC = () => {
                 <>
                   <button 
                     onClick={() => handleUpdateStatus(selectedTask.id, 'In Progress')}
-                    className="px-4 py-2.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-all cursor-pointer"
+                    className="px-4 py-2.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-all cursor-pointer min-h-[44px]"
                   >
                     Reject Submission
                   </button>
                   <button 
                     onClick={() => handleUpdateStatus(selectedTask.id, 'Completed')}
-                    className="px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md cursor-pointer"
+                    className="px-4 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md cursor-pointer min-h-[44px]"
                   >
                     Approve Submission
                   </button>

@@ -22,7 +22,7 @@ export const LeaveRequestForm: React.FC = () => {
         <label className="block text-sm font-medium text-gray-700">Leave Type</label>
         <select
           {...register('leaveType')}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-base"
         >
           <option value="SICK">Sick Leave</option>
           <option value="CASUAL">Casual Leave</option>
@@ -37,7 +37,7 @@ export const LeaveRequestForm: React.FC = () => {
           <input
             type="date"
             {...register('startDate')}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-base"
           />
           {errors.startDate && <p className="mt-1 text-sm text-red-600">{errors.startDate.message}</p>}
         </div>
@@ -47,7 +47,7 @@ export const LeaveRequestForm: React.FC = () => {
           <input
             type="date"
             {...register('endDate')}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-base"
           />
           {errors.endDate && <p className="mt-1 text-sm text-red-600">{errors.endDate.message}</p>}
         </div>
@@ -58,7 +58,7 @@ export const LeaveRequestForm: React.FC = () => {
         <textarea
           {...register('reason')}
           rows={4}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-base"
         />
         {errors.reason && <p className="mt-1 text-sm text-red-600">{errors.reason.message}</p>}
       </div>
@@ -66,7 +66,7 @@ export const LeaveRequestForm: React.FC = () => {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 min-h-[44px]"
       >
         {isSubmitting ? 'Submitting...' : 'Request Leave'}
       </button>
