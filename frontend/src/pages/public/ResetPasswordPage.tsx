@@ -95,7 +95,21 @@ export const ResetPasswordPage: React.FC = () => {
       setSuccess(true);
     } catch (err: any) {
       toast.dismiss(loadingToast);
-      const msg = err?.response?.data?.message ?? 'Failed to set password. The link may have expired.';
+      
+      let msg = 'Failed to set password. The link may have expired or the server is busy.';
+      
+      if (err?.response?.data) {
+        if (typeof err.response.data.message === 'string') {
+          msg = err.response.data.message;
+        } else if (err.response.data.message && typeof err.response.data.message.message === 'string') {
+          msg = err.response.data.message.message;
+        } else if (typeof err.response.data === 'string') {
+          msg = err.response.data;
+        }
+      } else if (err.message === 'Network Error') {
+        msg = 'Network error: The server might be deploying or temporarily unavailable. Please try again in a minute.';
+      }
+
       toast.error(msg);
     } finally {
       setLoading(false);
