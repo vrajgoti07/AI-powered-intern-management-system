@@ -6,18 +6,27 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Initialize Resend client (HTTP-based, works on Render Free Tier)
+ * Brevo API Key (HTTP-based, works on Render, sends to ANY email)
+ */
+const BREVO_API_KEY = config.email.brevoApiKey || null;
+
+if (BREVO_API_KEY) {
+  logger.info('✅ Brevo email provider configured (HTTP API — sends to any email, bypasses SMTP port blocks)');
+}
+
+/**
+ * Initialize Resend client (HTTP-based, works on Render Free Tier but limited to owner email)
  */
 const resendClient = config.email.resendApiKey
   ? new Resend(config.email.resendApiKey)
   : null;
 
-if (resendClient) {
-  logger.info('✅ Resend email provider configured (HTTP API — bypasses SMTP port blocks)');
+if (resendClient && !BREVO_API_KEY) {
+  logger.info('✅ Resend email provider configured (HTTP API — note: free tier only sends to account owner email)');
 }
 
 /**
- * Create SMTP email transporter (fallback for local dev)
+ * Create SMTP email transporter (for local dev)
  */
 const createTransporter = () => {
   if (!config.email.host || !config.email.user || !config.email.password) {
@@ -41,16 +50,63 @@ const createTransporter = () => {
 
 const transporter = createTransporter();
 
+/**
+ * Send email via Brevo HTTP API (sends to ANY email address, works on Render)
+ */
+const sendViaBrevo = async (to: string | string[], subject: string, html: string): Promise<boolean> => {
+  if (!BREVO_API_KEY) return false;
+
+  try {
+    const toArray = Array.isArray(to) ? to.map(email => ({ email })) : [{ email: to }];
+    const senderEmail = config.email.user || 'hr.internflow@gmail.com';
+    
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': BREVO_API_KEY,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        sender: { name: 'InternFlow', email: senderEmail },
+        to: toArray,
+        subject,
+        htmlContent: html,
+      }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const recipient = Array.isArray(to) ? `${to.length} recipients` : to;
+      logger.info(`Email sent via Brevo to ${recipient} (messageId: ${data.messageId})`);
+      return true;
+    } else {
+      const errorData = await response.json().catch(() => ({}));
+      logger.error(`Brevo API error (${response.status}): ${JSON.stringify(errorData)}`);
+      return false;
+    }
+  } catch (error: any) {
+    logger.error('Brevo email delivery exception:', error?.message || error);
+    return false;
+  }
+};
 
 /**
- * Send email — tries Resend first (HTTP), falls back to SMTP
+ * Send email — Priority: Brevo (HTTP) → SMTP (local) → Resend (fallback)
  */
 export const sendEmail = async (
   to: string,
   subject: string,
   html: string
 ): Promise<boolean> => {
-  // 1. Try SMTP first (Gmail — can send to ANY email address)
+  // 1. Try Brevo first (HTTP API — works on Render, sends to ANY email)
+  if (BREVO_API_KEY) {
+    const sent = await sendViaBrevo(to, subject, html);
+    if (sent) return true;
+    // Fall through to other providers
+  }
+
+  // 2. Try SMTP (Gmail — works locally, blocked on Render free tier)
   if (transporter) {
     try {
       await transporter.sendMail({
@@ -67,7 +123,7 @@ export const sendEmail = async (
     }
   }
 
-  // 2. Fallback to Resend (HTTP API — works when SMTP ports are blocked)
+  // 3. Last resort: Resend (HTTP API — free tier only sends to owner email)
   if (resendClient) {
     try {
       const result = await resendClient.emails.send({
@@ -89,9 +145,10 @@ export const sendEmail = async (
     }
   }
 
-  logger.warn(`No email provider available or all providers failed. Email to ${to} was NOT sent. Subject: ${subject}`);
+  logger.warn(`All email providers failed. Email to ${to} was NOT sent. Subject: ${subject}`);
   return false;
 };
+
 
 
 /**
@@ -395,7 +452,13 @@ export const sendAnnouncementEmail = async (
 
   const subject = `[${priority} Priority] ${title}`;
 
-  // 1. Try SMTP first (Gmail — can send to ANY email address)
+  // 1. Try Brevo first (HTTP API — sends to ANY email, works on Render)
+  if (BREVO_API_KEY) {
+    const sent = await sendViaBrevo(emails, subject, html);
+    if (sent) return true;
+  }
+
+  // 2. Try SMTP (Gmail — works locally)
   if (transporter) {
     try {
       await transporter.sendMail({
@@ -408,11 +471,10 @@ export const sendAnnouncementEmail = async (
       return true;
     } catch (error: any) {
       logger.error('SMTP announcement delivery failed:', error?.message || error);
-      // Fall through to Resend
     }
   }
 
-  // 2. Fallback to Resend (HTTP API)
+  // 3. Last resort: Resend
   if (resendClient) {
     try {
       const result = await resendClient.emails.send({
@@ -434,7 +496,7 @@ export const sendAnnouncementEmail = async (
     }
   }
 
-  logger.warn('No email provider available or all providers failed. Skipping announcement email.');
+  logger.warn('All email providers failed. Skipping announcement email.');
   return false;
 };
 

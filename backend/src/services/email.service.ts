@@ -9,16 +9,21 @@ import { renderTemplate } from '../email_templates';
 class EmailService {
   private transporter: nodemailer.Transporter | null = null;
   private resendClient: Resend | null = null;
+  private brevoApiKey: string | null = null;
 
   constructor() {
-    // Initialize Resend (HTTP-based, works on Render Free Tier)
+    // Initialize Brevo (HTTP-based, sends to ANY email, works on Render)
+    if (config.email.brevoApiKey) {
+      this.brevoApiKey = config.email.brevoApiKey;
+    }
+
+    // Initialize Resend (HTTP-based, free tier limited to owner email)
     if (config.email.resendApiKey) {
       this.resendClient = new Resend(config.email.resendApiKey);
     }
 
-    // Only create SMTP transporter if Resend is NOT configured
-    // (Render free tier blocks SMTP ports, so skip it when Resend is available)
-    if (!this.resendClient && emailConfig.host && emailConfig.user) {
+    // Only create SMTP transporter if no HTTP provider is configured
+    if (!this.brevoApiKey && !this.resendClient && emailConfig.host && emailConfig.user) {
       this.transporter = nodemailer.createTransport({
         host: emailConfig.host,
         port: emailConfig.port,
@@ -35,16 +40,54 @@ class EmailService {
   }
 
   /**
+   * Send email via Brevo HTTP API
+   */
+  private async sendViaBrevo(to: string, subject: string, html: string): Promise<boolean> {
+    if (!this.brevoApiKey) return false;
+
+    const senderEmail = emailConfig.user || 'hr.internflow@gmail.com';
+
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': this.brevoApiKey,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        sender: { name: 'InternFlow', email: senderEmail },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+      }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      logger.info(`Email sent via Brevo to ${to} (messageId: ${data.messageId})`);
+      return true;
+    } else {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Brevo API error (${response.status}): ${JSON.stringify(errorData)}`);
+    }
+  }
+
+  /**
    * Verify email connection
    */
   public async verifyConnection() {
+    if (this.brevoApiKey) {
+      logger.info('✅ Brevo email provider configured (HTTP API — sends to any email, bypasses SMTP port blocks)');
+      return true;
+    }
+
     if (this.resendClient) {
-      logger.info('✅ Resend email provider configured (HTTP API — bypasses SMTP port blocks)');
+      logger.info('✅ Resend email provider configured (HTTP API — note: free tier only sends to account owner email)');
       return true;
     }
 
     if (!this.transporter) {
-      logger.warn('⚠️  No email provider configured (set RESEND_API_KEY for Render, or SMTP_HOST/SMTP_USER for local). Emails will NOT be sent.');
+      logger.warn('⚠️  No email provider configured (set BREVO_API_KEY for production, or SMTP_HOST/SMTP_USER for local). Emails will NOT be sent.');
       return false;
     }
 
@@ -53,13 +96,14 @@ class EmailService {
       logger.info('✅ SMTP Mail Transporter verified successfully and is ready to send emails.');
       return true;
     } catch (error) {
-      logger.warn('⚠️  SMTP connection failed (expected on Render free tier). Set RESEND_API_KEY for production email delivery.');
+      logger.warn('⚠️  SMTP connection failed (expected on Render free tier). Set BREVO_API_KEY for production email delivery.');
       return false;
     }
   }
 
   /**
    * Internal method to send an email and log it
+   * Priority: Brevo → SMTP → Resend
    */
   public async sendEmail(
     to: string,
@@ -78,16 +122,21 @@ class EmailService {
     });
 
     try {
-      // Try Resend first (HTTP API — works on Render Free Tier)
-      if (this.resendClient) {
-        await this.resendClient.emails.send({
-          from: emailConfig.from || 'InternFlow <onboarding@resend.dev>',
-          to,
-          subject,
-          html,
-        });
-      } else if (this.transporter) {
-        // Fallback to SMTP
+      // 1. Try Brevo first (HTTP API — sends to ANY email)
+      if (this.brevoApiKey) {
+        const sent = await this.sendViaBrevo(to, subject, html);
+        if (sent) {
+          await prisma.emailLog.update({
+            where: { id: log.id },
+            data: { status: 'SENT', attempts: { increment: 1 } }
+          });
+          logger.info(`Email sent successfully to ${to} via Brevo (Subject: ${subject})`);
+          return true;
+        }
+      }
+
+      // 2. Try SMTP
+      if (this.transporter) {
         await this.transporter.sendMail({
           from: emailConfig.from,
           to,
@@ -95,8 +144,17 @@ class EmailService {
           html,
           attachments,
         });
+      }
+      // 3. Try Resend
+      else if (this.resendClient) {
+        await this.resendClient.emails.send({
+          from: emailConfig.from || 'InternFlow <onboarding@resend.dev>',
+          to,
+          subject,
+          html,
+        });
       } else {
-        throw new Error('No email provider configured. Set RESEND_API_KEY or SMTP credentials.');
+        throw new Error('No email provider configured. Set BREVO_API_KEY, RESEND_API_KEY, or SMTP credentials.');
       }
 
       await prisma.emailLog.update({
@@ -132,3 +190,4 @@ class EmailService {
 }
 
 export const emailService = new EmailService();
+
