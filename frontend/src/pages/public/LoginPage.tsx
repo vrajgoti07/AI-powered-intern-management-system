@@ -280,7 +280,7 @@ export const LoginPage: React.FC = () => {
                       value={otpCode}
                       onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                       placeholder="000 000"
-                      className="w-full text-center text-3xl font-black tracking-[0.4em] px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-[#2563eb] placeholder:text-slate-200 text-base"
+                      className="w-full text-center text-4xl font-black tracking-[0.4em] pl-[0.4em] py-5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-[#2563eb] placeholder:text-slate-200"
                       required
                     />
                   </div>
