@@ -46,8 +46,8 @@ export const helmetMiddleware = helmet({
   hidePoweredBy: true,
   // Referrer-Policy
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-  // Cross-Origin-Resource-Policy — allow API same-origin responses
-  crossOriginResourcePolicy: { policy: 'same-origin' },
+  // Cross-Origin-Resource-Policy — allow API cross-origin responses
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
   // Cross-Origin-Opener-Policy
   crossOriginOpenerPolicy: { policy: 'same-origin' },
 });

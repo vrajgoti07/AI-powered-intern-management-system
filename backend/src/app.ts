@@ -17,6 +17,9 @@ import { serverAdapter } from './queues/queue.config';
 const createApp = (): Application => {
   const app = express();
 
+  // ── 0. Trust Proxy (Required for Render/Reverse Proxies) ──
+  app.set('trust proxy', 1);
+
   // ── 1. Security Middleware (helmet, CORS, request logger, content-type guard) ──
   applySecurityMiddleware(app);
 
