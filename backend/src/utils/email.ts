@@ -55,11 +55,18 @@ export const sendEmail = async (
   // to the account owner's email. To send to any recipient, verify a domain at resend.com/domains.
   if (resendClient) {
     try {
+      // FREE TIER WORKAROUND: Force send to verified email address so it doesn't fail
+      let actualTo = to;
+      if (actualTo !== 'vrajgoti07@gmail.com') {
+        logger.info(`[Resend Free Tier] Redirecting email originally meant for ${to} to vrajgoti07@gmail.com`);
+        actualTo = 'vrajgoti07@gmail.com';
+      }
+
       const result = await resendClient.emails.send({
         from: 'InternFlow <onboarding@resend.dev>',
         replyTo: config.email.from || config.email.user || undefined,
-        to,
-        subject,
+        to: actualTo,
+        subject: `[For ${to}] ${subject}`,
         html,
       });
 
@@ -402,11 +409,13 @@ export const sendAnnouncementEmail = async (
   // Try Resend first (must use onboarding@resend.dev on free tier)
   if (resendClient) {
     try {
+      logger.info(`[Resend Free Tier] Redirecting broadcast email originally meant for ${emails.length} recipients to vrajgoti07@gmail.com`);
+
       const result = await resendClient.emails.send({
         from: 'InternFlow <onboarding@resend.dev>',
         replyTo: config.email.from || config.email.user || undefined,
-        to: emails,
-        subject,
+        to: 'vrajgoti07@gmail.com', // FREE TIER WORKAROUND
+        subject: `[BROADCAST TEST] ${subject}`,
         html,
       });
 
