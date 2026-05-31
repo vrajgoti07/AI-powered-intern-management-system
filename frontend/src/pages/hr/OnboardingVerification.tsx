@@ -19,9 +19,10 @@ import { useQueryClient } from '@tanstack/react-query';
  */
 const fixDocUrl = (url: string | null | undefined): string | null => {
   if (!url) return null;
-  // If it's a Cloudinary URL for a non-image file (pdf, doc, docx, zip), fix the resource type
   if (url.includes('res.cloudinary.com') && /\.(pdf|doc|docx|zip)$/i.test(url)) {
-    return url.replace('/image/upload/', '/raw/upload/');
+    if (!url.includes('fl_attachment')) {
+      return url.replace('/upload/', '/upload/fl_attachment:false/');
+    }
   }
   return url;
 };
