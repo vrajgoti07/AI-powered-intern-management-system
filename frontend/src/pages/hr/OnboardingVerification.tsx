@@ -20,9 +20,15 @@ import { useQueryClient } from '@tanstack/react-query';
 const fixDocUrl = (url: string | null | undefined): string | null => {
   if (!url) return null;
   if (url.includes('res.cloudinary.com')) {
-    if (url.includes('fl_attachment:false')) {
-      return url.replace('fl_attachment:false/', '').replace('/fl_attachment:false', '');
+    // 1. Clean up any legacy fl_attachment:false that was previously injected or stored
+    let cleanUrl = url.replace('fl_attachment:false/', '').replace('/fl_attachment:false', '');
+    
+    // 2. Fallback for legacy PDFs uploaded as 'image' resource type.
+    // Convert legacy image-bucket PDF URLs to JPG so that they bypass the Cloudinary PDF security settings and display properly.
+    if (cleanUrl.includes('/image/upload/') && /\.pdf(\?|$)/i.test(cleanUrl)) {
+      cleanUrl = cleanUrl.replace(/\.pdf(\?|$)/i, '.jpg$1');
     }
+    return cleanUrl;
   }
   return url;
 };

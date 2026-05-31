@@ -58,7 +58,7 @@ const certificateStorage = isCloudinaryConfigured ? new CloudinaryStorage({
     const isImage = file.mimetype.startsWith('image/');
     return {
       folder: 'intern-management/certificates',
-      allowed_formats: ['jpg', 'jpeg', 'png', 'pdf'],
+      allowed_formats: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'zip'],
       resource_type: isImage ? 'image' : 'raw',
       public_id: `certificate-${Date.now()}-${file.originalname.split('.')[0]}`,
     };

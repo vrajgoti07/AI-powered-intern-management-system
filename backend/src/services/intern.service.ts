@@ -17,12 +17,18 @@ function fixCloudinaryDocUrls<T>(intern: T): T {
   if (!intern || typeof intern !== 'object') return intern;
   const obj = intern as any;
   for (const field of DOC_URL_FIELDS) {
-    const url = obj[field];
+    let url = obj[field];
     if (url && typeof url === 'string' && url.includes('res.cloudinary.com')) {
-      // Clean up any legacy fl_attachment:false that was previously injected or stored
-      if (url.includes('fl_attachment:false')) {
-        obj[field] = url.replace('fl_attachment:false/', '').replace('/fl_attachment:false', '');
+      // 1. Clean up any legacy fl_attachment:false that was previously injected or stored
+      url = url.replace('fl_attachment:false/', '').replace('/fl_attachment:false', '');
+      
+      // 2. Fallback for legacy PDFs uploaded as 'image' resource type.
+      // Convert legacy image-bucket PDF URLs to JPG so that they bypass the Cloudinary PDF security settings and display properly.
+      if (url.includes('/image/upload/') && /\.pdf(\?|$)/i.test(url)) {
+        url = url.replace(/\.pdf(\?|$)/i, '.jpg$1');
       }
+      
+      obj[field] = url;
     }
   }
   return obj;
