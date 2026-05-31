@@ -8,6 +8,24 @@ import { logger } from '../utils/logger';
 import { paginate } from '../utils/paginate';
 
 /**
+ * Fix Cloudinary document URLs that were uploaded with resource_type 'auto'.
+ * PDFs/DOCs stored under /image/upload/ must use /raw/upload/ to be viewable.
+ */
+const DOC_URL_FIELDS = ['resumeUrl', 'idProofUrl', 'marksheetUrl', 'aadhaarPanUrl', 'collegeIdUrl', 'passportPhotoUrl'] as const;
+
+function fixCloudinaryDocUrls<T>(intern: T): T {
+  if (!intern || typeof intern !== 'object') return intern;
+  const obj = intern as any;
+  for (const field of DOC_URL_FIELDS) {
+    const url = obj[field];
+    if (url && typeof url === 'string' && url.includes('res.cloudinary.com') && /\.(pdf|doc|docx|zip)(\?|$)/i.test(url)) {
+      obj[field] = url.replace('/image/upload/', '/raw/upload/');
+    }
+  }
+  return obj;
+}
+
+/**
  * Intern with relations type
  */
 type InternWithRelations = Prisma.InternGetPayload<{
@@ -156,7 +174,7 @@ export const createIntern = async (data: {
     },
   });
 
-  return intern;
+  return fixCloudinaryDocUrls(intern);
 };
 
 /**
@@ -225,7 +243,7 @@ export const getAllInterns = async (
   });
 
   return {
-    data: result.data,
+    data: result.data.map(fixCloudinaryDocUrls),
     pagination: {
       page: result.currentPage,
       limit: Number(limit),
@@ -294,7 +312,7 @@ export const getInternById = async (id: string): Promise<InternWithRelations> =>
     throw new AppError('Intern not found', 404);
   }
 
-  return intern;
+  return fixCloudinaryDocUrls(intern);
 };
 
 /**
@@ -417,7 +435,7 @@ export const updateIntern = async (
     });
   }
 
-  return intern;
+  return fixCloudinaryDocUrls(intern);
 };
 
 /**
@@ -597,7 +615,7 @@ export const getInternByUserId = async (userId: string): Promise<InternWithRelat
     },
   });
 
-  return intern || null;
+  return intern ? fixCloudinaryDocUrls(intern) : null;
 };
 
 /**
@@ -709,7 +727,7 @@ export const applyIntern = async (data: {
     logger.error('Failed to queue application confirmation email:', queueErr);
   }
 
-  return intern;
+  return fixCloudinaryDocUrls(intern);
 };
 
 /**
@@ -807,7 +825,7 @@ export const updateOnboarding = async (
     }
   }
 
-  return updated;
+  return fixCloudinaryDocUrls(updated);
 };
 
 /**
@@ -852,7 +870,7 @@ export const updateOnboardingDoc = async (
     },
   });
 
-  return updated;
+  return fixCloudinaryDocUrls(updated);
 };
 
 export const removeOnboardingDoc = async (
@@ -893,7 +911,7 @@ export const removeOnboardingDoc = async (
     },
   });
 
-  return updated;
+  return fixCloudinaryDocUrls(updated);
 };
 
 
