@@ -63,7 +63,7 @@ export const corsMiddleware = cors({
   origin: (origin, callback) => {
     const allowedOrigins = config.cors.origin
       .split(',')
-      .map((o) => o.trim())
+      .map((o) => o.trim().replace(/\/+$/, ''))
       .filter(Boolean);
 
     // Allow requests with no origin (server-to-server, curl, Postman)
