@@ -520,7 +520,7 @@ export const sendLoginOtpEmail = async (
     'View Workspace Notification': `Code: ${otpCode}`
   });
 
-  if (!transporter && !resendClient) {
+  if (!transporter && !resendClient && !BREVO_API_KEY) {
     logger.info(`[MOCK EMAIL DELIVERY] OTP for ${email} (${name}) is: ${otpCode}`);
     return true;
   }
