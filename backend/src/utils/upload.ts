@@ -28,10 +28,11 @@ const isCloudinaryConfigured = !!config.cloudinary.cloudName && !!config.cloudin
 const taskStorage = isCloudinaryConfigured ? new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (_req: Request, file: Express.Multer.File) => {
+    const isImage = file.mimetype.startsWith('image/');
     return {
       folder: 'intern-management/tasks',
       allowed_formats: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'zip'],
-      resource_type: 'auto',
+      resource_type: isImage ? 'image' : 'raw',
       public_id: `task-${Date.now()}-${file.originalname.split('.')[0]}`,
     };
   },
@@ -44,20 +45,21 @@ const resumeStorage = isCloudinaryConfigured ? new CloudinaryStorage({
     return {
       folder: 'intern-management/resumes',
       allowed_formats: ['pdf', 'doc', 'docx'],
-      resource_type: 'auto',
+      resource_type: 'raw',
       public_id: `resume-${Date.now()}-${file.originalname.split('.')[0]}`,
     };
   },
 }) : localStorage;
 
-// Cloudinary storage for certificates
+// Cloudinary storage for certificates/onboarding documents
 const certificateStorage = isCloudinaryConfigured ? new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (_req: Request, file: Express.Multer.File) => {
+    const isImage = file.mimetype.startsWith('image/');
     return {
       folder: 'intern-management/certificates',
       allowed_formats: ['jpg', 'jpeg', 'png', 'pdf'],
-      resource_type: 'auto',
+      resource_type: isImage ? 'image' : 'raw',
       public_id: `certificate-${Date.now()}-${file.originalname.split('.')[0]}`,
     };
   },

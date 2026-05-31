@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -11,6 +12,19 @@ import toast from 'react-hot-toast';
 import { useInterns } from '../../hooks/queries';
 import api from '../../services/api';
 import { useQueryClient } from '@tanstack/react-query';
+
+/**
+ * Fix Cloudinary URLs for PDFs/documents that were uploaded with resource_type 'auto'
+ * which incorrectly uses /image/upload/ instead of /raw/upload/
+ */
+const fixDocUrl = (url: string | null | undefined): string | null => {
+  if (!url) return null;
+  // If it's a Cloudinary URL for a non-image file (pdf, doc, docx, zip), fix the resource type
+  if (url.includes('res.cloudinary.com') && /\.(pdf|doc|docx|zip)$/i.test(url)) {
+    return url.replace('/image/upload/', '/raw/upload/');
+  }
+  return url;
+};
 
 export const OnboardingVerification: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -227,7 +241,7 @@ export const OnboardingVerification: React.FC = () => {
                         <div className="flex justify-between items-start">
                           <FileText className="w-6 h-6 text-slate-400" />
                           {selectedCandidate.resumeUrl ? (
-                            <a href={selectedCandidate.resumeUrl} target="_blank" rel="noreferrer" className="p-1 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer">
+                            <a href={fixDocUrl(selectedCandidate.resumeUrl) || '#'} target="_blank" rel="noreferrer" className="p-1 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer">
                               <Eye className="w-4 h-4 text-indigo-500" />
                             </a>
                           ) : (
@@ -239,7 +253,7 @@ export const OnboardingVerification: React.FC = () => {
                         <div>
                           <p className="font-extrabold text-slate-800 text-xs">Updated Resume / CV</p>
                           {selectedCandidate.resumeUrl ? (
-                            <a href={selectedCandidate.resumeUrl} target="_blank" rel="noreferrer" className="text-[10px] text-indigo-500 font-semibold mt-0.5 hover:underline truncate block">View Resume</a>
+                            <a href={fixDocUrl(selectedCandidate.resumeUrl) || '#'} target="_blank" rel="noreferrer" className="text-[10px] text-indigo-500 font-semibold mt-0.5 hover:underline truncate block">View Resume</a>
                           ) : (
                             <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Not Uploaded</p>
                           )}
@@ -251,7 +265,7 @@ export const OnboardingVerification: React.FC = () => {
                         <div className="flex justify-between items-start">
                           <User className="w-6 h-6 text-slate-400" />
                           {selectedCandidate.aadhaarPanUrl ? (
-                            <a href={selectedCandidate.aadhaarPanUrl} target="_blank" rel="noreferrer" className="p-1 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer">
+                            <a href={fixDocUrl(selectedCandidate.aadhaarPanUrl) || '#'} target="_blank" rel="noreferrer" className="p-1 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer">
                               <Eye className="w-4 h-4 text-indigo-500" />
                             </a>
                           ) : (
@@ -263,7 +277,7 @@ export const OnboardingVerification: React.FC = () => {
                         <div>
                           <p className="font-extrabold text-slate-800 text-xs">Aadhaar / PAN Card</p>
                           {selectedCandidate.aadhaarPanUrl ? (
-                            <a href={selectedCandidate.aadhaarPanUrl} target="_blank" rel="noreferrer" className="text-[10px] text-indigo-500 font-semibold mt-0.5 hover:underline truncate block">View ID Proof</a>
+                            <a href={fixDocUrl(selectedCandidate.aadhaarPanUrl) || '#'} target="_blank" rel="noreferrer" className="text-[10px] text-indigo-500 font-semibold mt-0.5 hover:underline truncate block">View ID Proof</a>
                           ) : (
                             <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Not Uploaded</p>
                           )}
@@ -275,7 +289,7 @@ export const OnboardingVerification: React.FC = () => {
                         <div className="flex justify-between items-start">
                           <BookOpen className="w-6 h-6 text-slate-400" />
                           {selectedCandidate.collegeIdUrl ? (
-                            <a href={selectedCandidate.collegeIdUrl} target="_blank" rel="noreferrer" className="p-1 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer">
+                            <a href={fixDocUrl(selectedCandidate.collegeIdUrl) || '#'} target="_blank" rel="noreferrer" className="p-1 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer">
                               <Eye className="w-4 h-4 text-indigo-500" />
                             </a>
                           ) : (
@@ -287,7 +301,7 @@ export const OnboardingVerification: React.FC = () => {
                         <div>
                           <p className="font-extrabold text-slate-800 text-xs">College ID Card</p>
                           {selectedCandidate.collegeIdUrl ? (
-                            <a href={selectedCandidate.collegeIdUrl} target="_blank" rel="noreferrer" className="text-[10px] text-indigo-500 font-semibold mt-0.5 hover:underline truncate block">View College ID</a>
+                            <a href={fixDocUrl(selectedCandidate.collegeIdUrl) || '#'} target="_blank" rel="noreferrer" className="text-[10px] text-indigo-500 font-semibold mt-0.5 hover:underline truncate block">View College ID</a>
                           ) : (
                             <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Not Uploaded</p>
                           )}
@@ -299,7 +313,7 @@ export const OnboardingVerification: React.FC = () => {
                         <div className="flex justify-between items-start">
                           <Camera className="w-6 h-6 text-slate-400" />
                           {selectedCandidate.passportPhotoUrl ? (
-                            <a href={selectedCandidate.passportPhotoUrl} target="_blank" rel="noreferrer" className="p-1 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer">
+                            <a href={fixDocUrl(selectedCandidate.passportPhotoUrl) || '#'} target="_blank" rel="noreferrer" className="p-1 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer">
                               <Eye className="w-4 h-4 text-indigo-500" />
                             </a>
                           ) : (
@@ -311,7 +325,7 @@ export const OnboardingVerification: React.FC = () => {
                         <div>
                           <p className="font-extrabold text-slate-800 text-xs">Passport Size Photo</p>
                           {selectedCandidate.passportPhotoUrl ? (
-                            <a href={selectedCandidate.passportPhotoUrl} target="_blank" rel="noreferrer" className="text-[10px] text-indigo-500 font-semibold mt-0.5 hover:underline truncate block">View Passport Photo</a>
+                            <a href={fixDocUrl(selectedCandidate.passportPhotoUrl) || '#'} target="_blank" rel="noreferrer" className="text-[10px] text-indigo-500 font-semibold mt-0.5 hover:underline truncate block">View Passport Photo</a>
                           ) : (
                             <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Not Uploaded</p>
                           )}
