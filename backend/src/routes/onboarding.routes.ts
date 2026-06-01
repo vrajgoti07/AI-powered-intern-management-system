@@ -16,5 +16,6 @@ router.post('/emergency', onboardingController.submitEmergency);
 router.post('/upload-documents', onboardingController.submitDocuments);
 router.post('/agreement', onboardingController.submitAgreement);
 router.post('/final-submit', onboardingController.submitFinal);
+router.post('/save-draft', onboardingController.saveDraft);
 
 export default router;

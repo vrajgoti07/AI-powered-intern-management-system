@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   User, BookOpen, PhoneCall, Upload, FileText,
   CheckCircle, RefreshCw, Eye, Download, Trash2, Camera,
-  ArrowLeft, ArrowRight, Pencil, X, Lock
+  ArrowLeft, ArrowRight, Pencil, X, Lock, Save
 } from 'lucide-react';
 import { Sidebar } from '../../../components/common/Sidebar';
 import { Navbar } from '../../../components/common/Navbar';
@@ -28,6 +29,7 @@ export const OnboardingWorkflow: React.FC = () => {
   const { user } = useAuth();
   const { data: myInternData, refetch: refetchIntern } = useInternByUser(user?.id || '');
   const { data: onboardingStatus, isLoading: statusLoading } = useOnboardingStatus();
+  const queryClient = useQueryClient();
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [step, setStep] = useState(1);
@@ -297,6 +299,21 @@ export const OnboardingWorkflow: React.FC = () => {
         }
         return true;
       default: return true;
+    }
+  };
+
+  const saveDraftProgress = async () => {
+    setLoading(true);
+    try {
+      await api.post('/onboarding/save-draft', formData);
+      toast.success("Draft saved successfully!");
+      queryClient.invalidateQueries({ queryKey: ['onboardingStatus'] });
+      await refetchIntern();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.response?.data?.message || "Failed to save draft");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1181,17 +1198,30 @@ export const OnboardingWorkflow: React.FC = () => {
                   <ArrowLeft className="w-4 h-4" /> Previous
                 </button>
 
-                <button
-                  onClick={submitStep}
-                  disabled={loading}
-                  className={`px-6 py-2.5 rounded-xl text-xs font-bold text-white transition-all duration-300 flex items-center justify-center gap-2 w-full sm:w-auto ${
-                    loading 
-                      ? 'bg-indigo-400 cursor-not-allowed shadow-none' 
-                      : 'bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-200 hover:shadow-lg hover:-translate-y-0.5'
-                  } min-h-[44px]`}
-                >
-                  {loading ? 'Processing...' : step === 7 ? 'Submit Onboarding' : 'Save & Continue'} <ArrowRight className="w-4 h-4" />
-                </button>
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={saveDraftProgress}
+                    disabled={loading}
+                    className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 flex items-center justify-center gap-2 w-full sm:w-auto border border-slate-200 hover:bg-slate-50 cursor-pointer text-slate-600 bg-white min-h-[44px] ${
+                      loading ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    <Save className="w-4 h-4" /> Save Draft
+                  </button>
+
+                  <button
+                    onClick={submitStep}
+                    disabled={loading}
+                    className={`px-6 py-2.5 rounded-xl text-xs font-bold text-white transition-all duration-300 flex items-center justify-center gap-2 w-full sm:w-auto ${
+                      loading 
+                        ? 'bg-indigo-400 cursor-not-allowed shadow-none' 
+                        : 'bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-200 hover:shadow-lg hover:-translate-y-0.5'
+                    } min-h-[44px]`}
+                  >
+                    {loading ? 'Processing...' : step === 7 ? 'Submit Onboarding' : 'Save & Continue'} <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             )}
           </div>

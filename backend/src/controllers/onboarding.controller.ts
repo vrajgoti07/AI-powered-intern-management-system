@@ -111,3 +111,15 @@ export const submitFinal = async (req: Request, res: Response, next: NextFunctio
     next(error);
   }
 };
+
+export const saveDraft = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const internId = req.user?.intern?.id;
+    if (!internId) throw new AppError('Intern not found', 404);
+
+    const status = await onboardingService.saveDraft(internId, req.body);
+    successResponse(res, 'Onboarding draft saved successfully', status);
+  } catch (error) {
+    next(error);
+  }
+};

@@ -225,3 +225,97 @@ export const submitFinal = async (internId: string) => {
 
   return updatedProgress;
 };
+
+export const saveDraft = async (internId: string, data: any) => {
+  const progress = await getOnboardingStatus(internId);
+  
+  const {
+    fullName,
+    dob,
+    gender,
+    address,
+    phone,
+    college,
+    degree,
+    branch,
+    semester,
+    cgpa,
+    skills,
+    parentName,
+    parentPhone,
+    emergencyName,
+    emergencyPhone,
+    emergencyRelation,
+    signedName,
+    agreementAccepted,
+    offerLetterAccepted
+  } = data;
+
+  const intern = await prisma.intern.findUnique({ where: { id: internId }, select: { userId: true } });
+  if (!intern) throw new AppError('Intern not found', 404);
+
+  // 1. Update User name if fullName is provided
+  if (fullName !== undefined) {
+    await prisma.user.update({
+      where: { id: intern.userId },
+      data: { name: fullName }
+    });
+  }
+
+  // 2. Build Intern update payload
+  const internUpdateData: any = {};
+  if (phone !== undefined) internUpdateData.phone = phone;
+  
+  if (dob !== undefined && dob !== null && dob !== '') {
+    const parsedDate = new Date(dob);
+    if (!isNaN(parsedDate.getTime())) {
+      internUpdateData.dob = parsedDate;
+    }
+  }
+  
+  if (gender !== undefined) internUpdateData.gender = gender;
+  if (address !== undefined) internUpdateData.address = address;
+  if (college !== undefined) internUpdateData.college = college;
+  if (degree !== undefined) internUpdateData.degree = degree;
+  if (branch !== undefined) internUpdateData.branch = branch;
+  
+  if (semester !== undefined && semester !== null && semester !== '') {
+    const parsedSemester = parseInt(semester);
+    if (!isNaN(parsedSemester)) {
+      internUpdateData.semester = parsedSemester;
+    }
+  }
+  
+  if (cgpa !== undefined && cgpa !== null && cgpa !== '') {
+    const parsedCgpa = parseFloat(cgpa);
+    if (!isNaN(parsedCgpa)) {
+      internUpdateData.cgpa = parsedCgpa;
+    }
+  }
+  
+  if (skills !== undefined) {
+    let skillsArray: string[] = [];
+    if (Array.isArray(skills)) {
+      skillsArray = skills;
+    } else if (typeof skills === 'string') {
+      skillsArray = skills.split(',').map(s => s.trim()).filter(s => s);
+    }
+    internUpdateData.skills = skillsArray;
+  }
+  
+  if (parentName !== undefined) internUpdateData.parentName = parentName;
+  if (parentPhone !== undefined) internUpdateData.parentPhone = parentPhone;
+  if (emergencyName !== undefined) internUpdateData.emergencyName = emergencyName;
+  if (emergencyPhone !== undefined) internUpdateData.emergencyPhone = emergencyPhone;
+  if (emergencyRelation !== undefined) internUpdateData.emergencyRelation = emergencyRelation;
+  if (signedName !== undefined) internUpdateData.signedName = signedName;
+  if (agreementAccepted !== undefined) internUpdateData.agreementAccepted = agreementAccepted;
+  if (offerLetterAccepted !== undefined) internUpdateData.offerLetterAccepted = offerLetterAccepted;
+
+  await prisma.intern.update({
+    where: { id: internId },
+    data: internUpdateData
+  });
+
+  return progress;
+};
