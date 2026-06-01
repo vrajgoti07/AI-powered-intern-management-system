@@ -86,6 +86,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     socket.on('leave:decision', handleNewNotification);
     socket.on('announcement:new', handleNewNotification);
     socket.on('offer:received', handleNewNotification);
+    socket.on('intern:applied', handleNewNotification);
     
     // Also listen to the generic ones
     socket.on('new-notification', handleNewNotification);
@@ -99,6 +100,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       socket.off('leave:decision', handleNewNotification);
       socket.off('announcement:new', handleNewNotification);
       socket.off('offer:received', handleNewNotification);
+      socket.off('intern:applied', handleNewNotification);
       socket.off('new-notification', handleNewNotification);
       socket.off('notification', handleNewNotification);
     };

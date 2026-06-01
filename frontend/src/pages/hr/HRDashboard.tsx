@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSocket } from '../../hooks/useSocket';
 import { useInterns, useMentors, useTasks, useDepartments, useLeaves, useHRFeedbacks, useAttendance } from '../../hooks/queries';
 import { Sidebar } from '../../components/common/Sidebar';
 import { Navbar } from '../../components/common/Navbar';
@@ -37,6 +38,18 @@ export const HRDashboard: React.FC = () => {
   const [selectedInternDetail, setSelectedInternDetail] = useState<any>(null);
 
   const { data: hrFeedbacks = [] } = useHRFeedbacks();
+  const socket = useSocket();
+
+  useEffect(() => {
+    if (!socket) return;
+    const handleNewApplication = () => {
+      refetchInterns();
+    };
+    socket.on('intern:applied', handleNewApplication);
+    return () => {
+      socket.off('intern:applied', handleNewApplication);
+    };
+  }, [socket, refetchInterns]);
 
   // App metrics
   const totalInterns = interns.length;

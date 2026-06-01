@@ -199,7 +199,7 @@ export const LoginPage: React.FC = () => {
         </div>
 
         {/* Form Content */}
-        <div className="flex-1 flex flex-col justify-center px-8 md:px-16 lg:px-24 xl:px-32 py-10 items-center">
+        <div className="flex-1 flex flex-col justify-center px-5 sm:px-8 md:px-16 lg:px-24 xl:px-32 py-10 items-center">
           <div className="w-full max-w-md space-y-8">
 
             {!isOtpStage ? (
@@ -280,7 +280,7 @@ export const LoginPage: React.FC = () => {
                       value={otpCode}
                       onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                       placeholder="000 000"
-                      className="w-full text-center text-4xl font-black tracking-[0.4em] pl-[0.4em] py-5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-[#2563eb] placeholder:text-slate-200"
+                      className="w-full text-center text-4xl font-black tracking-[0.4em] pl-[0.4em] py-5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-[#2563eb] placeholder:text-slate-200 text-base"
                       required
                     />
                   </div>

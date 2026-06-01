@@ -70,6 +70,10 @@ export const NotificationBell: React.FC = () => {
       }
     } else if (type === 'CHAT') {
       navigate('/shared/communication');
+    } else if (type === 'APPLICATION') {
+      if (role === 'hr' || role === 'admin' || role === 'super_admin') {
+        navigate('/hr/interns');
+      }
     }
   };
 
@@ -94,6 +98,9 @@ export const NotificationBell: React.FC = () => {
     if (type === 'ANNOUNCEMENT') {
       return 'Announcement';
     }
+    if (type === 'APPLICATION') {
+      return 'New Application';
+    }
     return n.type || 'System';
   };
 
@@ -104,6 +111,9 @@ export const NotificationBell: React.FC = () => {
     if (t.includes('task') || t.includes('new')) return 'text-indigo-600 bg-indigo-50 border-indigo-100';
     if (t.includes('leave')) return 'text-amber-600 bg-amber-50 border-amber-100';
     if (t.includes('chat')) return 'text-blue-600 bg-blue-50 border-blue-100';
+    if (t.includes('application') || t.includes('new application')) {
+      return 'text-rose-600 bg-rose-50 border-rose-100';
+    }
     return 'text-slate-500 bg-slate-50 border-slate-100';
   };
 

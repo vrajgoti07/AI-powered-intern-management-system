@@ -76,7 +76,30 @@ export const ApplyPage: React.FC = () => {
         whyJoin: whyJoin || undefined,
       };
 
-      await api.post('/interns/apply', payload);
+      const applyResponse = await api.post('/interns/apply', payload);
+
+      // Trigger HR email notification for the new application
+      try {
+        await api.post('/notifications/intern-applied', {
+          applicantName: name,
+          applicantEmail: email,
+          applicantPhone: phone,
+          college,
+          degree,
+          branch,
+          cgpa,
+          dept,
+          skills: skills ? skills.split(',').map(s => s.trim()).filter(Boolean) : [],
+          duration,
+          startDate,
+          whyJoin,
+          internId: applyResponse?.data?.data?.id || null,
+        });
+      } catch (notifError) {
+        // Silently fail — do not block the applicant's success screen
+        // if notification fails
+        console.warn('Notification dispatch failed:', notifError);
+      }
 
       toast.dismiss(loadingToast);
       toast.success("Application Submitted Successfully!");
@@ -100,7 +123,7 @@ export const ApplyPage: React.FC = () => {
     }
   };
 
-  const inputClass = "w-full text-sm font-semibold px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 focus:bg-white transition-all placeholder:text-slate-400 text-slate-800";
+  const inputClass = "w-full text-base font-semibold px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 focus:bg-white transition-all placeholder:text-slate-400 text-slate-800";
   const labelClass = "block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5";
 
   return (
@@ -243,7 +266,7 @@ export const ApplyPage: React.FC = () => {
         </div>
 
         {/* Content Box */}
-        <div className="flex-1 flex items-center justify-center p-6 md:p-10 lg:p-12 overflow-y-auto z-10">
+        <div className="flex-1 flex items-start sm:items-center justify-center p-4 sm:p-6 md:p-10 lg:p-12 overflow-y-auto z-10 pt-6 sm:pt-6">
           
           {step < 5 ? (
             <div className={`w-full max-w-2xl transition-all duration-300 ${animating ? 'opacity-0 translate-y-3' : 'opacity-100 translate-y-0'}`}>
@@ -252,7 +275,7 @@ export const ApplyPage: React.FC = () => {
               <div className="bg-white rounded-3xl border border-slate-200/80 shadow-2xl shadow-slate-200/40 overflow-hidden">
                 
                 {/* Card Header */}
-                <div className="bg-slate-50/50 border-b border-slate-100 px-8 py-6 flex items-center justify-between">
+                <div className="bg-slate-50/50 border-b border-slate-100 px-5 sm:px-8 py-5 sm:py-6 flex items-center justify-between">
                   <div className="flex items-center gap-3.5">
                     <div className="w-11 h-11 bg-blue-600 rounded-2xl flex items-center justify-center shadow-md shadow-blue-100">
                       {React.createElement(stepMeta[step - 1].icon, { className: "w-5 h-5 text-white" })}
@@ -271,11 +294,11 @@ export const ApplyPage: React.FC = () => {
                 </div>
 
                 {/* Card Body */}
-                <div className="px-8 py-8 space-y-6">
+                <div className="px-5 sm:px-8 py-6 sm:py-8 space-y-6">
 
                   {step === 1 && (
                     <div className="space-y-5" style={{ animation: 'fadeIn 0.3s ease-out' }}>
-                      <div className="grid grid-cols-2 gap-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                         <div>
                           <label className={labelClass}>Full Name *</label>
                           <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. John Doe" className={`${inputClass} text-base`} />
@@ -285,7 +308,7 @@ export const ApplyPage: React.FC = () => {
                           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="e.g. aarav@example.com" className={`${inputClass} text-base`} />
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                         <div>
                           <label className={labelClass}>Phone Number *</label>
                           <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. +91 98765 43210" className={`${inputClass} text-base`} />
@@ -304,7 +327,7 @@ export const ApplyPage: React.FC = () => {
                         <label className={labelClass}>University / College *</label>
                         <input type="text" value={college} onChange={(e) => setCollege(e.target.value)} placeholder="e.g. IIT Delhi" className={`${inputClass} text-base`} />
                       </div>
-                      <div className="grid grid-cols-2 gap-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                         <div>
                           <label className={labelClass}>Degree</label>
                           <input type="text" value={degree} onChange={(e) => setDegree(e.target.value)} placeholder="e.g. B.Tech" className={`${inputClass} text-base`} />
@@ -314,7 +337,7 @@ export const ApplyPage: React.FC = () => {
                           <input type="text" value={branch} onChange={(e) => setBranch(e.target.value)} placeholder="e.g. Computer Science" className={`${inputClass} text-base`} />
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                         <div>
                           <label className={labelClass}>CGPA *</label>
                           <input type="number" step="0.01" value={cgpa} onChange={(e) => setCgpa(e.target.value)} placeholder="e.g. 9.1" className={`${inputClass} text-base`} />
@@ -329,7 +352,7 @@ export const ApplyPage: React.FC = () => {
 
                   {step === 3 && (
                     <div className="space-y-5" style={{ animation: 'fadeIn 0.3s ease-out' }}>
-                      <div className="grid grid-cols-2 gap-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                         <div>
                           <label className={labelClass}>Preferred Department</label>
                           <select value={dept} onChange={(e) => setDept(e.target.value)} className={`${inputClass} text-base`}>
@@ -374,9 +397,9 @@ export const ApplyPage: React.FC = () => {
                           { label: "Duration", value: duration },
                           { label: "Start Date", value: startDate },
                         ].map((item, i) => (
-                          <div key={item.label} className={`flex items-center justify-between px-4 py-3 text-xs ${i % 2 === 0 ? 'bg-white rounded-xl' : 'bg-transparent'}`}>
+                          <div key={item.label} className={`flex items-start sm:items-center justify-between px-3 sm:px-4 py-3 text-xs gap-2 ${i % 2 === 0 ? 'bg-white rounded-xl' : 'bg-transparent'}`}>
                             <span className="font-extrabold text-slate-400 uppercase tracking-wider text-[10px]">{item.label}</span>
-                            <span className="font-bold text-slate-800 truncate max-w-[55%]">{item.value || "—"}</span>
+                            <span className="font-bold text-slate-800 truncate max-w-[60%] sm:max-w-[55%] text-right">{item.value || "—"}</span>
                           </div>
                         ))}
                       </div>
@@ -400,18 +423,18 @@ export const ApplyPage: React.FC = () => {
                 </div>
 
                 {/* Card Footer */}
-                <div className="bg-slate-50/50 border-t border-slate-100 px-8 py-5 flex items-center justify-between">
+                <div className="bg-slate-50/50 border-t border-slate-100 px-5 sm:px-8 py-4 sm:py-5 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3">
                   {step > 1 ? (
-                    <button type="button" onClick={prevStep} className="px-5 py-3 text-xs font-bold text-slate-500 hover:text-blue-600 hover:bg-white border border-slate-200 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 min-h-[44px]">
+                    <button type="button" onClick={prevStep} className="w-full sm:w-auto px-5 py-3 text-xs font-bold text-slate-500 hover:text-blue-600 hover:bg-white border border-slate-200 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px]">
                       <ArrowLeft className="w-4 h-4" /> Back
                     </button>
                   ) : <div />}
                   {step < 4 ? (
-                    <button type="button" onClick={nextStep} className="px-6 py-3.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-100 flex items-center gap-1.5 cursor-pointer min-h-[44px]">
+                    <button type="button" onClick={nextStep} className="w-full sm:w-auto px-6 py-3.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-1.5 cursor-pointer min-h-[44px]">
                       Continue <ArrowRight className="w-4 h-4" />
                     </button>
                   ) : (
-                    <button type="button" onClick={handleSubmit} className="px-6 py-3.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-100 flex items-center gap-1.5 cursor-pointer min-h-[44px]">
+                    <button type="button" onClick={handleSubmit} className="w-full sm:w-auto px-6 py-3.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-1.5 cursor-pointer min-h-[44px]">
                       <CheckCircle2 className="w-4 h-4" /> Submit Application
                     </button>
                   )}
