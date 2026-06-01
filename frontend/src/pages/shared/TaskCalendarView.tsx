@@ -426,7 +426,7 @@ export const TaskCalendarView: React.FC = () => {
                   >
                     <div className="min-w-[320px] space-y-6">
                       {/* Day Headers */}
-                      <div className="grid grid-cols-7 gap-3 text-center text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
+                      <div className="grid grid-cols-7 gap-1 sm:gap-3 text-center text-[8px] sm:text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
                         <div>Sun</div>
                         <div>Mon</div>
                         <div>Tue</div>
@@ -437,10 +437,10 @@ export const TaskCalendarView: React.FC = () => {
                       </div>
 
                       {/* Grid cells */}
-                      <div className="grid grid-cols-7 gap-3">
+                      <div className="grid grid-cols-7 gap-1 sm:gap-3">
                         {/* Pad empty cells for the starting day of this month */}
                         {Array.from({ length: firstDayOfMonth }).map((_, idx) => (
-                          <div key={`empty-${idx}`} className="bg-slate-50/20 border border-slate-100/10 rounded-2xl min-h-[90px]" />
+                          <div key={`empty-${idx}`} className="bg-slate-50/20 border border-slate-100/10 rounded-lg sm:rounded-2xl min-h-[44px] sm:min-h-[90px]" />
                         ))}
 
                         {days.map(d => {
@@ -450,7 +450,7 @@ export const TaskCalendarView: React.FC = () => {
                           return (
                             <div 
                               key={d} 
-                              className={`border rounded-2xl p-2.5 min-h-[95px] text-left transition-all duration-300 flex flex-col justify-between group relative ${
+                              className={`border rounded-lg sm:rounded-2xl p-1 sm:p-2.5 min-h-[44px] sm:min-h-[95px] text-left transition-all duration-300 flex flex-col justify-between group relative ${
                                 hasToday
                                   ? 'bg-gradient-to-b from-indigo-50/50 to-white border-indigo-600 shadow-lg shadow-indigo-100/40 ring-2 ring-indigo-100'
                                   : dayTasks.length > 0
@@ -459,7 +459,7 @@ export const TaskCalendarView: React.FC = () => {
                               }`}
                             >
                               <div className="flex justify-between items-center w-full">
-                                <span className={`text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center ${
+                                <span className={`text-[9px] sm:text-[10px] font-black w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center ${
                                   hasToday 
                                     ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-200'
                                     : 'text-slate-500'
@@ -474,7 +474,7 @@ export const TaskCalendarView: React.FC = () => {
                               </div>
                               
                               {/* Inner Scrollable Task list inside Cell */}
-                              <div className="space-y-1 mt-2 max-h-[68px] overflow-y-auto scrollbar-none flex-1">
+                              <div className="space-y-0.5 sm:space-y-1 mt-1 sm:mt-2 max-h-[30px] sm:max-h-[68px] overflow-y-auto scrollbar-none flex-1">
                                 {dayTasks.map((task: any) => {
                                   const isDone = task.status === 'COMPLETED';
                                   const isHigh = !isDone && task.priority === 'HIGH';
@@ -485,7 +485,7 @@ export const TaskCalendarView: React.FC = () => {
                                     <div 
                                       key={task.id} 
                                       onClick={() => setSelectedTask(task)}
-                                      className={`text-[8.5px] font-extrabold px-1.5 py-1 rounded-lg leading-normal truncate cursor-pointer transition-all duration-200 flex items-center gap-1 hover:scale-[1.02] ${
+                                      className={`text-[7px] sm:text-[8.5px] font-extrabold px-1 sm:px-1.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg leading-normal truncate cursor-pointer transition-all duration-200 flex items-center gap-0.5 sm:gap-1 hover:scale-[1.02] ${
                                         isDone ? 'bg-emerald-50 border border-emerald-100 text-emerald-700' :
                                         isHigh ? 'bg-rose-50 border border-rose-100 text-rose-700' :
                                         isMed ? 'bg-amber-50 border border-amber-100 text-amber-700' :

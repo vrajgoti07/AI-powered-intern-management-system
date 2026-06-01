@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Logo } from '../../components/common/Logo';
+import api from '../../services/api';
 
 const FAQS = [
   { q: "What is your typical onboarding time?", a: "For teams under 50 interns, onboarding usually takes 48 hours. Enterprise deployments with custom integrations typically take 2-3 weeks depending on your IT review processes." },
@@ -24,16 +25,19 @@ const ContactPage: React.FC = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await api.post('/contact', formData);
       setIsSubmitting(false);
       setIsSuccess(true);
       setFormData({ name: '', email: '', company: '', size: '', subject: '', message: '' });
       setTimeout(() => setIsSuccess(false), 5000);
-    }, 1500);
+    } catch (error: any) {
+      setIsSubmitting(false);
+      console.error('Contact form error:', error);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -55,8 +59,8 @@ const ContactPage: React.FC = () => {
             <Link to="/careers" className="hover:text-white transition-colors">Careers</Link>
             <Link to="/contact" className="text-white border-b border-blue-500 pb-1">Contact</Link>
           </div>
-          <div className="flex items-center gap-4">
-            <Link to="/login" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Log in</Link>
+          <div className="flex items-center gap-3">
+            <Link to="/login" className="hidden sm:block text-sm font-medium text-slate-300 hover:text-white transition-colors">Log in</Link>
             <Link to="/apply" className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-full transition-all shadow-lg shadow-blue-500/20">
               Get Started
             </Link>
@@ -65,17 +69,17 @@ const ContactPage: React.FC = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-40 pb-16 px-6 max-w-7xl mx-auto text-center">
-        <h1 className="text-6xl md:text-8xl font-['Instrument_Serif'] italic mb-6">Let's talk.</h1>
-        <p className="text-lg md:text-xl text-slate-400 font-medium max-w-2xl mx-auto">
+      <section className="pt-28 sm:pt-40 pb-10 sm:pb-16 px-5 sm:px-6 max-w-7xl mx-auto text-center">
+        <h1 className="text-4xl sm:text-6xl md:text-8xl font-['Instrument_Serif'] italic mb-4 sm:mb-6">Let's talk.</h1>
+        <p className="text-sm sm:text-lg md:text-xl text-slate-400 font-medium max-w-2xl mx-auto">
           Whether you're looking for a platform demo, need technical support, or want to explore a partnership—our team is here for you.
         </p>
       </section>
 
       {/* Contact Options Grid */}
-      <section className="py-12 px-6 max-w-7xl mx-auto border-b border-white/10">
+      <section className="py-8 sm:py-12 px-5 sm:px-6 max-w-7xl mx-auto border-b border-white/10">
         <div className="grid md:grid-cols-3 gap-6">
-          <div className="bg-[#121822] border border-white/10 p-8 rounded-2xl flex flex-col justify-between group hover:border-blue-500/50 transition-colors">
+          <div className="bg-[#121822] border border-white/10 p-5 sm:p-8 rounded-2xl flex flex-col justify-between group hover:border-blue-500/50 transition-colors">
             <div>
               <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-blue-600 transition-all duration-300">
                 <MessagesSquare className="w-6 h-6 text-blue-400 group-hover:text-white" />
@@ -88,7 +92,7 @@ const ContactPage: React.FC = () => {
             </a>
           </div>
 
-          <div className="bg-[#121822] border border-white/10 p-8 rounded-2xl flex flex-col justify-between group hover:border-blue-500/50 transition-colors">
+          <div className="bg-[#121822] border border-white/10 p-5 sm:p-8 rounded-2xl flex flex-col justify-between group hover:border-blue-500/50 transition-colors">
             <div>
               <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-blue-600 transition-all duration-300">
                 <Headset className="w-6 h-6 text-blue-400 group-hover:text-white" />
@@ -101,7 +105,7 @@ const ContactPage: React.FC = () => {
             </a>
           </div>
 
-          <div className="bg-[#121822] border border-white/10 p-8 rounded-2xl flex flex-col justify-between group hover:border-blue-500/50 transition-colors">
+          <div className="bg-[#121822] border border-white/10 p-5 sm:p-8 rounded-2xl flex flex-col justify-between group hover:border-blue-500/50 transition-colors">
             <div>
               <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-blue-600 transition-all duration-300">
                 <Newspaper className="w-6 h-6 text-blue-400 group-hover:text-white" />
@@ -117,7 +121,7 @@ const ContactPage: React.FC = () => {
       </section>
 
       {/* Main Form & Info Split Layout */}
-      <section id="form" className="py-24 px-6 max-w-7xl mx-auto">
+      <section id="form" className="py-12 sm:py-24 px-5 sm:px-6 max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-5 gap-16">
           
           {/* Left Col: Contact Form */}

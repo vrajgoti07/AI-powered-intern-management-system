@@ -45,6 +45,26 @@ router.get('/health', (_req, res) => {
 /**
  * Mount routes
  */
+router.post('/contact', async (req, res) => {
+  try {
+    const { name, email, company, size, subject, message } = req.body;
+    if (!name || !email || !message) {
+      res.status(400).json({ success: false, message: 'Name, email, and message are required.' });
+      return;
+    }
+    const { emailQueue } = await import('../queues/queue.config');
+    await emailQueue.add('CONTACT_FORM_SUBMISSION', {
+      to: process.env.ADMIN_EMAIL || 'admin@internflow.io',
+      data: { name, email, company: company || 'Not provided', size: size || 'Not provided', subject: subject || 'General Inquiry', message, submittedAt: new Date().toISOString() }
+    });
+    await emailQueue.add('CONTACT_FORM_CONFIRMATION', { to: email, data: { name, subject: subject || 'General Inquiry' } });
+    res.json({ success: true, message: 'Your message has been received. Our team will respond within 24 hours.' });
+  } catch (error: any) {
+    console.error('Contact form error:', error);
+    res.status(500).json({ success: false, message: 'Failed to send message. Please try again.' });
+  }
+});
+
 router.use('/auth', authRoutes);
 router.use('/interns', internRoutes);
 router.use('/mentors', mentorRoutes);

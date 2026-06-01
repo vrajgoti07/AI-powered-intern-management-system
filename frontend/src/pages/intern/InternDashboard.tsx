@@ -149,7 +149,7 @@ export const InternDashboard: React.FC = () => {
         <Navbar onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} title="Intern Workspace Portal" />
 
         {/* Scrollable Container */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-6">
 
           {/* Welcome Banner */}
           <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-6 relative overflow-hidden flex-shrink-0">

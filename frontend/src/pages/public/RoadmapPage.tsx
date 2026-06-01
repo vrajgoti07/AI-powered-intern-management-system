@@ -68,13 +68,13 @@ export const RoadmapPage: React.FC = () => {
         </div>
       </header>
 
-      <main className="max-w-[90rem] mx-auto px-6 py-20 space-y-20">
+      <main className="max-w-[90rem] mx-auto px-4 sm:px-6 py-10 sm:py-20 space-y-12 sm:space-y-20">
         {/* Hero */}
         <section className="text-center space-y-6 animate-[slideUpFadeIn_0.5s_ease-out_both]">
-          <h1 className="text-5xl md:text-7xl font-fraunces font-medium text-white tracking-tight">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-fraunces font-medium text-white tracking-tight">
             What we're building <span className="text-[#2563eb] italic">next</span>.
           </h1>
-          <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-sm sm:text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
             We believe in transparent product development. Explore our roadmap, upvote your favorite features, and suggest new ideas.
           </p>
         </section>
@@ -108,7 +108,7 @@ export const RoadmapPage: React.FC = () => {
 
         {/* Kanban Board */}
         {view === 'kanban' && (
-          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-[slideUpFadeIn_0.7s_ease-out_both] items-start">
+          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 animate-[slideUpFadeIn_0.7s_ease-out_both] items-start">
             {(Object.keys(statusConfig) as StatusType[]).map(status => (
               <div key={status} className="space-y-4">
                 <div className={`px-4 py-3 rounded-xl border ${statusConfig[status].bg} ${statusConfig[status].border} flex items-center justify-between`}>

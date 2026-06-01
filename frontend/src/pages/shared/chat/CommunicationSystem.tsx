@@ -4,7 +4,8 @@ import {
   MessageSquare, HelpCircle, Megaphone, Send, Paperclip,
   CheckCheck, Hash, User, ShieldAlert, Sparkles, Plus, PlusCircle, Search,
   Brain, RefreshCw, Mic, MicOff, Terminal, ChevronRight, Check, ThumbsUp,
-  Trash2, Smile, X, Download, Music, Camera, Image, Calendar, BarChart2, FileText
+  Trash2, Smile, X, Download, Music, Camera, Image, Calendar, BarChart2, FileText,
+  ArrowLeft
 } from 'lucide-react';
 import { Sidebar } from '../../../components/common/Sidebar';
 import { Navbar } from '../../../components/common/Navbar';
@@ -1306,10 +1307,10 @@ export const CommunicationSystem: React.FC = () => {
         <Navbar onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} title="Internal Messaging Network" />
 
         {/* Scrollable Container */}
-        <div className="flex-1 overflow-hidden p-6 flex flex-col space-y-4">
+        <div className="flex-1 overflow-hidden p-2 sm:p-6 flex flex-col space-y-4">
           
           {/* Top Tabs Controller with premium pill design */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex-shrink-0">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-3 sm:p-5 rounded-3xl border border-slate-100 shadow-sm flex-shrink-0">
             <div className="text-left">
               <span className="text-xs font-bold text-[#2563eb] bg-blue-50 px-3 py-1 rounded-full uppercase tracking-wider">Workspace Comms</span>
               <h1 className="text-lg font-black text-slate-800 tracking-tight mt-1.5">
@@ -1335,7 +1336,7 @@ export const CommunicationSystem: React.FC = () => {
                     <button
                       key={tab.key}
                       onClick={() => { setActiveTab(tab.key as any); setShowList(true); }}
-                      className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer border-0 outline-none ${
+                      className={`flex-shrink-0 flex items-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer border-0 outline-none ${
                         active 
                           ? 'bg-[#2563eb] text-white shadow-md shadow-blue-100' 
                           : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
@@ -1447,11 +1448,12 @@ export const CommunicationSystem: React.FC = () => {
                       <div className="pb-3 border-b border-slate-100 flex justify-between items-center flex-shrink-0">
                         <button
                           onClick={() => setShowList(true)}
-                          className="flex lg:hidden items-center gap-1 text-[10px]
+                          className="flex lg:hidden items-center gap-1.5 text-[11px]
                           font-extrabold text-slate-500 hover:text-slate-800
-                          mr-3 cursor-pointer bg-transparent border-0 p-0 flex-shrink-0"
+                          mr-3 cursor-pointer bg-transparent border-0 p-1.5
+                          min-h-[44px] flex-shrink-0"
                         >
-                          ← Back
+                          <ArrowLeft className="w-4 h-4" /> Back
                         </button>
                         <span className="font-extrabold text-slate-800 text-xs flex items-center gap-1"><Hash className="w-4 h-4 text-[#2563eb]" /> {chatChannel.slice(1)}</span>
                         <span className="text-[9px] text-emerald-600 font-extrabold bg-emerald-50 border border-emerald-100 px-2.5 py-0.5 rounded-full">Active Stream</span>
@@ -2154,7 +2156,7 @@ export const CommunicationSystem: React.FC = () => {
                   </div>
 
                   {/* Input form in premium container */}
-                  <form onSubmit={handleBotFormSubmit} className="p-4 border-t border-slate-100/80 flex items-center gap-3 bg-white/95 backdrop-blur-md flex-shrink-0 shadow-[0_-4px_24px_rgba(0,0,0,0.02)] z-10">
+                  <form onSubmit={handleBotFormSubmit} className="p-2 sm:p-4 border-t border-slate-100/80 flex items-center gap-3 bg-white/95 backdrop-blur-md flex-shrink-0 shadow-[0_-4px_24px_rgba(0,0,0,0.02)] z-10 sticky bottom-0 bg-white">
                     <div className="relative flex items-center flex-1 bg-slate-50 border border-slate-200/80 rounded-2xl focus-within:ring-4 focus-within:ring-indigo-50 focus-within:bg-white focus-within:border-indigo-500 transition-all duration-300 px-4 py-2.5 gap-2.5 shadow-sm">
                       {/* Voice Mic Button */}
                       <button 

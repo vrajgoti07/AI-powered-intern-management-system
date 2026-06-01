@@ -385,13 +385,13 @@ export const PerformanceAnalytics: React.FC = () => {
         <Navbar onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} title="Advanced Performance Analytics" />
 
         {/* Scrollable Container */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-6">
           
           {/* Top Header Row with Brand Accent */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
             <div className="text-left">
               <span className="text-xs font-bold text-[#2563eb] bg-blue-50 px-3 py-1 rounded-full uppercase tracking-wider">Intern Insight Engine</span>
-              <h1 className="text-2xl font-black text-slate-800 tracking-tight mt-1.5">AI Performance & Placement Hub</h1>
+              <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight mt-1.5">AI Performance & Placement Hub</h1>
               <p className="text-sm text-slate-500 font-medium mt-0.5">Real-time skill graph, sentiment reflex feedback, and verified digital credentials.</p>
             </div>
             

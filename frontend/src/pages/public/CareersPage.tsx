@@ -50,8 +50,8 @@ const CareersPage: React.FC = () => {
             <Link to="/about" className="hover:text-white transition-colors">About Us</Link>
             <Link to="/careers" className="text-white border-b border-blue-500 pb-1">Careers</Link>
           </div>
-          <div className="flex items-center gap-4">
-            <Link to="/login" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Log in</Link>
+          <div className="flex items-center gap-3">
+            <Link to="/login" className="hidden sm:block text-sm font-medium text-slate-300 hover:text-white transition-colors">Log in</Link>
             <Link to="/apply" className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-full transition-all shadow-lg shadow-blue-500/20">
               Join Us
             </Link>
@@ -60,7 +60,7 @@ const CareersPage: React.FC = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-40 pb-24 px-6 overflow-hidden">
+      <section className="relative pt-28 sm:pt-40 pb-12 sm:pb-24 px-5 sm:px-6 overflow-hidden">
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-600/10 rounded-full blur-[120px] -z-10 translate-x-1/3 -translate-y-1/3 pointer-events-none" />
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -72,11 +72,11 @@ const CareersPage: React.FC = () => {
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-400 text-xs font-bold tracking-widest uppercase mb-8">
               <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" /> We are hiring
             </div>
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black font-['Cabinet_Grotesk'] leading-[1.05] tracking-tight mb-8">
+            <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-black font-['Cabinet_Grotesk'] leading-[1.05] tracking-tight mb-6 sm:mb-8">
               Build the platform that <br className="hidden md:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">builds careers.</span>
             </h1>
-            <p className="text-lg md:text-xl text-slate-400 max-w-2xl font-light leading-relaxed mb-10 font-sans">
+            <p className="text-base sm:text-lg md:text-xl text-slate-400 max-w-2xl font-light leading-relaxed mb-8 sm:mb-10 font-sans">
               We're a team of makers, educators, and rebels completely reimagining how the next generation starts their professional journey. Want to leave a dent in the universe? Start here.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 font-sans font-bold">
@@ -121,7 +121,7 @@ const CareersPage: React.FC = () => {
       </section>
 
       {/* Culture Section */}
-      <section id="culture" className="py-32 px-6">
+      <section id="culture" className="py-16 sm:py-32 px-5 sm:px-6">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
@@ -199,7 +199,7 @@ const CareersPage: React.FC = () => {
       </section>
 
       {/* Open Roles Section */}
-      <section id="open-roles" className="py-32 px-6">
+      <section id="open-roles" className="py-16 sm:py-32 px-5 sm:px-6">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-4xl md:text-5xl font-black font-['Cabinet_Grotesk'] tracking-tight mb-12">Open Positions</h2>
           
@@ -212,7 +212,7 @@ const CareersPage: React.FC = () => {
                   <button 
                     key={dept}
                     onClick={() => setActiveDept(dept)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${activeDept === dept ? 'bg-blue-600 text-white' : 'bg-[#121822] text-slate-400 hover:text-white hover:bg-[#1a2133] border border-white/5'}`}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${activeDept === dept ? 'bg-blue-600 text-white' : 'bg-[#121822] text-slate-400 hover:text-white hover:bg-[#1a2133] border border-white/5'}`}
                   >
                     {dept}
                   </button>
@@ -227,7 +227,7 @@ const CareersPage: React.FC = () => {
                   <button 
                     key={loc}
                     onClick={() => setActiveLoc(loc)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${activeLoc === loc ? 'bg-blue-600 text-white' : 'bg-[#121822] text-slate-400 hover:text-white hover:bg-[#1a2133] border border-white/5'}`}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${activeLoc === loc ? 'bg-blue-600 text-white' : 'bg-[#121822] text-slate-400 hover:text-white hover:bg-[#1a2133] border border-white/5'}`}
                   >
                     {loc}
                   </button>

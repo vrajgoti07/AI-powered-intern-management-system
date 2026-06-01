@@ -375,7 +375,7 @@ export const Settings: React.FC = () => {
       <main className="flex-grow flex flex-col overflow-hidden bg-slate-50/50">
         <Navbar onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} title="Workspace Settings" />
 
-        <div className="flex-1 p-6 overflow-y-auto max-w-6xl mx-auto w-full text-left">
+        <div className="flex-1 p-3 sm:p-6 overflow-y-auto max-w-6xl mx-auto w-full text-left">
 
           {/* Executive Backdrop Profile Hero Banner */}
           <div className="relative bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden mb-6">

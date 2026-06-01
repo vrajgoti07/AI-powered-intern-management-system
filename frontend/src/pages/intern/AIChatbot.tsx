@@ -185,12 +185,12 @@ export const AIChatbot: React.FC = () => {
         <Navbar onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} title="AI Help Desk Chatbot" />
 
         {/* Chat main layout */}
-        <div className="flex-1 p-6 overflow-hidden flex flex-col max-w-4xl mx-auto w-full">
+        <div className="flex-1 p-2 sm:p-6 overflow-hidden flex flex-col max-w-4xl mx-auto w-full">
           
           <div className="bg-white rounded-3xl border border-slate-150 shadow-sm overflow-hidden flex flex-col flex-1 bg-slate-50/50">
             
             {/* Premium Header Bar */}
-            <div className="px-6 py-4 border-b border-slate-100/80 flex items-center justify-between flex-shrink-0 bg-white/80 backdrop-blur-md shadow-sm z-10">
+            <div className="px-4 sm:px-6 py-4 border-b border-slate-100/80 flex items-center justify-between flex-shrink-0 bg-white/80 backdrop-blur-md shadow-sm z-10">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-gradient-to-tr from-indigo-500 to-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-150 transform hover:rotate-12 transition-transform duration-300">
                   <Brain className="w-5 h-5 text-white" />
@@ -225,7 +225,7 @@ export const AIChatbot: React.FC = () => {
                       {isUser ? myName.charAt(0).toUpperCase() : "AI"}
                     </div>
                     
-                    <div className={`p-4 rounded-3xl text-xs font-semibold leading-relaxed border shadow-sm transition-all duration-200 hover:shadow-md
+                    <div className={`p-3 sm:p-4 rounded-3xl text-xs font-semibold leading-relaxed border shadow-sm transition-all duration-200 hover:shadow-md
                       ${isUser 
                         ? 'bg-gradient-to-br from-indigo-600 to-blue-600 border-blue-700 text-white rounded-br-none' 
                         : 'bg-white border-slate-150 text-slate-700 rounded-bl-none'}`}>
@@ -251,7 +251,7 @@ export const AIChatbot: React.FC = () => {
             </div>
 
             {/* Dynamic suggestions capsules */}
-            <div className="px-6 py-3 border-t border-slate-100/60 overflow-x-auto flex gap-2 flex-shrink-0 bg-white/40 scrollbar-none z-10">
+            <div className="px-3 sm:px-6 py-3 border-t border-slate-100/60 overflow-x-auto flex gap-2 flex-shrink-0 bg-white/40 scrollbar-none z-10">
               {suggestedPrompts.map((p, idx) => (
                 <button 
                   key={idx}

@@ -88,7 +88,7 @@ const SecurityPage: React.FC = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-40 pb-20 px-6 max-w-7xl mx-auto relative z-10 text-center">
+      <section className="pt-28 sm:pt-40 pb-12 sm:pb-20 px-5 sm:px-6 max-w-7xl mx-auto relative z-10 text-center">
         <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-600/10 rounded-full blur-[120px] -z-10" />
         
         <motion.div 
@@ -99,7 +99,7 @@ const SecurityPage: React.FC = () => {
           <Shield className="w-12 h-12 text-blue-500" />
         </motion.div>
 
-        <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6">Enterprise-grade security. <br className="hidden md:block"/>Built in from day one.</h1>
+        <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tight mb-4 sm:mb-6">Enterprise-grade security. <br className="hidden md:block"/>Built in from day one.</h1>
         <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
           Trust is our most important feature. We safeguard your cohort data with bank-level encryption, rigorous compliance, and zero-trust architecture.
         </p>
@@ -127,9 +127,9 @@ const SecurityPage: React.FC = () => {
       </section>
 
       {/* Security Pillars */}
-      <section className="py-24 px-6 max-w-7xl mx-auto">
+      <section className="py-12 sm:py-24 px-5 sm:px-6 max-w-7xl mx-auto">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">The Six Pillars of InternFlow Security</h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {PILLARS.map((pillar, i) => (
             <div key={i} className="bg-[#121822] border border-white/10 p-8 rounded-2xl hover:border-blue-500/50 transition-colors">
               <div className="w-12 h-12 rounded-lg bg-[#0d1117] border border-white/5 flex items-center justify-center mb-6">

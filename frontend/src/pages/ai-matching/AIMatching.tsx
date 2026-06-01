@@ -88,7 +88,7 @@ export const AIMatching: React.FC = () => {
         <Navbar onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} title="AI Matching & Skill Analytics" />
 
         {/* Scrollable Container */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-6">
           
           {/* Hero Banner */}
           <div className="bg-gradient-to-r from-slate-900 to-indigo-950 rounded-3xl p-6 text-white text-left relative overflow-hidden shadow-xl border border-indigo-900/60">
@@ -180,9 +180,9 @@ export const AIMatching: React.FC = () => {
                     <div>
                       <div className="flex justify-between items-center pb-2 border-b border-slate-100">
                         <span className="text-[10px] font-extrabold uppercase text-indigo-600">Question {currentQuestion + 1} of {questions.length}</span>
-                        <span className="text-[9px] font-bold text-slate-400">Score: {score}</span>
+                        <span className="text-xs sm:text-[9px] font-bold text-slate-400">Score: {score}</span>
                       </div>
-                      <h4 className="font-extrabold text-slate-800 text-xs tracking-tight mt-3 leading-relaxed">
+                      <h4 className="font-extrabold text-slate-800 text-xs sm:text-[11px] tracking-tight mt-3 leading-relaxed">
                         {questions[currentQuestion].q}
                       </h4>
                     </div>
@@ -192,7 +192,7 @@ export const AIMatching: React.FC = () => {
                         <button 
                           key={i}
                           onClick={() => handleAnswerSelect(opt)}
-                          className="w-full text-left text-xs font-semibold p-3 border border-slate-100 bg-slate-50/50 hover:bg-indigo-50/40 hover:border-indigo-200 rounded-xl transition-all duration-300 cursor-pointer"
+                          className="w-full text-left text-xs font-semibold p-3 border border-slate-100 bg-slate-50/50 hover:bg-indigo-50/40 hover:border-indigo-200 rounded-xl transition-all duration-300 cursor-pointer min-h-[44px]"
                         >
                           {opt}
                         </button>

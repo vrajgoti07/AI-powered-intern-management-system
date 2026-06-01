@@ -64,20 +64,20 @@ const PrivacyPage: React.FC = () => {
             <Link to="/careers" className="hover:text-white transition-colors">Careers</Link>
             <Link to="/contact" className="hover:text-white transition-colors">Contact</Link>
           </div>
-          <div className="flex items-center gap-4">
-            <Link to="/login" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Log in</Link>
+          <div className="flex items-center gap-3">
+            <Link to="/login" className="hidden sm:block text-sm font-medium text-slate-300 hover:text-white transition-colors">Log in</Link>
           </div>
         </div>
       </nav>
 
-      <div className="pt-32 pb-24 px-6 max-w-7xl mx-auto">
+      <div className="pt-24 sm:pt-32 pb-12 sm:pb-24 px-5 sm:px-6 max-w-7xl mx-auto">
         
         {/* Header */}
         <div className="mb-16 border-b border-white/10 print:border-black/20 pb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full text-xs font-bold text-slate-300 mb-6 font-['DM_Sans'] print:text-black print:border-black/20">
             <FileText className="w-4 h-4" /> Last updated: January 15, 2025
           </div>
-          <h1 className="text-5xl md:text-6xl font-bold font-['DM_Sans'] mb-8 tracking-tight">Privacy Policy</h1>
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold font-['DM_Sans'] mb-5 sm:mb-8 tracking-tight">Privacy Policy</h1>
           
           <div className="flex flex-wrap gap-4 font-['DM_Sans']">
             <div className="flex items-center gap-2 px-4 py-2 bg-blue-900/30 border border-blue-500/30 rounded-lg text-blue-300 text-sm font-bold print:border-blue-800 print:text-blue-800">
@@ -92,7 +92,7 @@ const PrivacyPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-16">
+        <div className="flex flex-col lg:flex-row gap-8 sm:gap-16 items-start">
           
           {/* Sidebar TOC - Hidden in print */}
           <aside className="lg:w-1/4 hidden lg:block print:hidden relative">

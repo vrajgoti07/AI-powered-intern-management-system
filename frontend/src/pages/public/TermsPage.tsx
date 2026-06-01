@@ -101,13 +101,13 @@ const TermsPage: React.FC = () => {
             <Link to="/careers" className="hover:text-white transition-colors">Careers</Link>
             <Link to="/contact" className="hover:text-white transition-colors">Contact</Link>
           </div>
-          <div className="flex items-center gap-4">
-            <Link to="/login" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Log in</Link>
+          <div className="flex items-center gap-3">
+            <Link to="/login" className="hidden sm:block text-sm font-medium text-slate-300 hover:text-white transition-colors">Log in</Link>
           </div>
         </div>
       </nav>
 
-      <div className="pt-32 pb-24 px-6 max-w-7xl mx-auto">
+      <div className="pt-24 sm:pt-32 pb-12 sm:pb-24 px-5 sm:px-6 max-w-7xl mx-auto">
         
         {/* Header */}
         <div className="mb-16 border-b border-white/10 print:border-black/20 pb-12">
@@ -141,7 +141,7 @@ const TermsPage: React.FC = () => {
             </button>
           </div>
 
-          <h1 className="text-5xl md:text-6xl font-bold font-['DM_Sans'] mb-8 tracking-tight flex items-center gap-4">
+           <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold font-['DM_Sans'] mb-5 sm:mb-8 tracking-tight flex items-center gap-3 sm:gap-4">
             <ScrollText className="w-12 h-12 text-blue-500" /> Terms of Service
           </h1>
           
@@ -155,7 +155,7 @@ const TermsPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-16">
+        <div className="flex flex-col lg:flex-row gap-8 sm:gap-16 items-start">
           
           {/* Sidebar TOC - Hidden in print */}
           <aside className="lg:w-1/4 hidden lg:block print:hidden relative">

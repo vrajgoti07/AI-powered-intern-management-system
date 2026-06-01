@@ -29,8 +29,8 @@ const AboutPage: React.FC = () => {
             <Link to="/about" className="text-white">About Us</Link>
             <Link to="/careers" className="hover:text-white transition-colors">Careers</Link>
           </div>
-          <div className="flex items-center gap-4">
-            <Link to="/login" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Log in</Link>
+          <div className="flex items-center gap-3">
+            <Link to="/login" className="hidden sm:block text-sm font-medium text-slate-300 hover:text-white transition-colors">Log in</Link>
             <Link to="/apply" className="px-5 py-2.5 bg-[#2563eb] hover:bg-blue-600 text-white text-sm font-medium rounded-full transition-all hover:shadow-lg hover:shadow-blue-500/25">
               Get Started
             </Link>
@@ -39,7 +39,7 @@ const AboutPage: React.FC = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-40 pb-32 px-6 flex items-center justify-center min-h-[90vh]">
+      <section className="relative pt-28 sm:pt-40 pb-16 sm:pb-32 px-5 sm:px-6 flex items-center justify-center min-h-[70vh] sm:min-h-[90vh]">
         <div 
           className="absolute inset-0 z-0 opacity-40 pointer-events-none"
           style={{
@@ -56,13 +56,13 @@ const AboutPage: React.FC = () => {
             <span className="px-4 py-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-400 text-sm font-medium tracking-wide mb-8 inline-block">
               OUR MISSION
             </span>
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black font-['Playfair_Display'] leading-[1.1] mb-8 tracking-tight">
+            <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-black font-['Playfair_Display'] leading-[1.1] mb-6 sm:mb-8 tracking-tight">
               Making great internships <br className="hidden md:block"/>
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-600 to-indigo-400">
                 accessible to everyone.
               </span>
             </h1>
-            <p className="text-xl md:text-2xl text-slate-400 max-w-3xl mx-auto font-light leading-relaxed">
+            <p className="text-base sm:text-xl md:text-2xl text-slate-400 max-w-3xl mx-auto font-light leading-relaxed">
               We're building the operating system for the next generation of talent, empowering teams to deliver world-class internship experiences at scale.
             </p>
           </motion.div>
@@ -70,9 +70,9 @@ const AboutPage: React.FC = () => {
       </section>
 
       {/* Origin Story */}
-      <section className="py-24 px-6 relative border-t border-white/5 bg-gradient-to-b from-[#0d1117] to-[#121822]">
+      <section className="py-12 sm:py-24 px-5 sm:px-6 relative border-t border-white/5 bg-gradient-to-b from-[#0d1117] to-[#121822]">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-16 items-center">
+          <div className="grid md:grid-cols-2 gap-8 sm:gap-16 items-center">
             <motion.div 
               initial={{ opacity: 0, x: -40 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -101,7 +101,7 @@ const AboutPage: React.FC = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
             >
-              <h2 className="text-4xl md:text-5xl font-['Playfair_Display'] font-bold mb-6">Born from frustration. <br/>Built for scale.</h2>
+              <h2 className="text-2xl sm:text-4xl md:text-5xl font-['Playfair_Display'] font-bold mb-4 sm:mb-6">Born from frustration. <br/>Built for scale.</h2>
               <div className="space-y-6 text-lg text-slate-400 font-light leading-relaxed">
                 <p>
                   Founded in 2022, InternFlow started when our founders—former university recruiting leaders at top tech firms—realized that managing 500+ interns across 20 departments using spreadsheets was fundamentally broken.

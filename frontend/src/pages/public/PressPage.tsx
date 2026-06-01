@@ -48,8 +48,8 @@ const PressPage: React.FC = () => {
             <Link to="/careers" className="hover:text-white transition-colors">Careers</Link>
             <Link to="/press" className="text-white border-b border-blue-500 pb-1">Press</Link>
           </div>
-          <div className="flex items-center gap-4">
-            <Link to="/login" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Log in</Link>
+          <div className="flex items-center gap-3">
+            <Link to="/login" className="hidden sm:block text-sm font-medium text-slate-300 hover:text-white transition-colors">Log in</Link>
             <Link to="/apply" className="px-5 py-2.5 bg-white text-[#0d1117] hover:bg-slate-200 text-sm font-bold rounded-full transition-all">
               Join Us
             </Link>
@@ -58,21 +58,21 @@ const PressPage: React.FC = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-48 pb-20 px-6 max-w-7xl mx-auto border-b border-white/10 relative">
+      <section className="pt-28 sm:pt-48 pb-12 sm:pb-20 px-5 sm:px-6 max-w-7xl mx-auto border-b border-white/10 relative">
         <div className="absolute top-20 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-[100px] -z-10" />
         <div className="mb-6 flex items-center gap-3 text-blue-400 font-bold uppercase tracking-widest text-sm">
           <BookOpen className="w-4 h-4" /> Media & Press Room
         </div>
-        <h1 className="text-6xl md:text-8xl font-medium font-['Cormorant_Garamond'] tracking-tight leading-none mb-8">
+        <h1 className="text-4xl sm:text-6xl md:text-8xl font-medium font-['Cormorant_Garamond'] tracking-tight leading-none mb-6 sm:mb-8">
           InternFlow <br/> <span className="italic text-slate-300">in the News.</span>
         </h1>
-        <p className="text-xl md:text-2xl text-slate-400 max-w-2xl font-light leading-relaxed">
+        <p className="text-base sm:text-xl md:text-2xl text-slate-400 max-w-2xl font-light leading-relaxed">
           The latest coverage, announcements, and resources for journalists reporting on the future of work and early-career talent.
         </p>
       </section>
 
       {/* Press Highlights */}
-      <section className="py-24 px-6 max-w-7xl mx-auto">
+      <section className="py-12 sm:py-24 px-5 sm:px-6 max-w-7xl mx-auto">
         <h2 className="text-3xl font-medium font-['Cormorant_Garamond'] mb-12 flex items-center gap-4">
           Featured Coverage <span className="flex-1 h-px bg-white/10 ml-4"></span>
         </h2>
@@ -157,7 +157,7 @@ const PressPage: React.FC = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 md:p-6 items-center hover:bg-white/5 transition-colors group"
+                    className="flex flex-col sm:grid sm:grid-cols-12 gap-4 p-4 md:p-6 items-center hover:bg-white/5 transition-colors group"
                   >
                     <div className="col-span-1 md:col-span-3 flex items-center gap-4">
                       <div className="w-10 h-10 rounded bg-slate-800 flex items-center justify-center font-bold text-slate-400 text-xs border border-white/10 group-hover:border-blue-500/50 group-hover:text-blue-400 transition-all">

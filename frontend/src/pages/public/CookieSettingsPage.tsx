@@ -231,27 +231,27 @@ const CookieSettingsPage: React.FC = () => {
             <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
           </div>
-          <div className="flex items-center gap-4">
-            <Link to="/login" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Log in</Link>
+          <div className="flex items-center gap-3">
+            <Link to="/login" className="hidden sm:block text-sm font-medium text-slate-300 hover:text-white transition-colors">Log in</Link>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-40 pb-16 px-6 max-w-4xl mx-auto text-center relative z-10">
+      <section className="pt-28 sm:pt-40 pb-10 sm:pb-16 px-5 sm:px-6 max-w-4xl mx-auto text-center relative z-10">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
         
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 font-bold text-xs uppercase tracking-widest mb-8">
           <Settings2 className="w-4 h-4" /> Consent Management
         </div>
-        <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-8">Your Privacy, <br/> Your Choice.</h1>
+        <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tight mb-5 sm:mb-8">Your Privacy, <br/> Your Choice.</h1>
         <p className="text-lg text-slate-400 leading-relaxed max-w-2xl mx-auto">
           We use cookies to improve your experience, analyze site traffic, and serve targeted advertisements. You can customize your preferences below. Your choices will be saved for 1 year.
         </p>
       </section>
 
       {/* Main Content Area */}
-      <section className="px-6 max-w-4xl mx-auto relative z-10">
+      <section className="px-5 sm:px-6 max-w-4xl mx-auto relative z-10">
         
         {/* About Cookies Info Box */}
         <div className="bg-[#121822] border border-white/10 rounded-2xl p-8 mb-12 flex flex-col md:flex-row gap-8 items-start">

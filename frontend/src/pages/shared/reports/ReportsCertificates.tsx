@@ -33,7 +33,7 @@ export const ReportsCertificates: React.FC = () => {
         <Navbar onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} title="Report & Certificate Gateway" />
 
         {/* Scrollable Container */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-6">
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
             
@@ -130,7 +130,7 @@ export const ReportsCertificates: React.FC = () => {
                         </button>
                         <button 
                           onClick={() => setShowCertificate(false)}
-                          className="px-3 py-2 border border-slate-200 text-slate-500 font-bold text-xs rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
+                          className="px-3 py-2 border border-slate-200 text-slate-500 font-bold text-xs rounded-xl hover:bg-slate-50 transition-colors cursor-pointer min-h-[44px]"
                         >
                           Close Preview
                         </button>
