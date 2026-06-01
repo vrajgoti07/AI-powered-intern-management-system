@@ -82,7 +82,10 @@ export const ApplyPage: React.FC = () => {
       try {
         await api.post('/notifications/intern-applied', {
           internName: name,
+          internEmail: email,
           position: dept,
+          college: college,
+          startDate: startDate,
         });
       } catch (notifError) {
         console.warn('Notification dispatch failed:', notifError);
