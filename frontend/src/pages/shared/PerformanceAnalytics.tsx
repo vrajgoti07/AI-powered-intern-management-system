@@ -23,7 +23,7 @@ export const PerformanceAnalytics: React.FC = () => {
   const { user } = useAuth();
   const userName = user?.name || "Intern";
   const isIntern = user?.role?.toUpperCase() === 'INTERN';
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
 
   // Tab State
   const [activeTab, setActiveTab] = useState<'analytics' | 'matching' | 'feedback' | 'credentials'>('analytics');
@@ -1115,3 +1115,4 @@ export const PerformanceAnalytics: React.FC = () => {
     </div>
   );
 }
+

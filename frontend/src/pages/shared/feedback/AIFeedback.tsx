@@ -12,7 +12,7 @@ import api from '../../../services/api';
 import { useSubmitFeedback } from '../../../hooks/queries';
 
 export const AIFeedback: React.FC = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [activeTab, setActiveTab] = useState<'mentor' | 'intern' | 'insights'>('insights');
   const [text, setText] = useState('');
   const [rating, setRating] = useState(5);
@@ -376,3 +376,4 @@ export const AIFeedback: React.FC = () => {
     </div>
   );
 };
+

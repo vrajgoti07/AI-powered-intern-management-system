@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export const ReportsAnalytics: React.FC = () => {
   const { state } = useApp();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [timeframe, setTimeframe] = useState('This Month');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
@@ -243,3 +243,4 @@ export const ReportsAnalytics: React.FC = () => {
     </>
   );
 };
+

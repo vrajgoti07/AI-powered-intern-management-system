@@ -14,7 +14,7 @@ import { useTasks } from '../../hooks/queries';
 import { useAuth } from '../../hooks/useAuth';
 
 export const TaskCalendarView: React.FC = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [selectedTask, setSelectedTask] = useState<any>(null);
   
   // Set default initial month to May 2026 to align with system time (Friday, May 22, 2026)
@@ -674,4 +674,5 @@ export const TaskCalendarView: React.FC = () => {
     </div>
   );
 };
+
 

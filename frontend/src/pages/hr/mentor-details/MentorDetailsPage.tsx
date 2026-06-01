@@ -27,7 +27,7 @@ export const MentorDetailsPage: React.FC = () => {
   const { mentorId } = useParams<{ mentorId: string }>();
   const navigate = useNavigate();
 
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
   const [mentor, setMentor] = useState<MentorDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -175,3 +175,4 @@ export const MentorDetailsPage: React.FC = () => {
     </div>
   );
 };
+

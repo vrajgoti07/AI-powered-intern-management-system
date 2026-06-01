@@ -207,7 +207,7 @@ export const CommunicationSystem: React.FC = () => {
   const mentorName = myInternData?.mentor?.user?.name || "Your Mentor";
   const mentorDisplay = `${mentorName} (Mentor)`;
 
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [showList, setShowList] = useState(true);
   
   // Hub Active Tab
@@ -2744,3 +2744,4 @@ export const CommunicationSystem: React.FC = () => {
     </div>
   );
 };
+

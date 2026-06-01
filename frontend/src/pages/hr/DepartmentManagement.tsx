@@ -16,7 +16,7 @@ import { AssignHeadModal } from '../../components/common/AssignHeadModal';
 export const DepartmentManagement: React.FC = () => {
   const { state, refreshData } = useApp();
   const navigate = useNavigate();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Active Modals state
@@ -481,7 +481,7 @@ export const DepartmentManagement: React.FC = () => {
         title="Establish New Division"
       >
         <form onSubmit={handleCreateDepartment} className="space-y-4 text-left">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5 col-span-2">
               <label className="text-xs font-bold text-slate-700">Division Name</label>
               <input
@@ -816,3 +816,4 @@ export const DepartmentManagement: React.FC = () => {
     </div>
   );
 };
+

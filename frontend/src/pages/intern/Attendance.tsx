@@ -9,7 +9,7 @@ import api from '../../services/api';
 
 export const Attendance: React.FC = () => {
   const { user } = useAuth();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
 
   // Current month/year
   const now = new Date();
@@ -313,3 +313,4 @@ export const Attendance: React.FC = () => {
     </div>
   );
 };
+

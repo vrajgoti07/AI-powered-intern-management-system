@@ -31,7 +31,7 @@ export const HRDashboard: React.FC = () => {
   const { data: leaveRequests = [] } = useLeaves();
   const { data: attendances = [], refetch: refetchAttendance } = useAttendance();
 
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [showAddInternModal, setShowAddInternModal] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -235,7 +235,7 @@ export const HRDashboard: React.FC = () => {
         <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-6">
           
           {/* KPI Dashboard Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {kpiData.map((k, idx) => (
               <KPICard 
                 key={idx}
@@ -713,3 +713,4 @@ export const HRDashboard: React.FC = () => {
     </div>
   );
 };
+

@@ -13,7 +13,7 @@ import api, { API_BASE_URL } from '../../../services/api';
 export const ReportsCertificates: React.FC = () => {
   const { user } = useAuth();
   const userName = user?.name || "Intern";
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [generating, setGenerating] = useState(false);
   const [showCertificate, setShowCertificate] = useState(false);
 
@@ -192,3 +192,4 @@ export const ReportsCertificates: React.FC = () => {
     </div>
   );
 };
+

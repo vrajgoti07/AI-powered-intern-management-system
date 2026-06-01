@@ -18,7 +18,7 @@ interface Task {
 }
 
 export const LifecycleTimeline: React.FC = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [stage] = useState(2); // Mid-term progress
   const [exitSurveySubmitted, setExitSurveySubmitted] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -179,3 +179,4 @@ export const LifecycleTimeline: React.FC = () => {
     </div>
   );
 };
+

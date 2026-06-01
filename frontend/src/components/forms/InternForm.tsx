@@ -62,7 +62,7 @@ export const InternForm: React.FC<InternFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 text-left max-h-[70vh] overflow-y-auto pr-1">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Full Name *</label>
           <input 
@@ -87,7 +87,7 @@ export const InternForm: React.FC<InternFormProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Phone *</label>
           <input 
@@ -109,7 +109,7 @@ export const InternForm: React.FC<InternFormProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">College *</label>
           <input 
@@ -135,7 +135,7 @@ export const InternForm: React.FC<InternFormProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Degree</label>
           <input 
@@ -158,7 +158,7 @@ export const InternForm: React.FC<InternFormProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Department Preference *</label>
           <select 

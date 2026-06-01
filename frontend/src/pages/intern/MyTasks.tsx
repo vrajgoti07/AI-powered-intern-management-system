@@ -21,7 +21,7 @@ const MotionDiv = motion.div as any;
 export const MyTasks: React.FC = () => {
   const { data: tasks = [], isLoading: isTasksLoading, refetch } = useTasks({ assignedTo: 'me' });
   const { user } = useAuth();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
 
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [dragOverCol, setDragOverCol] = useState<string | null>(null);
@@ -904,3 +904,4 @@ export const MyTasks: React.FC = () => {
     </div>
   );
 };
+

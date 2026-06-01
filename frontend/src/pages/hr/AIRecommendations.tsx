@@ -6,7 +6,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 
 export const AIRecommendations: React.FC = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [appliedIds, setAppliedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -274,3 +274,4 @@ export const AIRecommendations: React.FC = () => {
     </div>
   );
 };
+

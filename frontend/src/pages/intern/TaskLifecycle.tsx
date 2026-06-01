@@ -14,7 +14,7 @@ import api from '../../services/api';
 
 export const TaskLifecycle: React.FC = () => {
   const { user } = useAuth();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   
   // Fetch Tasks
   const { data: allTasks = [], refetch: refetchTasks } = useTasks();
@@ -295,3 +295,4 @@ export const TaskLifecycle: React.FC = () => {
     </div>
   );
 };
+

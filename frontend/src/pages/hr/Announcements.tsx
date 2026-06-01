@@ -8,7 +8,7 @@ import api from '../../services/api';
 
 export const Announcements: React.FC = () => {
   const { state, dispatch } = useApp();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
 
   // Form states
   const [title, setTitle] = useState('');
@@ -234,3 +234,4 @@ export const Announcements: React.FC = () => {
     </div>
   );
 };
+

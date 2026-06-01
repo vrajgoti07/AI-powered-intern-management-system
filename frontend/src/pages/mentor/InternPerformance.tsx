@@ -28,7 +28,7 @@ import api from '../../services/api';
 export const InternPerformance: React.FC = () => {
   const { state, refreshData } = useApp();
   const { user } = useAuth();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
 
   // Mentor dynamic reference from logged-in user
   const mentorName = user?.name || "Mentor";
@@ -322,3 +322,4 @@ export const InternPerformance: React.FC = () => {
     </div>
   );
 };
+

@@ -30,7 +30,7 @@ interface MatchResult {
 export const AIMatching: React.FC = () => {
   const { user } = useAuth();
   const userName = user?.name || "Intern Candidate";
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [assessmentStarted, setAssessmentStarted] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
@@ -349,3 +349,4 @@ export const AIMatching: React.FC = () => {
     </div>
   );
 };
+

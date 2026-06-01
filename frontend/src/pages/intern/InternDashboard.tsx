@@ -18,7 +18,7 @@ export const InternDashboard: React.FC = () => {
   const { user } = useAuth();
   const { data: myInternData } = useInternByUser(user?.id || '');
   const { data: tasks = [] } = useTasks();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [announcements, setAnnouncements] = useState<any[]>([]);
 
   useEffect(() => {
@@ -186,7 +186,7 @@ export const InternDashboard: React.FC = () => {
           </div>
 
           {/* KPIs Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {kpis.map((k, i) => (
               <KPICard
                 key={i}
@@ -362,7 +362,7 @@ export const InternDashboard: React.FC = () => {
       {/* Leave Request Modal */}
       <Modal isOpen={isLeaveModalOpen} onClose={() => setIsLeaveModalOpen(false)} title="Submit Leave Request">
         <form onSubmit={handleSubmitLeave} className="space-y-4 text-left">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Start Date *</label>
               <input
@@ -408,3 +408,4 @@ export const InternDashboard: React.FC = () => {
     </div>
   );
 };
+

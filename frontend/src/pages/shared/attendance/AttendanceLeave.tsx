@@ -17,7 +17,7 @@ export const AttendanceLeave: React.FC = () => {
   const { user } = useAuth();
   const { data: leaves = [], refetch: refetchLeaves } = useLeaves();
   const { data: attendances = [], refetch: refetchAttendance } = useAttendance();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [activeTab, setActiveTab] = useState<'request' | 'approval' | 'calendar'>(
     user?.role === 'intern' ? 'calendar' : 'approval'
   );
@@ -788,3 +788,4 @@ export const AttendanceLeave: React.FC = () => {
     </div>
   );
 };
+

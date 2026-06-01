@@ -15,7 +15,7 @@ import api from '../../services/api';
 export const AIChatbot: React.FC = () => {
   const { state, dispatch } = useApp();
   const { user } = useAuth();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [micActive, setMicActive] = useState(false);
@@ -307,3 +307,4 @@ export const AIChatbot: React.FC = () => {
     </div>
   );
 };
+

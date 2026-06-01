@@ -29,7 +29,7 @@ export const OnboardingWorkflow: React.FC = () => {
   const { data: myInternData, refetch: refetchIntern } = useInternByUser(user?.id || '');
   const { data: onboardingStatus, isLoading: statusLoading } = useOnboardingStatus();
 
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [step, setStep] = useState(1);
   const [maxStepAllowed, setMaxStepAllowed] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -1192,3 +1192,4 @@ export const OnboardingWorkflow: React.FC = () => {
     </div>
   );
 };
+

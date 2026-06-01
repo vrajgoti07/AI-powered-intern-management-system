@@ -9,7 +9,7 @@ import { Navbar } from '../../components/common/Navbar';
 import toast from 'react-hot-toast';
 
 export const SecurityPortal: React.FC = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [activeTab, setActiveTab] = useState<'otp' | '2fa' | 'sessions'>('otp');
 
   // OTP State
@@ -245,3 +245,4 @@ export const SecurityPortal: React.FC = () => {
     </div>
   );
 };
+

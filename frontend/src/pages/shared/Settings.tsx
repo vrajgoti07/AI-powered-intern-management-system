@@ -15,7 +15,7 @@ import { Avatar } from '../../components/common/Avatar';
 export const Settings: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
 
   // Settings Sidebar active tab state
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'notifications' | 'preferences'>('profile');
@@ -436,12 +436,11 @@ export const Settings: React.FC = () => {
 
           {/* Settings Split Grid Panel */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-
             {/* Sidebar Navigation Column */}
             <div className="lg:col-span-1 space-y-2.5">
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 space-y-1.5">
-                <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest px-3.5 pb-2">Workspace settings</p>
-
+              <div className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible gap-2 lg:gap-0 lg:space-y-1.5 bg-white rounded-2xl border border-slate-100 shadow-sm p-2.5 lg:p-4 scrollbar-none whitespace-nowrap lg:whitespace-normal">
+                <p className="hidden lg:block text-[9px] font-extrabold text-slate-400 uppercase tracking-widest px-3.5 pb-2">Workspace settings</p>
+                
                 {[
                   { id: 'profile', label: user?.role === 'hr' ? 'HR Profile' : user?.role === 'mentor' ? 'Mentor Profile' : 'My Profile', icon: User },
                   { id: 'security', label: 'Account Security', icon: Shield },
@@ -454,10 +453,10 @@ export const Settings: React.FC = () => {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id as any)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer
+                      className={`flex items-center gap-2 lg:gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex-shrink-0 lg:flex-shrink border-b-2 lg:border-b-0 lg:border-l-4
                         ${isActive
-                          ? 'bg-[#2563eb]/10 text-[#2563eb] border-l-4 border-[#2563eb]'
-                          : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 border-l-4 border-transparent'
+                          ? 'bg-[#2563eb]/10 text-[#2563eb] border-[#2563eb]'
+                          : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 border-transparent'
                         }`}
                     >
                       <Icon className="w-4 h-4 flex-shrink-0" />
@@ -1006,3 +1005,4 @@ export const Settings: React.FC = () => {
     </div>
   );
 };
+

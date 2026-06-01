@@ -34,7 +34,7 @@ const fixDocUrl = (url: string | null | undefined): string | null => {
 };
 
 export const OnboardingVerification: React.FC = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [search, setSearch] = useState('');
 
   const queryClient = useQueryClient();
@@ -403,3 +403,4 @@ export const OnboardingVerification: React.FC = () => {
     </div>
   );
 };
+

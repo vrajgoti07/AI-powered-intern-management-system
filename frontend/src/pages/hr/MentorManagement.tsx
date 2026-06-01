@@ -13,7 +13,7 @@ import api from '../../services/api';
 export const MentorManagement: React.FC = () => {
   const { state, refreshData } = useApp();
   const navigate = useNavigate();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [searchTerm, setSearchTerm] = useState('');
   
   const [showAddMentorModal, setShowAddMentorModal] = useState(false);
@@ -322,3 +322,4 @@ export const MentorManagement: React.FC = () => {
     </div>
   );
 };
+

@@ -20,7 +20,7 @@ export const TaskManagement: React.FC = () => {
       ? { departmentId: resolvedDeptId }
       : undefined
   );
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
@@ -266,3 +266,4 @@ export const TaskManagement: React.FC = () => {
     </div>
   );
 };
+

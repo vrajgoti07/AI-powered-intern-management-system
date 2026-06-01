@@ -18,7 +18,7 @@ import toast from 'react-hot-toast';
 export const Profile: React.FC = () => {
   const { state, refreshData } = useApp();
   const { user } = useAuth();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [resumeName, setResumeName] = useState<string>('');
   
   const [activeHubTab, setActiveHubTab] = useState<'details' | 'security'>('details');
@@ -1044,3 +1044,4 @@ export const Profile: React.FC = () => {
     </div>
   );
 };
+

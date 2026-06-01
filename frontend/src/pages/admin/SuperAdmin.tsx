@@ -13,7 +13,7 @@ import toast from 'react-hot-toast';
 import api from '../../services/api';
 
 export const SuperAdmin: React.FC = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [loading, setLoading] = useState(false);
 
   const [stats, setStats] = useState({ interns: 0, mentors: 0, departments: 0 });
@@ -233,3 +233,4 @@ export const SuperAdmin: React.FC = () => {
     </div>
   );
 };
+

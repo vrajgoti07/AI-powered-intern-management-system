@@ -20,7 +20,7 @@ const getFileUrl = (url: string | null) => {
 };
 
 export const SubmissionReview: React.FC = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [grade, setGrade] = useState('85');
   const [feedback, setFeedback] = useState('');
   const queryClient = useQueryClient();
@@ -293,3 +293,4 @@ export const SubmissionReview: React.FC = () => {
     </div>
   );
 };
+

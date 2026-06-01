@@ -13,7 +13,7 @@ import api from '../../services/api';
 
 export const InternManagement: React.FC = () => {
   const { state, refreshData } = useApp();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [deptFilter, setDeptFilter] = useState('All');
@@ -395,3 +395,4 @@ export const InternManagement: React.FC = () => {
     </div>
   );
 };
+

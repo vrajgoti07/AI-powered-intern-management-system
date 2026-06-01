@@ -14,7 +14,7 @@ import { useInternByUser, useTasks } from '../../hooks/queries';
 import api from '../../services/api';
 
 export const PortfolioDashboard: React.FC = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const { user } = useAuth();
   const { data: myInternData } = useInternByUser(user?.id || '');
   const { data: tasks = [] } = useTasks();
@@ -664,3 +664,4 @@ export const PortfolioDashboard: React.FC = () => {
     </div>
   );
 };
+

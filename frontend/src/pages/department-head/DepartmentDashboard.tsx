@@ -19,7 +19,7 @@ import { useAuth } from '../../hooks/useAuth';
 export const DepartmentDashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [activeTab, setActiveTab] = useState<'overview' | 'interns' | 'mentors' | 'projects' | 'reports'>('overview');
   
   // Data States
@@ -509,3 +509,4 @@ export const DepartmentDashboard: React.FC = () => {
     </div>
   );
 };
+
