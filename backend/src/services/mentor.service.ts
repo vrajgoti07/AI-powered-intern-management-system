@@ -357,25 +357,53 @@ export const deleteMentor = async (id: string): Promise<void> => {
     throw new AppError('Mentor not found', 404);
   }
 
-  // Unassign interns before deleting
-  if (mentor.interns.length > 0) {
-    await prisma.intern.updateMany({
+  // Perform clean cascade deletion of dependent records in a transaction
+  await prisma.$transaction([
+    // 1. Unassign interns
+    prisma.intern.updateMany({
       where: { mentorId: id },
       data: { mentorId: null }
-    });
-  }
+    }),
+    // 2. Delete tasks assigned by this mentor
+    prisma.task.deleteMany({
+      where: { mentorId: id }
+    }),
+    // 3. Delete feedback records associated with this mentor
+    prisma.feedback.deleteMany({
+      where: { mentorId: id }
+    }),
+    // 4. Delete leave requests referencing this mentor
+    prisma.leaveRequest.deleteMany({
+      where: { mentorId: id }
+    }),
+    // 5. Delete department mentor mappings
+    prisma.departmentMentor.deleteMany({
+      where: { mentorId: id }
+    }),
+    // 6. Delete AI recommendations referencing this mentor
+    prisma.aIRecommendation.deleteMany({
+      where: { mentorId: id }
+    }),
+    // 7. Delete activities, analytics and documents of this mentor
+    prisma.mentorActivity.deleteMany({
+      where: { mentorId: id }
+    }),
+    prisma.mentorAnalytics.deleteMany({
+      where: { mentorId: id }
+    }),
+    prisma.mentorDocument.deleteMany({
+      where: { mentorId: id }
+    }),
+  ]);
 
-  // Delete the user (which cascade deletes the Mentor profile)
-  // Catch any foreign key errors (e.g. from Tasks) and throw a clear message
+  // 8. Delete the user (which cascade deletes the Mentor profile)
   try {
     await prisma.user.delete({
       where: { id: mentor.userId },
     });
   } catch (error: any) {
-    if (error.code === 'P2003') {
-      throw new AppError('Cannot delete mentor because they have assigned tasks or feedback records.', 400);
-    }
-    throw error;
+    logger.error(`Error deleting mentor user ${mentor.userId}:`, error);
+    throw new AppError('Failed to complete mentor profile deletion due to server constraints.', 500);
   }
 };
 
