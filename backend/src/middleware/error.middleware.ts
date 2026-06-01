@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { Prisma } from '@prisma/client';
 import { ZodError } from 'zod';
+import * as Sentry from '@sentry/node';
 import { logger } from '../utils/logger';
 
 /**
@@ -56,6 +57,9 @@ export const errorHandler = (
   res: Response,
   _next: NextFunction
 ): void => {
+  // Capture exception in Sentry
+  Sentry.captureException(err);
+
   // Log every error with request context
   logger.error(err.message, {
     stack: err.stack,

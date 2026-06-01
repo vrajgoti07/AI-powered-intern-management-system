@@ -25,6 +25,111 @@ router.post(
   authController.register
 );
 
+/**
+ * @swagger
+ * /api/v1/auth/login:
+ *   post:
+ *     summary: Direct Login
+ *     description: Authenticate a user directly with email and password, returning a JWT token pair.
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: intern@example.com
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: SecurePass123!
+ *     responses:
+ *       200:
+ *         description: Login successful.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Login successful
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           example: "user-uuid"
+ *                         email:
+ *                           type: string
+ *                           example: intern@example.com
+ *                         name:
+ *                           type: string
+ *                           example: John Doe
+ *                         role:
+ *                           type: string
+ *                           example: INTERN
+ *                     accessToken:
+ *                       type: string
+ *                       example: "eyJhbGciOi..."
+ *                     refreshToken:
+ *                       type: string
+ *                       example: "eyJhbGciOi..."
+ *                 timestamp:
+ *                   type: string
+ *                   example: "2026-05-20T10:30:00.000Z"
+ *       400:
+ *         description: Bad request (e.g. invalid validation inputs).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Validation error
+ *                 error:
+ *                   type: string
+ *                   example: "Email and password are required"
+ *                 timestamp:
+ *                   type: string
+ *                   example: "2026-05-20T10:30:00.000Z"
+ *       401:
+ *         description: Unauthorized (invalid credentials).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Invalid email or password
+ *                 error:
+ *                   type: string
+ *                   example: "Invalid email or password"
+ *                 timestamp:
+ *                   type: string
+ *                   example: "2026-05-20T10:30:00.000Z"
+ */
 router.post(
   '/login',
   authLimiter,
@@ -33,9 +138,88 @@ router.post(
 );
 
 /**
- * @route   POST /api/auth/send-otp
- * @desc    Send login OTP code via email
- * @access  Public
+ * @swagger
+ * /api/v1/auth/send-otp:
+ *   post:
+ *     summary: Send Login Verification OTP
+ *     description: Verify credentials and send a 6-digit verification code to the registered email. Bypasses if a recognized active trusted session is found.
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: intern@example.com
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: SecurePass123!
+ *               deviceFingerprint:
+ *                 type: string
+ *                 example: "device-uuid-or-hash"
+ *     responses:
+ *       200:
+ *         description: Direct login via recognized session OR OTP successfully sent to email.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Verification OTP sent to your registered email address."
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     directLogin:
+ *                       type: boolean
+ *                       example: false
+ *                 timestamp:
+ *                   type: string
+ *                   example: "2026-05-20T10:30:00.000Z"
+ *       400:
+ *         description: Bad request (missing required email/password inputs).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Email and password are required
+ *                 timestamp:
+ *                   type: string
+ *                   example: "2026-05-20T10:30:00.000Z"
+ *       401:
+ *         description: Unauthorized (invalid credentials).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Invalid email or password
+ *                 timestamp:
+ *                   type: string
+ *                   example: "2026-05-20T10:30:00.000Z"
  */
 router.post(
   '/send-otp',
@@ -44,9 +228,113 @@ router.post(
 );
 
 /**
- * @route   POST /api/auth/verify-otp
- * @desc    Verify login OTP and generate JWT session
- * @access  Public
+ * @swagger
+ * /api/v1/auth/verify-otp:
+ *   post:
+ *     summary: Verify Login OTP
+ *     description: Verify the email, password, and the 6-digit OTP code. Establishes a trusted session for 3 hours and issues JWT tokens.
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - otpCode
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: intern@example.com
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: SecurePass123!
+ *               otpCode:
+ *                 type: string
+ *                 example: "123456"
+ *               deviceFingerprint:
+ *                 type: string
+ *                 example: "device-uuid-or-hash"
+ *     responses:
+ *       200:
+ *         description: OTP verification successful and trusted session established.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Login verification completed successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           example: "user-uuid"
+ *                         email:
+ *                           type: string
+ *                           example: intern@example.com
+ *                         name:
+ *                           type: string
+ *                           example: John Doe
+ *                         role:
+ *                           type: string
+ *                           example: INTERN
+ *                     accessToken:
+ *                       type: string
+ *                       example: "eyJhbGciOi..."
+ *                     refreshToken:
+ *                       type: string
+ *                       example: "eyJhbGciOi..."
+ *                     sessionToken:
+ *                       type: string
+ *                       example: "session-token-hex"
+ *                 timestamp:
+ *                   type: string
+ *                   example: "2026-05-20T10:30:00.000Z"
+ *       400:
+ *         description: Bad request (missing fields, code expired, max attempts exceeded, or invalid code).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Email, password, and OTP code are required"
+ *                 timestamp:
+ *                   type: string
+ *                   example: "2026-05-20T10:30:00.000Z"
+ *       401:
+ *         description: Unauthorized (invalid credentials).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Invalid email, password, or verification code
+ *                 timestamp:
+ *                   type: string
+ *                   example: "2026-05-20T10:30:00.000Z"
  */
 router.post(
   '/verify-otp',

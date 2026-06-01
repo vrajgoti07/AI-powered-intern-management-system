@@ -9,6 +9,8 @@ import routes from './routes';
 import './config/redis';
 import path from 'path';
 import { serverAdapter } from './queues/queue.config';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './config/swagger';
 
 
 /**
@@ -35,6 +37,18 @@ const createApp = (): Application => {
 
   // ── 5. Global Rate Limiting ──
   app.use(apiLimiter);
+
+  // ── 5.5 Swagger API Documentation ──
+  app.use(
+    '/api/v1/docs',
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpec)
+  );
+
+  app.get(
+    '/api/v1/docs.json',
+    (_req, res) => res.json(swaggerSpec)
+  );
 
   // ── 6. API Routes ──
   app.use(`/api/${config.server.apiVersion}`, routes);
