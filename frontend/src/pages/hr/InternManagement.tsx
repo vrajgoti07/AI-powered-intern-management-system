@@ -35,6 +35,36 @@ export const InternManagement: React.FC = () => {
   }>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
   const itemsPerPage = 20;
 
+  const [activeStatusDropdownInternId, setActiveStatusDropdownInternId] = useState<string | null>(null);
+
+  const getStatusTransitions = (currentStatus: string) => {
+    const status = currentStatus.toLowerCase();
+    switch (status) {
+      case 'pending':
+        return [
+          { value: 'Onboarding' as const, label: 'Move to Onboarding', dotColor: 'bg-amber-400' },
+          { value: 'Active' as const, label: 'Activate Directly', dotColor: 'bg-emerald-500' }
+        ];
+      case 'onboarding':
+        return [
+          { value: 'Active' as const, label: 'Approve & Activate', dotColor: 'bg-emerald-500' },
+          { value: 'Pending' as const, label: 'Reject to Pending', dotColor: 'bg-rose-500' }
+        ];
+      case 'active':
+        return [
+          { value: 'Completed' as const, label: 'Complete Internship', dotColor: 'bg-blue-500' },
+          { value: 'Onboarding' as const, label: 'Send back to Onboarding', dotColor: 'bg-amber-400' }
+        ];
+      case 'completed':
+      case 'terminated':
+      default:
+        return [
+          { value: 'Active' as const, label: 'Re-activate', dotColor: 'bg-emerald-500' },
+          { value: 'Pending' as const, label: 'Set to Pending', dotColor: 'bg-rose-500' }
+        ];
+    }
+  };
+
   // Filters calculation
   const filteredInterns = state.interns.filter(i => {
     const matchesSearch = i.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -271,27 +301,47 @@ export const InternManagement: React.FC = () => {
                             <button 
                               onClick={() => setSelectedIntern(intern)}
                               className="p-1.5 hover:bg-slate-100 rounded-xl transition-colors text-slate-400 hover:text-slate-600 cursor-pointer"
+                              title="View Dossier"
                             >
                               <Eye className="w-4 h-4" />
                             </button>
-                            {intern.status === 'Pending' && (
+                            
+                            {/* Status Transition Dropdown Trigger */}
+                            <div className="relative">
                               <button 
-                                onClick={() => handleStatusChange(intern.id, 'Onboarding')}
-                                className="p-1.5 hover:bg-emerald-50 rounded-xl text-emerald-600 cursor-pointer"
-                                title="Approve application for onboarding"
+                                onClick={() => setActiveStatusDropdownInternId(activeStatusDropdownInternId === intern.id ? null : intern.id)}
+                                className={`p-1.5 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer ${
+                                  activeStatusDropdownInternId === intern.id ? 'text-indigo-600 bg-slate-100' : 'text-slate-400 hover:text-slate-600'
+                                }`}
+                                title="Change Status"
                               >
                                 <Check className="w-4 h-4" />
                               </button>
-                            )}
-                            {intern.status === 'Active' && (
-                              <button 
-                                onClick={() => handleStatusChange(intern.id, 'Completed')}
-                                className="p-1.5 hover:bg-slate-100 rounded-xl text-indigo-600 cursor-pointer"
-                                title="Mark Completed"
-                              >
-                                <Check className="w-4 h-4" />
-                              </button>
-                            )}
+                              {activeStatusDropdownInternId === intern.id && (
+                                <>
+                                  <div className="fixed inset-0 z-30" onClick={() => setActiveStatusDropdownInternId(null)} />
+                                  <div className="absolute right-0 bottom-full mb-2 w-48 bg-white border border-slate-100 shadow-xl rounded-2xl py-1.5 z-40 animate-in fade-in slide-in-from-bottom-2 duration-200 text-left">
+                                    <div className="px-3 py-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-50 mb-1">
+                                      Transition Status
+                                    </div>
+                                    {getStatusTransitions(intern.status).map(t => (
+                                      <button
+                                        key={t.value}
+                                        onClick={() => {
+                                          handleStatusChange(intern.id, t.value);
+                                          setActiveStatusDropdownInternId(null);
+                                        }}
+                                        className="w-full text-left px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors cursor-pointer flex items-center gap-2"
+                                      >
+                                        <span className={`w-1.5 h-1.5 rounded-full ${t.dotColor}`} />
+                                        {t.label}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </>
+                              )}
+                            </div>
+
                             <button 
                               onClick={() => handleDeleteIntern(intern)}
                               className="p-1.5 hover:bg-red-50 rounded-xl text-red-500 hover:text-red-600 transition-colors cursor-pointer ml-1"
