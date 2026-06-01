@@ -11,6 +11,8 @@ export interface User {
     id: string;
     name: string;
   };
+  intern?: Intern;
+  mentor?: Mentor;
 }
 
 export interface Intern {
@@ -49,6 +51,8 @@ export interface Intern {
   collegeIdUrl?: string;
   passportPhotoUrl?: string;
   experience?: any;
+  education?: any;
+  interests?: string[];
 }
 
 export interface Mentor {
