@@ -24,7 +24,13 @@ export const MentorManagement: React.FC = () => {
   // Mentor form state
   const [mName, setMName] = useState('');
   const [mEmail, setMEmail] = useState('');
-  const [mDept, setMDept] = useState('Engineering');
+  const [mDept, setMDept] = useState('');
+
+  React.useEffect(() => {
+    if (state.departments.length > 0 && !mDept) {
+      setMDept(state.departments[0].name);
+    }
+  }, [state.departments, mDept]);
 
   // Assignment form state
   const [selectedInternId, setSelectedInternId] = useState<string>('');
@@ -48,7 +54,11 @@ export const MentorManagement: React.FC = () => {
       return;
     }
     try {
-      const departmentId = state.departments.find(d => d.name.toLowerCase() === mDept.toLowerCase())?.id;
+      const departmentId = state.departments.find(d => 
+        d.name.toLowerCase() === mDept.toLowerCase() ||
+        d.name.toLowerCase().includes(mDept.toLowerCase()) ||
+        mDept.toLowerCase().includes(d.name.toLowerCase())
+      )?.id;
       if (!departmentId) {
         toast.error("Selected department not found in database.");
         return;
@@ -264,11 +274,19 @@ export const MentorManagement: React.FC = () => {
               onChange={(e) => setMDept(e.target.value)}
               className="w-full text-xs font-medium px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
             >
-              <option value="Engineering">Engineering</option>
-              <option value="Design">Design</option>
-              <option value="Marketing">Marketing</option>
-              <option value="HR">HR</option>
-              <option value="Finance">Finance</option>
+              {state.departments.length > 0 ? (
+                state.departments.map(d => (
+                  <option key={d.id} value={d.name}>{d.name}</option>
+                ))
+              ) : (
+                <>
+                  <option value="Engineering">Engineering</option>
+                  <option value="Design">Design</option>
+                  <option value="Marketing">Marketing</option>
+                  <option value="HR">HR</option>
+                  <option value="Finance">Finance</option>
+                </>
+              )}
             </select>
           </div>
 
