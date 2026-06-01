@@ -6,6 +6,7 @@ import { Navbar } from '../../components/common/Navbar';
 import { Avatar } from '../../components/common/Avatar';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { Modal } from '../../components/common/Modal';
+import { ConfirmModal } from '../../components/common/ConfirmModal';
 import { Search, Star, Plus, Link, Sparkles, Eye, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
@@ -27,6 +28,13 @@ export const MentorManagement: React.FC = () => {
 
   // Assignment form state
   const [selectedInternId, setSelectedInternId] = useState<string>('');
+
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
 
   const filteredMentors = state.mentors.filter(m => 
     m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -94,17 +102,23 @@ export const MentorManagement: React.FC = () => {
     }
   };
 
-  const handleDeleteMentor = async (mentorId: string) => {
-    if (!window.confirm("Are you sure you want to delete this mentor?")) return;
-    try {
-      await api.delete(`/mentors/${mentorId}`);
-      toast.success("Mentor deleted successfully!");
-      await refreshData();
-    } catch (error: any) {
-      console.error(error);
-      const errMsg = error.response?.data?.message || "Failed to delete mentor";
-      toast.error(errMsg);
-    }
+  const handleDeleteMentor = (mentorId: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Mentor',
+      message: 'Are you sure you want to delete this mentor? This action cannot be undone.',
+      onConfirm: async () => {
+        try {
+          await api.delete(`/mentors/${mentorId}`);
+          toast.success("Mentor deleted successfully!");
+          await refreshData();
+        } catch (error: any) {
+          console.error(error);
+          const errMsg = error.response?.data?.message || "Failed to delete mentor";
+          toast.error(errMsg);
+        }
+      },
+    });
   };
 
   const openAssignModal = (mentor: any) => {
@@ -318,6 +332,16 @@ export const MentorManagement: React.FC = () => {
           </div>
         </form>
       </Modal>
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant="danger"
+        confirmLabel="Delete Mentor"
+      />
 
     </div>
   );

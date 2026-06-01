@@ -7,6 +7,7 @@ import {
   ArrowRightLeft, Crown, ShieldAlert, CheckCircle2, ChevronRight, X, Sparkles, Trash2
 } from 'lucide-react';
 import { Modal } from '../../components/common/Modal';
+import { ConfirmModal } from '../../components/common/ConfirmModal';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
@@ -81,6 +82,15 @@ export const DepartmentManagement: React.FC = () => {
     memberId: '',
     targetDeptId: ''
   });
+
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    variant?: 'danger' | 'warning' | 'info';
+    confirmLabel?: string;
+  }>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
 
   const colorsMap: Record<string, { 
     border: string; 
@@ -265,29 +275,43 @@ export const DepartmentManagement: React.FC = () => {
     }
   };
 
-  const handleDeleteDepartment = async (deptId: string, deptName: string) => {
-    if (!window.confirm(`Are you sure you want to permanently delete the ${deptName} division? This action cannot be undone.`)) {
-      return;
-    }
-    try {
-      await api.delete(`/departments/${deptId}`);
-      toast.success(`${deptName} division has been successfully removed.`);
-      refreshData();
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to delete department');
-    }
+  const handleDeleteDepartment = (deptId: string, deptName: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: `Delete ${deptName} Division`,
+      message: `Are you sure you want to permanently delete the ${deptName} division? This action cannot be undone.`,
+      variant: 'danger',
+      confirmLabel: 'Delete Division',
+      onConfirm: async () => {
+        try {
+          await api.delete(`/departments/${deptId}`);
+          toast.success(`${deptName} division has been successfully removed.`);
+          refreshData();
+        } catch (error: any) {
+          toast.error(error.response?.data?.message || 'Failed to delete department');
+        }
+      },
+    });
   };
 
-  const handleRemoveHead = async (dept: any) => {
-    if (!window.confirm(`Are you sure you want to remove the division head for ${dept.name}?`)) return;
-    try {
-      await api.put(`/departments/${dept.id}`, { headId: null });
-      toast.success(`Division Head removed from ${dept.name}!`);
-      queryClient.invalidateQueries({ queryKey: ['departments'] });
-      refreshData();
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to remove head');
-    }
+  const handleRemoveHead = (dept: any) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Remove Division Head',
+      message: `Are you sure you want to remove the division head for ${dept.name}?`,
+      variant: 'warning',
+      confirmLabel: 'Remove Head',
+      onConfirm: async () => {
+        try {
+          await api.put(`/departments/${dept.id}`, { headId: null });
+          toast.success(`Division Head removed from ${dept.name}!`);
+          queryClient.invalidateQueries({ queryKey: ['departments'] });
+          refreshData();
+        } catch (error: any) {
+          toast.error(error.response?.data?.message || 'Failed to remove head');
+        }
+      },
+    });
   };
 
   const handleTransferMember = async (e: React.FormEvent) => {
@@ -811,6 +835,16 @@ export const DepartmentManagement: React.FC = () => {
         }))}
         onConfirm={handleAssignHeadPatch}
         isSubmitting={isSubmittingPatch}
+      />
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant={confirmModal.variant}
+        confirmLabel={confirmModal.confirmLabel}
       />
 
     </div>

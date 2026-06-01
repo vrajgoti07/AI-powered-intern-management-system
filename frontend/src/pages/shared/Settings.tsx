@@ -11,6 +11,7 @@ import api from '../../services/api';
 import { Sidebar } from '../../components/common/Sidebar';
 import { Navbar } from '../../components/common/Navbar';
 import { Avatar } from '../../components/common/Avatar';
+import { ConfirmModal } from '../../components/common/ConfirmModal';
 
 export const Settings: React.FC = () => {
   const navigate = useNavigate();
@@ -69,6 +70,15 @@ export const Settings: React.FC = () => {
     density: 'comfortable',
     pageSize: '10'
   });
+
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    variant?: 'danger' | 'warning' | 'info';
+    confirmLabel?: string;
+  }>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const resumeInputRef = useRef<HTMLInputElement>(null);
@@ -222,25 +232,33 @@ export const Settings: React.FC = () => {
   };
 
   // Handle profile photo deletion
-  const handleRemoveAvatar = async () => {
-    if (!window.confirm('Are you sure you want to remove your profile photo?')) return;
-    const deleteToast = toast.loading('Removing profile photo...');
-    try {
-      const res = await api.put('/settings/profile', { avatarUrl: 'REMOVE' });
-      if (res.data.success) {
-        const stored = localStorage.getItem('internflow_user');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          parsed.avatarUrl = null;
-          localStorage.setItem('internflow_user', JSON.stringify(parsed));
+  const handleRemoveAvatar = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Remove Profile Photo',
+      message: 'Are you sure you want to remove your profile photo?',
+      variant: 'warning',
+      confirmLabel: 'Remove Photo',
+      onConfirm: async () => {
+        const deleteToast = toast.loading('Removing profile photo...');
+        try {
+          const res = await api.put('/settings/profile', { avatarUrl: 'REMOVE' });
+          if (res.data.success) {
+            const stored = localStorage.getItem('internflow_user');
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              parsed.avatarUrl = null;
+              localStorage.setItem('internflow_user', JSON.stringify(parsed));
+            }
+            toast.success('Profile photo removed successfully!', { id: deleteToast });
+            fetchProfileData();
+          }
+        } catch (err) {
+          console.error(err);
+          toast.error('Failed to remove profile photo.', { id: deleteToast });
         }
-        toast.success('Profile photo removed successfully!', { id: deleteToast });
-        fetchProfileData();
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to remove profile photo.', { id: deleteToast });
-    }
+      },
+    });
   };
 
   // Handle onboarding resume PDF updates
@@ -321,40 +339,56 @@ export const Settings: React.FC = () => {
   };
 
   // Forcefully Logout/Terminate a session
-  const handleTerminateSession = async (id: string) => {
-    if (!window.confirm('Are you sure you want to terminate this active device session?')) return;
-    const termToast = toast.loading('Terminating active session...');
-    try {
-      const res = await api.delete(`/security/session/${id}`);
-      if (res.data.success) {
-        toast.success('Session terminated successfully!', { id: termToast });
-        fetchSessions();
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to terminate session.', { id: termToast });
-    }
+  const handleTerminateSession = (id: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Terminate Session',
+      message: 'Are you sure you want to terminate this active device session?',
+      variant: 'warning',
+      confirmLabel: 'Terminate',
+      onConfirm: async () => {
+        const termToast = toast.loading('Terminating active session...');
+        try {
+          const res = await api.delete(`/security/session/${id}`);
+          if (res.data.success) {
+            toast.success('Session terminated successfully!', { id: termToast });
+            fetchSessions();
+          }
+        } catch (err) {
+          console.error(err);
+          toast.error('Failed to terminate session.', { id: termToast });
+        }
+      },
+    });
   };
 
   // Forcefully terminate ALL sessions
-  const handleLogoutAllSessions = async () => {
-    if (!window.confirm('Are you sure you want to force logout all active sessions? You will need to log in again on all other devices.')) return;
-    const termToast = toast.loading('Revoking all active sessions...');
-    try {
-      const res = await api.delete('/security/logout-all');
-      if (res.data.success) {
-        toast.success('All other sessions terminated. Logging you out...');
-        setTimeout(() => {
-          localStorage.removeItem('internflow_access_token');
-          localStorage.removeItem('internflow_refresh_token');
-          localStorage.removeItem('internflow_user');
-          navigate('/login');
-        }, 1500);
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to terminate all sessions.', { id: termToast });
-    }
+  const handleLogoutAllSessions = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Logout All Sessions',
+      message: 'Are you sure you want to force logout all active sessions? You will need to log in again on all other devices.',
+      variant: 'danger',
+      confirmLabel: 'Logout All',
+      onConfirm: async () => {
+        const termToast = toast.loading('Revoking all active sessions...');
+        try {
+          const res = await api.delete('/security/logout-all');
+          if (res.data.success) {
+            toast.success('All other sessions terminated. Logging you out...');
+            setTimeout(() => {
+              localStorage.removeItem('internflow_access_token');
+              localStorage.removeItem('internflow_refresh_token');
+              localStorage.removeItem('internflow_user');
+              navigate('/login');
+            }, 1500);
+          }
+        } catch (err) {
+          console.error(err);
+          toast.error('Failed to terminate all sessions.', { id: termToast });
+        }
+      },
+    });
   };
 
   // Save visual portal preferences locally
@@ -1002,6 +1036,15 @@ export const Settings: React.FC = () => {
 
         </div>
       </main>
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant={confirmModal.variant}
+        confirmLabel={confirmModal.confirmLabel}
+      />
     </div>
   );
 };

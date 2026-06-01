@@ -14,6 +14,7 @@ import {
   KeyRound, Trash2, ShieldAlert, Cpu, Laptop, Terminal, ChevronRight, Check
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { ConfirmModal } from '../../components/common/ConfirmModal';
 
 export const Profile: React.FC = () => {
   const { state, refreshData } = useApp();
@@ -97,6 +98,15 @@ export const Profile: React.FC = () => {
     emergencyRelation: myInternData?.emergencyRelation || '',
   });
 
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    variant?: 'danger' | 'warning' | 'info';
+    confirmLabel?: string;
+  }>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+
   const myName = userProfile?.name || user?.name || "Intern User";
 
   // OTP State
@@ -178,28 +188,36 @@ export const Profile: React.FC = () => {
     }
   };
 
-  const handleRemoveAvatar = async () => {
-    if (!window.confirm("Are you sure you want to remove your profile photo?")) return;
-    toast.loading('Removing profile picture...', { id: 'avatar-toast' });
-    try {
-      const { default: api } = await import('../../services/api');
-      const res = await api.delete(`/profile/avatar`);
-      
-      if (res.data.success && res.data.data) {
-        const stored = localStorage.getItem('internflow_user');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          parsed.avatarUrl = null;
-          localStorage.setItem('internflow_user', JSON.stringify(parsed));
+  const handleRemoveAvatar = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Remove Profile Photo',
+      message: 'Are you sure you want to remove your profile photo?',
+      variant: 'warning',
+      confirmLabel: 'Remove Photo',
+      onConfirm: async () => {
+        toast.loading('Removing profile picture...', { id: 'avatar-toast' });
+        try {
+          const { default: api } = await import('../../services/api');
+          const res = await api.delete(`/profile/avatar`);
+          
+          if (res.data.success && res.data.data) {
+            const stored = localStorage.getItem('internflow_user');
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              parsed.avatarUrl = null;
+              localStorage.setItem('internflow_user', JSON.stringify(parsed));
+            }
+          }
+          
+          toast.success("Profile photo removed successfully!", { id: 'avatar-toast' });
+          window.location.reload();
+        } catch (err) {
+          console.error(err);
+          toast.error("Failed to remove profile photo.", { id: 'avatar-toast' });
         }
-      }
-      
-      toast.success("Profile photo removed successfully!", { id: 'avatar-toast' });
-      window.location.reload();
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to remove profile photo.", { id: 'avatar-toast' });
-    }
+      },
+    });
   };
 
   // Onboarding File Upload State & Handlers
@@ -328,18 +346,26 @@ export const Profile: React.FC = () => {
     }
   };
 
-  const handleRemoveDocument = async (docType: string, label: string) => {
-    if (!window.confirm(`Are you sure you want to remove your uploaded ${label}?`)) return;
-    toast.loading(`Removing ${label}...`, { id: 'remove-toast' });
-    try {
-      const { default: api } = await import('../../services/api');
-      await api.delete(`/interns/me/onboarding/remove?docType=${docType}`);
-      toast.success(`${label} removed successfully!`, { id: 'remove-toast' });
-      window.location.reload();
-    } catch (err) {
-      console.error(err);
-      toast.error(`Failed to remove ${label}.`, { id: 'remove-toast' });
-    }
+  const handleRemoveDocument = (docType: string, label: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: `Remove ${label}`,
+      message: `Are you sure you want to remove your uploaded ${label}? You will need to re-upload it.`,
+      variant: 'warning',
+      confirmLabel: 'Remove',
+      onConfirm: async () => {
+        toast.loading(`Removing ${label}...`, { id: 'remove-toast' });
+        try {
+          const { default: api } = await import('../../services/api');
+          await api.delete(`/interns/me/onboarding/remove?docType=${docType}`);
+          toast.success(`${label} removed successfully!`, { id: 'remove-toast' });
+          window.location.reload();
+        } catch (err) {
+          console.error(err);
+          toast.error(`Failed to remove ${label}.`, { id: 'remove-toast' });
+        }
+      },
+    });
   };
 
   const renderDocVaultItem = (
@@ -1041,6 +1067,15 @@ export const Profile: React.FC = () => {
 
         </div>
       </main>
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant={confirmModal.variant}
+        confirmLabel={confirmModal.confirmLabel}
+      />
     </div>
   );
 };

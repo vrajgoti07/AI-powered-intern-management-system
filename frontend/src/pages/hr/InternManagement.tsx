@@ -10,6 +10,7 @@ import { InternForm } from '../../components/forms/InternForm';
 import { Search, Filter, UserPlus, Eye, Check, AlertCircle, Trash2, ChevronDown, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
+import { ConfirmModal } from '../../components/common/ConfirmModal';
 
 export const InternManagement: React.FC = () => {
   const { state, refreshData } = useApp();
@@ -26,6 +27,12 @@ export const InternManagement: React.FC = () => {
   const [selectedIntern, setSelectedIntern] = useState<any>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
   const itemsPerPage = 20;
 
   // Filters calculation
@@ -95,18 +102,23 @@ export const InternManagement: React.FC = () => {
     }
   };
 
-  const handleDeleteIntern = async (intern: any) => {
-    if (window.confirm(`Are you sure you want to completely delete intern ${intern.name}? This action cannot be undone and will delete their user account.`)) {
-      try {
-        await api.delete(`/interns/${intern.id}`);
-        toast.success(`Intern ${intern.name} deleted successfully!`);
-        await refreshData();
-      } catch (error: any) {
-        console.error(error);
-        const errMsg = error.response?.data?.message || "Failed to delete intern";
-        toast.error(errMsg);
-      }
-    }
+  const handleDeleteIntern = (intern: any) => {
+    setConfirmModal({
+      isOpen: true,
+      title: `Delete ${intern.name}`,
+      message: `Are you sure you want to completely delete intern ${intern.name}? This action cannot be undone and will delete their user account.`,
+      onConfirm: async () => {
+        try {
+          await api.delete(`/interns/${intern.id}`);
+          toast.success(`Intern ${intern.name} deleted successfully!`);
+          await refreshData();
+        } catch (error: any) {
+          console.error(error);
+          const errMsg = error.response?.data?.message || "Failed to delete intern";
+          toast.error(errMsg);
+        }
+      },
+    });
   };
 
   return (
@@ -391,6 +403,16 @@ export const InternManagement: React.FC = () => {
           </div>
         )}
       </Modal>
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant="danger"
+        confirmLabel="Delete Intern"
+      />
 
     </div>
   );

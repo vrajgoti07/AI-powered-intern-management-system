@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { documentApi, InternDocument } from '../../services/documentApi';
 import { FileText, Download, FileCheck, FileOutput, Loader2, Plus, Eye } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth'; // Assumed to exist for role checking
+import { ConfirmModal } from '../common/ConfirmModal';
+import toast from 'react-hot-toast';
 
 interface DocumentListProps {
   internId: string;
@@ -12,6 +14,12 @@ const DocumentList: React.FC<DocumentListProps> = ({ internId }) => {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState<string | null>(null);
   const { user } = useAuth(); // Assuming useAuth provides current user and role
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
 
   const isHR = user?.role === 'hr' || user?.role === 'admin';
 
@@ -31,52 +39,67 @@ const DocumentList: React.FC<DocumentListProps> = ({ internId }) => {
     fetchDocuments();
   }, [internId]);
 
-  const handleGenerateCertificate = async () => {
-    if (!window.confirm('Are you sure you want to generate a certificate for this intern?')) return;
-    
-    try {
-      setGenerating('CERTIFICATE');
-      await documentApi.generateCertificate(internId);
-      await fetchDocuments();
-      alert('Certificate generated successfully!');
-    } catch (error) {
-      console.error('Failed to generate certificate:', error);
-      alert('Failed to generate certificate.');
-    } finally {
-      setGenerating(null);
-    }
+  const handleGenerateCertificate = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Generate Certificate',
+      message: 'Are you sure you want to generate a certificate for this intern?',
+      onConfirm: async () => {
+        try {
+          setGenerating('CERTIFICATE');
+          await documentApi.generateCertificate(internId);
+          await fetchDocuments();
+          toast.success('Certificate generated successfully!');
+        } catch (error) {
+          console.error('Failed to generate certificate:', error);
+          toast.error('Failed to generate certificate.');
+        } finally {
+          setGenerating(null);
+        }
+      },
+    });
   };
 
-  const handleGenerateOfferLetter = async () => {
-    if (!window.confirm('Are you sure you want to generate an offer letter?')) return;
-    
-    try {
-      setGenerating('OFFER_LETTER');
-      await documentApi.generateOfferLetter(internId);
-      await fetchDocuments();
-      alert('Offer letter generated successfully!');
-    } catch (error) {
-      console.error('Failed to generate offer letter:', error);
-      alert('Failed to generate offer letter.');
-    } finally {
-      setGenerating(null);
-    }
+  const handleGenerateOfferLetter = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Generate Offer Letter',
+      message: 'Are you sure you want to generate an offer letter for this intern?',
+      onConfirm: async () => {
+        try {
+          setGenerating('OFFER_LETTER');
+          await documentApi.generateOfferLetter(internId);
+          await fetchDocuments();
+          toast.success('Offer letter generated successfully!');
+        } catch (error) {
+          console.error('Failed to generate offer letter:', error);
+          toast.error('Failed to generate offer letter.');
+        } finally {
+          setGenerating(null);
+        }
+      },
+    });
   };
 
-  const handleGenerateReport = async () => {
-    if (!window.confirm('Are you sure you want to generate a performance report?')) return;
-    
-    try {
-      setGenerating('PERFORMANCE_REPORT');
-      await documentApi.generatePerformanceReport(internId);
-      await fetchDocuments();
-      alert('Performance report generated successfully!');
-    } catch (error) {
-      console.error('Failed to generate report:', error);
-      alert('Failed to generate report.');
-    } finally {
-      setGenerating(null);
-    }
+  const handleGenerateReport = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Generate Performance Report',
+      message: 'Are you sure you want to generate a performance report for this intern?',
+      onConfirm: async () => {
+        try {
+          setGenerating('PERFORMANCE_REPORT');
+          await documentApi.generatePerformanceReport(internId);
+          await fetchDocuments();
+          toast.success('Performance report generated successfully!');
+        } catch (error) {
+          console.error('Failed to generate report:', error);
+          toast.error('Failed to generate report.');
+        } finally {
+          setGenerating(null);
+        }
+      },
+    });
   };
 
   const getIcon = (type: string) => {
@@ -172,6 +195,15 @@ const DocumentList: React.FC<DocumentListProps> = ({ internId }) => {
           </div>
         )}
       </div>
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant="info"
+        confirmLabel="Generate"
+      />
     </div>
   );
 };

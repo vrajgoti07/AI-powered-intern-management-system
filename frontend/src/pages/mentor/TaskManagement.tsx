@@ -9,6 +9,7 @@ import { Plus, FileText, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
+import { ConfirmModal } from '../../components/common/ConfirmModal';
 
 export const TaskManagement: React.FC = () => {
   const { user } = useAuth();
@@ -24,6 +25,10 @@ export const TaskManagement: React.FC = () => {
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    onConfirm: () => void;
+  }>({ isOpen: false, onConfirm: () => {} });
 
   // Group tasks by status
   const columns: { title: string; status: any; color: string }[] = [
@@ -66,18 +71,22 @@ export const TaskManagement: React.FC = () => {
     }
   };
 
-  const handleDeleteTask = async (id: string) => {
-    try {
-      if (!window.confirm("Are you sure you want to delete this task milestone?")) return;
-      await api.delete(`/tasks/${id}`);
-      toast.success("Task deleted successfully!");
-      setSelectedTask(null);
-      await refreshTasks();
-    } catch (error: any) {
-      console.error(error);
-      const errMsg = error.response?.data?.message || "Failed to delete task";
-      toast.error(errMsg);
-    }
+  const handleDeleteTask = (id: string) => {
+    setConfirmModal({
+      isOpen: true,
+      onConfirm: async () => {
+        try {
+          await api.delete(`/tasks/${id}`);
+          toast.success("Task deleted successfully!");
+          setSelectedTask(null);
+          await refreshTasks();
+        } catch (error: any) {
+          console.error(error);
+          const errMsg = error.response?.data?.message || "Failed to delete task";
+          toast.error(errMsg);
+        }
+      },
+    });
   };
 
   return (
@@ -262,6 +271,16 @@ export const TaskManagement: React.FC = () => {
           </div>
         )}
       </Modal>
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title="Delete Task Milestone"
+        message="Are you sure you want to delete this task milestone? This action cannot be undone."
+        variant="danger"
+        confirmLabel="Delete Task"
+      />
 
     </div>
   );

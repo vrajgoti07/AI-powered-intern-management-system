@@ -5,6 +5,7 @@ import { Navbar } from '../../components/common/Navbar';
 import { Megaphone, Calendar, User, Plus, PlusCircle, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
+import { ConfirmModal } from '../../components/common/ConfirmModal';
 
 export const Announcements: React.FC = () => {
   const { state, dispatch } = useApp();
@@ -18,6 +19,13 @@ export const Announcements: React.FC = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
 
   // Fetch announcements
   useEffect(() => {
@@ -36,22 +44,27 @@ export const Announcements: React.FC = () => {
     fetchAnnouncements();
   }, []);
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this announcement? This will remove it permanently.")) return;
-    
-    const deleteToast = toast.loading("Deleting announcement...");
-    try {
-      const res = await api.delete(`/announcements/${id}`);
-      if (res.data.success) {
-        toast.success("Announcement deleted successfully!", { id: deleteToast });
-        setAnnouncements(announcements.filter(ann => ann.id !== id));
-      } else {
-        toast.error(res.data.message || "Failed to delete announcement", { id: deleteToast });
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("An error occurred while deleting", { id: deleteToast });
-    }
+  const handleDelete = (id: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Announcement',
+      message: 'Are you sure you want to delete this announcement? This will remove it permanently.',
+      onConfirm: async () => {
+        const deleteToast = toast.loading("Deleting announcement...");
+        try {
+          const res = await api.delete(`/announcements/${id}`);
+          if (res.data.success) {
+            toast.success("Announcement deleted successfully!", { id: deleteToast });
+            setAnnouncements(announcements.filter(ann => ann.id !== id));
+          } else {
+            toast.error(res.data.message || "Failed to delete announcement", { id: deleteToast });
+          }
+        } catch (err) {
+          console.error(err);
+          toast.error("An error occurred while deleting", { id: deleteToast });
+        }
+      },
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -231,6 +244,15 @@ export const Announcements: React.FC = () => {
           </div>
         </div>
       </main>
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant="danger"
+        confirmLabel="Delete"
+      />
     </div>
   );
 };
