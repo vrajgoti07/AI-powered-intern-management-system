@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
+import notificationService from './notification.service';
 
 const prisma = new PrismaClient();
 
@@ -185,12 +186,14 @@ export const submitFinal = async (internId: string) => {
   const progress = await getOnboardingStatus(internId);
   if (!progress.agreementAccepted) throw new AppError('Previous step not completed', 400);
 
-  await prisma.intern.update({
+  const intern = await prisma.intern.findUnique({
     where: { id: internId },
-    data: { onboardingStep: 8 }
+    include: { user: true }
   });
 
-  return prisma.onboardingProgress.update({
+  if (!intern) throw new AppError('Intern not found', 404);
+
+  const updatedProgress = await prisma.onboardingProgress.update({
     where: { internId },
     data: {
       finalSubmitted: true,
@@ -198,4 +201,27 @@ export const submitFinal = async (internId: string) => {
       verificationStatus: 'UNDER_REVIEW'
     }
   });
+
+  await prisma.intern.update({
+    where: { id: internId },
+    data: { onboardingStep: 8 }
+  });
+
+  // Notify all active HR users that an intern has submitted onboarding details and needs review
+  try {
+    await notificationService.notifyHR(
+      'New Onboarding Submission',
+      `Intern ${intern.user.name} has completed all onboarding details and is awaiting verification/approval.`,
+      'ONBOARDING_SUBMISSION',
+      {
+        internId: intern.id,
+        internName: intern.user.name,
+        userId: intern.userId
+      }
+    );
+  } catch (err) {
+    console.error('Failed to trigger onboarding completion notification for HR:', err);
+  }
+
+  return updatedProgress;
 };

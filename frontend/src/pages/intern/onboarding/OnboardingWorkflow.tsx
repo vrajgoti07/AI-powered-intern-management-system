@@ -1168,11 +1168,15 @@ export const OnboardingWorkflow: React.FC = () => {
 
             {/* Stepper Footer Controls */}
             {step < 8 && (
-              <div className="pt-6 border-t border-slate-100 flex items-center justify-between mt-6">
+              <div className="pt-6 border-t border-slate-100 flex flex-col-reverse sm:flex-row items-center justify-between gap-3 mt-6">
                 <button
                   onClick={() => { if (step > 1) setStep(step - 1); }}
                   disabled={step === 1 || loading}
-                  className={`${`px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 flex items-center gap-2 ${step === 1 || loading ? 'bg-slate-50 text-slate-300 cursor-not-allowed' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer'} min-h-[44px]`}`}
+                  className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 flex items-center justify-center gap-2 w-full sm:w-auto ${
+                    step === 1 || loading 
+                      ? 'bg-slate-50 text-slate-300 cursor-not-allowed' 
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer'
+                  } min-h-[44px]`}
                 >
                   <ArrowLeft className="w-4 h-4" /> Previous
                 </button>
@@ -1180,7 +1184,11 @@ export const OnboardingWorkflow: React.FC = () => {
                 <button
                   onClick={submitStep}
                   disabled={loading}
-                  className={`${`px-6 py-2.5 rounded-xl text-xs font-bold text-white transition-all duration-300 flex items-center gap-2 ${loading ? 'bg-indigo-400 cursor-not-allowed shadow-none' : 'bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-200 hover:shadow-lg hover:-translate-y-0.5'} min-h-[44px]`}`}
+                  className={`px-6 py-2.5 rounded-xl text-xs font-bold text-white transition-all duration-300 flex items-center justify-center gap-2 w-full sm:w-auto ${
+                    loading 
+                      ? 'bg-indigo-400 cursor-not-allowed shadow-none' 
+                      : 'bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-200 hover:shadow-lg hover:-translate-y-0.5'
+                  } min-h-[44px]`}
                 >
                   {loading ? 'Processing...' : step === 7 ? 'Submit Onboarding' : 'Save & Continue'} <ArrowRight className="w-4 h-4" />
                 </button>
