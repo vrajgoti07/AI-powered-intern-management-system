@@ -95,17 +95,29 @@ export const ApplyPage: React.FC = () => {
       toast.dismiss(loadingToast);
       console.error('Submission error:', error);
       
-      if (error.response?.data?.message) {
-        // Backend returned a specific error message
-        let errMsg = error.response.data.message;
-        if (error.response.data.errors) {
-          errMsg += ": " + JSON.stringify(error.response.data.errors);
+      const responseData = error.response?.data;
+      if (responseData) {
+        if (Array.isArray(responseData.errors) && responseData.errors.length > 0) {
+          responseData.errors.forEach((err: any) => {
+            const fieldName = err.field ? err.field.replace('body.', '') : '';
+            const capitalizedField = fieldName ? fieldName.charAt(0).toUpperCase() + fieldName.slice(1) : '';
+            const msg = err.message || 'Invalid input';
+            const displayMsg = (capitalizedField && !msg.toLowerCase().includes(fieldName.toLowerCase()))
+              ? `${capitalizedField}: ${msg}`
+              : msg;
+            toast.error(displayMsg, { duration: 5000 });
+          });
+        } else if (responseData.message) {
+          toast.error(responseData.message);
+        } else if (responseData.error) {
+          toast.error(responseData.error);
+        } else {
+          toast.error(JSON.stringify(responseData));
         }
-        toast.error(errMsg);
       } else if (error.code === 'ERR_NETWORK') {
         toast.error("Cannot connect to the server. Please check if the backend is running.");
       } else {
-        toast.error(`Error: ${error.response?.data ? JSON.stringify(error.response.data) : error.message}`);
+        toast.error(error.message || "An unexpected error occurred.");
       }
     }
   };
