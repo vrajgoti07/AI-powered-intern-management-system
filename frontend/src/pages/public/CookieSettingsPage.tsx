@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { 
-  Zap, ShieldCheck, Info, ChevronDown, CheckCircle2, 
+  ShieldCheck, Info, ChevronDown, CheckCircle2, 
   Settings2, PieChart, LayoutTemplate, Megaphone, Globe
 } from 'lucide-react';
 import { Logo } from '../../components/common/Logo';
+import toast from 'react-hot-toast';
 
 type CookieCategory = {
   id: string;
@@ -172,6 +173,21 @@ const CookieSettingsPage: React.FC = () => {
     functional: true,
     marketing: false
   });
+
+  useEffect(() => {
+    const saved = localStorage.getItem('internflow_cookie_preferences');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        parsed.necessary = true;
+        Promise.resolve().then(() => {
+          setPreferences(parsed);
+        });
+      } catch {
+        // ignore malformed data
+      }
+    }
+  }, []);
   
   const [showToast, setShowToast] = useState(false);
 
@@ -191,7 +207,8 @@ const CookieSettingsPage: React.FC = () => {
   };
 
   const savePreferences = () => {
-    // In a real app, this would save to localStorage or a backend
+    localStorage.setItem('internflow_cookie_preferences', JSON.stringify(preferences));
+    toast.success("Cookie preferences saved.");
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };

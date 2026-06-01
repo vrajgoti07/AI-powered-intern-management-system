@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Milestone, Send, 
   ClipboardList, Info
@@ -6,11 +6,40 @@ import {
 import { Sidebar } from '../../../components/common/Sidebar';
 import { Navbar } from '../../../components/common/Navbar';
 import toast from 'react-hot-toast';
+import api from '../../../services/api';
+
+interface Task {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  dueDate?: string;
+  createdAt?: string;
+}
 
 export const LifecycleTimeline: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [stage, setStage] = useState(2); // Mid-term progress
+  const [stage] = useState(2); // Mid-term progress
   const [exitSurveySubmitted, setExitSurveySubmitted] = useState(false);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      setIsLoading(true);
+      try {
+        const res = await api.get('/tasks', { params: { limit: 50 } });
+        if (res.data?.success) {
+          setTasks(res.data.data?.tasks || res.data.data || []);
+        }
+      } catch (error) {
+        console.error('LifecycleTimeline fetch error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchTasks();
+  }, []);
 
   // Form states for exit interview
   const [rating, setRating] = useState('5');
@@ -25,15 +54,6 @@ export const LifecycleTimeline: React.FC = () => {
     setExitSurveySubmitted(true);
     toast.success("Exit Interview survey submitted successfully!");
   };
-
-  // Progression milestones
-  const milestones = [
-    { num: 1, label: "Onboarding & IT Setup", desc: "Government verification and keys credentials setup.", date: "2026-03-01" },
-    { num: 2, label: "Training & Core Tasks", desc: "First 4 weeks of project engineering tasks.", date: "2026-04-01" },
-    { num: 3, label: "Midterm Progress Audit", desc: "Score matching overlays with mentor feedback.", date: "2026-04-15" },
-    { num: 4, label: "Final Task Evaluations", desc: "Normalized performance index score scorecard.", date: "2026-05-25" },
-    { num: 5, label: "Exit Interview Survey", desc: "Completion reviews and digital signature.", date: "2026-06-01" }
-  ];
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
@@ -54,29 +74,40 @@ export const LifecycleTimeline: React.FC = () => {
               </h3>
 
               <div className="relative pl-6 border-l-2 border-slate-100 space-y-6 ml-3">
-                {milestones.map((m) => {
-                  const isDone = stage >= m.num;
-                  const isCurrent = stage === m.num;
+                {isLoading ? (
+                  <div className="text-slate-400 text-sm text-center py-8 font-semibold">Loading timeline...</div>
+                ) : tasks.length > 0 ? (
+                  tasks.map((task: Task, idx: number) => {
+                    const isDone = task.status === 'COMPLETED';
 
-                  return (
-                    <div key={m.num} className="relative">
-                      {/* Node Indicator */}
-                      <span className={`absolute -left-[35px] top-0.5 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-300 ${
-                        isDone ? 'bg-indigo-600 text-white shadow-indigo-100' : 'bg-white border-2 border-slate-200 text-slate-400'
-                      }`}>
-                        {isDone ? '✓' : m.num}
-                      </span>
+                    return (
+                      <div key={task.id || idx} className="relative">
+                        {/* Node Indicator */}
+                        <span className={`absolute -left-[35px] top-0.5 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-300 ${
+                          isDone ? 'bg-indigo-600 text-white shadow-indigo-100' : 'bg-white border-2 border-slate-200 text-slate-400'
+                        }`}>
+                          {isDone ? '✓' : (idx + 1)}
+                        </span>
 
-                      <div className="space-y-1">
-                        <div className="flex justify-between items-center">
-                          <h4 className={`text-xs font-extrabold ${isDone ? 'text-slate-800' : 'text-slate-400'}`}>{m.label}</h4>
-                          <span className="text-[9px] text-slate-400 font-bold">{m.date}</span>
+                        <div className="space-y-1">
+                          <div className="flex justify-between items-center">
+                            <h4 className={`text-xs font-extrabold ${isDone ? 'text-slate-800' : 'text-slate-400'}`}>{task.title}</h4>
+                            <span className="text-[9px] text-slate-400 font-bold">
+                              Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '—'}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 font-semibold leading-relaxed">{task.description}</p>
+                          <div className="flex justify-between items-center text-[8px] text-slate-400 font-bold mt-1">
+                            <span>Status: {task.status}</span>
+                            <span>Created: {task.createdAt ? new Date(task.createdAt).toLocaleDateString() : '—'}</span>
+                          </div>
                         </div>
-                        <p className="text-[10px] text-slate-500 font-semibold leading-relaxed">{m.desc}</p>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                ) : (
+                  <div className="text-slate-400 text-sm text-center py-8 font-semibold">No tasks in timeline yet.</div>
+                )}
               </div>
 
               {/* Stage progression is managed by the HR/Mentor workflow */}

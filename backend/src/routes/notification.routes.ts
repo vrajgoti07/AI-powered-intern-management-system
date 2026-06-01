@@ -3,8 +3,38 @@ import notificationController from '../controllers/notification.controller';
 import { authenticate } from '../middleware/auth.middleware';
 import { validate } from '../middleware/validate.middleware';
 import { getNotificationsQuerySchema } from '../validations/notification.validation';
+import prisma from '../config/database';
 
 const router = Router();
+
+// POST /api/notifications/intern-applied  (public — no auth required, called from apply page)
+router.post('/intern-applied', async (req: any, res: any) => {
+  try {
+    const { internName, position } = req.body;
+    if (!internName) {
+      return res.status(400).json({ success: false, message: 'internName is required.' });
+    }
+    // Notify all HR users about the new application
+    const hrUsers = await prisma.user.findMany({
+      where: { role: 'HR', isActive: true },
+      select: { id: true },
+    });
+    if (hrUsers.length > 0) {
+      await prisma.notification.createMany({
+        data: hrUsers.map((hr) => ({
+          userId: hr.id,
+          title: 'New Intern Application',
+          message: `${internName} has applied for ${position || 'an internship position'}.`,
+          type: 'SYSTEM',
+          isRead: false,
+        })),
+      });
+    }
+    return res.json({ success: true, message: 'HR team notified.' });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
 
 // Protect all routes with JWT authentication
 router.use(authenticate);

@@ -62,7 +62,7 @@ export const useUpdateIntern = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...updateData }: any) => {
-      const { data } = await api.patch(`/interns/${id}`, updateData);
+      const { data } = await api.put(`/interns/${id}`, updateData);
       return data;
     },
     onSuccess: (data, variables) => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, 
@@ -6,13 +6,26 @@ import {
   Legend, Cell
 } from 'recharts';
 import { 
-  BrainCircuit, Award, Star, Compass, ShieldAlert,
-  ArrowRight, CheckCircle2, Play, Sparkles, Check, Info
+  BrainCircuit, Award, Star, Compass,
+  Play, Sparkles, Check, Info
 } from 'lucide-react';
 import { Sidebar } from '../../components/common/Sidebar';
 import { Navbar } from '../../components/common/Navbar';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
+import api from '../../services/api';
+
+interface MatchResult {
+  bestDepartment: string;
+  best_department?: string;
+  matchPercentage: number;
+  match_percentage?: number;
+  recommendedRole?: string;
+  suggestedTechnologies?: string[];
+  matchedSkills?: string[];
+  missingSkills?: string[];
+  rationale?: string;
+}
 
 export const AIMatching: React.FC = () => {
   const { user } = useAuth();
@@ -22,6 +35,16 @@ export const AIMatching: React.FC = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [quizFinished, setQuizFinished] = useState(false);
+  const [matchResult, setMatchResult] = useState<MatchResult | null>(null);
+  const [isMatchLoading, setIsMatchLoading] = useState(false);
+
+  // Department compatibility metrics
+  const deptData = [
+    { name: 'Engineering', Match: 92, fill: '#6366f1' },
+    { name: 'Design', Match: 81, fill: '#a855f7' },
+    { name: 'Product', Match: 75, fill: '#ec4899' },
+    { name: 'Marketing', Match: 45, fill: '#f59e0b' },
+  ];
 
   // Skill matrix data comparing current intern against Ideal Engineering Roles
   const radarData = [
@@ -33,13 +56,61 @@ export const AIMatching: React.FC = () => {
     { subject: 'Agile & Git', Aarav: 85, Ideal: 80, fullMark: 100 },
   ];
 
-  // Department compatibility metrics
-  const deptData = [
-    { name: 'Engineering', Match: 92, fill: '#6366f1' },
-    { name: 'Design', Match: 81, fill: '#a855f7' },
-    { name: 'Product', Match: 75, fill: '#ec4899' },
-    { name: 'Marketing', Match: 45, fill: '#f59e0b' },
-  ];
+  useEffect(() => {
+    if (!user) return;
+
+    let active = true;
+    const fetchMatch = async () => {
+      Promise.resolve().then(() => {
+        if (active) setIsMatchLoading(true);
+      });
+
+      try {
+        const res = await api.post('/ai/match-role', {
+          skills: user.intern?.skills && user.intern.skills.length > 0 ? user.intern.skills : ['React', 'Node.js', 'TypeScript'],
+          education: user.intern?.education || 'B.Tech in Computer Science',
+          interests: user.intern?.interests && user.intern.interests.length > 0 ? user.intern.interests : ['Web Development', 'AI/ML'],
+          internId: user.intern?.id || '',
+          departmentRequirements: [
+            { name: 'Engineering', role: 'Full Stack Developer', required_skills: ['React', 'Node.js', 'TypeScript'], preferred_interests: ['Web Development'] },
+            { name: 'Design', role: 'UI/UX Designer', required_skills: ['Figma', 'CSS', 'UI Design'], preferred_interests: ['Designing'] },
+            { name: 'Product', role: 'Product Manager', required_skills: ['Analytics', 'Roadmapping'], preferred_interests: ['Product management'] },
+            { name: 'Marketing', role: 'Growth Marketer', required_skills: ['SEO', 'Content'], preferred_interests: ['Marketing'] },
+          ],
+        });
+        if (active && res.data?.success && res.data?.data) {
+          setMatchResult(res.data.data);
+        }
+      } catch (error) {
+        console.error('AI match error:', error);
+      } finally {
+        if (active) {
+          setIsMatchLoading(false);
+        }
+      }
+    };
+
+    fetchMatch();
+
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  const getChartData = () => {
+    const bestDept = matchResult?.bestDepartment || matchResult?.best_department;
+    const matchPct = matchResult?.matchPercentage || matchResult?.match_percentage;
+
+    if (bestDept && typeof matchPct === 'number') {
+      return [
+        { name: 'Engineering', Match: bestDept.toLowerCase().includes('eng') ? matchPct : Math.max(20, Math.round(matchPct * 0.7)), fill: '#6366f1' },
+        { name: 'Design', Match: bestDept.toLowerCase().includes('des') ? matchPct : Math.max(20, Math.round(matchPct * 0.6)), fill: '#a855f7' },
+        { name: 'Product', Match: bestDept.toLowerCase().includes('prod') ? matchPct : Math.max(20, Math.round(matchPct * 0.5)), fill: '#ec4899' },
+        { name: 'Marketing', Match: bestDept.toLowerCase().includes('mark') ? matchPct : Math.max(20, Math.round(matchPct * 0.4)), fill: '#f59e0b' },
+      ];
+    }
+    return deptData;
+  };
 
   // Coding evaluation questions
   const questions = [
@@ -148,19 +219,26 @@ export const AIMatching: React.FC = () => {
                   <Compass className="w-5 h-5 text-indigo-600" /> Department Match Indices (%)
                 </h3>
                 
-                <div className="w-full h-[240px] mt-4 flex items-center justify-center">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={deptData} layout="vertical" margin={{ left: 10, right: 10, top: 10, bottom: 10 }}>
-                      <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 8, fontWeight: 700 }} />
-                      <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fontWeight: 700, fill: '#475569' }} />
-                      <Tooltip contentStyle={{ fontSize: '10px', borderRadius: '12px' }} />
-                      <Bar dataKey="Match" radius={[0, 8, 8, 0]} barSize={16}>
-                        {deptData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.fill} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
+                <div className="w-full h-[240px] mt-4 flex items-center justify-center font-sans">
+                  {isMatchLoading ? (
+                    <div className="flex flex-col items-center justify-center space-y-2 text-slate-400">
+                      <Sparkles className="w-6 h-6 animate-spin text-indigo-600" />
+                      <span className="text-xs font-semibold">Analyzing your profile...</span>
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={getChartData()} layout="vertical" margin={{ left: 10, right: 10, top: 10, bottom: 10 }}>
+                        <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 8, fontWeight: 700 }} />
+                        <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fontWeight: 700, fill: '#475569' }} />
+                        <Tooltip contentStyle={{ fontSize: '10px', borderRadius: '12px' }} />
+                        <Bar dataKey="Match" radius={[0, 8, 8, 0]} barSize={16}>
+                          {getChartData().map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
                 </div>
               </div>
             </div>

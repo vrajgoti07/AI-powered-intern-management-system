@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import * as os from 'os';
+import prisma from '../config/database';
 
 import aiController from '../controllers/ai.controller';
 import { authenticate } from '../middleware/auth.middleware';
@@ -98,5 +99,61 @@ router.patch('/recommendations/:id/apply', aiController.applyRecommendation);
  * @access  Authenticated Users (HR, Admin)
  */
 router.patch('/recommendations/:id/reject', aiController.rejectRecommendation);
+
+// GET /api/ai/feedback/history
+router.get('/feedback/history', async (req: any, res: any) => {
+  try {
+    const internId = req.user?.intern?.id;
+    if (!internId) {
+      return res.status(404).json({ success: false, message: 'Intern profile not found.' });
+    }
+    const feedbacks = await prisma.feedback.findMany({
+      where: { internId },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    });
+    return res.json({ success: true, data: feedbacks });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// POST /api/ai/feedback
+router.post('/feedback', async (req: any, res: any) => {
+  try {
+    const internId = req.user?.intern?.id;
+    if (!internId) {
+      return res.status(403).json({ success: false, message: 'Only interns can submit feedback.' });
+    }
+    
+    // Fetch the intern's assigned mentorId
+    const intern = await prisma.intern.findUnique({
+      where: { id: internId },
+      select: { mentorId: true },
+    });
+    const mentorId = intern?.mentorId;
+    if (!mentorId) {
+      return res.status(400).json({ success: false, message: 'No mentor assigned to this intern yet.' });
+    }
+
+    const { rating, comment, type } = req.body;
+    if (!rating || !comment) {
+      return res.status(400).json({ success: false, message: 'Rating and comment are required.' });
+    }
+    
+    const feedback = await prisma.feedback.create({
+      data: {
+        internId,
+        mentorId,
+        rating: Number(rating),
+        comment,
+        category: type || 'GENERAL',
+      },
+    });
+    return res.json({ success: true, data: feedback });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
 
 export default router;

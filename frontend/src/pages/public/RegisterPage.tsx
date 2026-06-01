@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { GraduationCap, User, Mail, Lock, ShieldAlert, Sparkles, Building } from 'lucide-react';
 import { Logo } from '../../components/common/Logo';
 import toast from 'react-hot-toast';
+import api from '../../services/api';
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export const RegisterPage: React.FC = () => {
   });
 
   const [passwordStrength, setPasswordStrength] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handlePasswordChange = (val: string) => {
     setFormData(prev => ({ ...prev, password: val }));
@@ -29,7 +31,7 @@ export const RegisterPage: React.FC = () => {
     setPasswordStrength(strength);
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.password) {
       toast.error("Please fill in all credentials.");
@@ -39,11 +41,21 @@ export const RegisterPage: React.FC = () => {
       toast.error("Please accept the security compliance terms.");
       return;
     }
-
-    toast.success("Account created successfully! Redirecting to Verification Gateway...");
-    setTimeout(() => {
-      navigate('/login');
-    }, 1500);
+    setIsLoading(true);
+    try {
+      await api.post('/auth/register', {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        department: formData.dept,
+      });
+      toast.success("Account created successfully! Redirecting to login...");
+      setTimeout(() => navigate('/login'), 1500);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Registration failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -159,9 +171,10 @@ export const RegisterPage: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full flex items-center justify-center gap-1.5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-indigo-900/20 transition-colors cursor-pointer min-h-[44px]"
+            disabled={isLoading}
+            className={`w-full flex items-center justify-center gap-1.5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-indigo-900/20 transition-colors cursor-pointer min-h-[44px] ${isLoading ? 'opacity-60' : ''}`}
           >
-            <Sparkles className="w-4 h-4" /> Initialize Candidate Account
+            <Sparkles className="w-4 h-4" /> {isLoading ? "Creating Account..." : "Initialize Candidate Account"}
           </button>
         </form>
 

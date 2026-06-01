@@ -78,26 +78,13 @@ export const ApplyPage: React.FC = () => {
 
       const applyResponse = await api.post('/interns/apply', payload);
 
-      // Trigger HR email notification for the new application
+      // Trigger HR notification for the new application
       try {
         await api.post('/notifications/intern-applied', {
-          applicantName: name,
-          applicantEmail: email,
-          applicantPhone: phone,
-          college,
-          degree,
-          branch,
-          cgpa,
-          dept,
-          skills: skills ? skills.split(',').map(s => s.trim()).filter(Boolean) : [],
-          duration,
-          startDate,
-          whyJoin,
-          internId: applyResponse?.data?.data?.id || null,
+          internName: name,
+          position: dept,
         });
       } catch (notifError) {
-        // Silently fail — do not block the applicant's success screen
-        // if notification fails
         console.warn('Notification dispatch failed:', notifError);
       }
 

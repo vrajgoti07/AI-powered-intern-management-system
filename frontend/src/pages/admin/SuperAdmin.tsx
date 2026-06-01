@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer
@@ -10,10 +10,46 @@ import {
 import { Sidebar } from '../../components/common/Sidebar';
 import { Navbar } from '../../components/common/Navbar';
 import toast from 'react-hot-toast';
+import api from '../../services/api';
 
 export const SuperAdmin: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const [stats, setStats] = useState({ interns: 0, mentors: 0, departments: 0 });
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const [internsRes, mentorsRes, deptsRes, logsRes] = await Promise.allSettled([
+          api.get('/interns?limit=1'),
+          api.get('/mentors?limit=1'),
+          api.get('/departments/list'),
+          api.get('/admin/audit-logs?limit=10'),
+        ]);
+        if (internsRes.status === 'fulfilled') {
+          setStats(prev => ({ ...prev, interns: internsRes.value.data?.data?.pagination?.total || 0 }));
+        }
+        if (mentorsRes.status === 'fulfilled') {
+          setStats(prev => ({ ...prev, mentors: mentorsRes.value.data?.data?.pagination?.total || 0 }));
+        }
+        if (deptsRes.status === 'fulfilled') {
+          setStats(prev => ({ ...prev, departments: deptsRes.value.data?.data?.length || 0 }));
+        }
+        if (logsRes.status === 'fulfilled') {
+          setAuditLogs(logsRes.value.data?.data?.logs || []);
+        }
+      } catch (error) {
+        console.error('SuperAdmin load error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   // DB Monitoring stats (Recharts area stats)
   const systemMetrics = [
@@ -55,8 +91,41 @@ export const SuperAdmin: React.FC = () => {
         <Navbar onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} title="Super Admin Control Deck" />
 
         {/* Scrollable Container */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 font-sans">
           
+          {/* Stats row */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-left">
+            <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 flex-shrink-0">
+                <Users className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Total Interns</p>
+                <p className="text-2xl font-black text-slate-800 mt-0.5">{isLoading ? '...' : stats.interns}</p>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600 flex-shrink-0">
+                <Users className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Total Mentors</p>
+                <p className="text-2xl font-black text-slate-800 mt-0.5">{isLoading ? '...' : stats.mentors}</p>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 flex-shrink-0">
+                <Database className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Total Departments</p>
+                <p className="text-2xl font-black text-slate-800 mt-0.5">{isLoading ? '...' : stats.departments}</p>
+              </div>
+            </div>
+          </div>
+
           {/* Top row */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
             
@@ -139,19 +208,21 @@ export const SuperAdmin: React.FC = () => {
               </h3>
 
               <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
-                {[
-                  { act: "Indexed Tasks schema table", ip: "192.168.1.15", time: "12:20 PM" },
-                  { act: "Role upgrade granted to Priyan", ip: "10.0.0.42", time: "11:05 AM" },
-                  { act: "Token refresh validation keys updated", ip: "172.16.8.5", time: "Yesterday" }
-                ].map((log, i) => (
-                  <div key={i} className="p-3 border rounded-2xl text-[10px] font-semibold space-y-1">
-                    <p className="text-slate-700 font-bold">{log.act}</p>
-                    <div className="flex justify-between text-slate-400 text-[9px] font-bold">
-                      <span>IP: {log.ip}</span>
-                      <span>{log.time}</span>
+                {auditLogs.length > 0 ? (
+                  auditLogs.map((log: any, i: number) => (
+                    <div key={log.id || i} className="p-3 border border-slate-100 rounded-2xl text-[10px] font-semibold space-y-1">
+                      <p className="text-slate-700 font-bold">{log.action}</p>
+                      <div className="flex justify-between text-slate-400 text-[9px] font-bold">
+                        <span>IP: {log.ipAddress || 'Unknown'}</span>
+                        <span>{log.createdAt ? new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recent'}</span>
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-slate-400 font-semibold text-xs">
+                    No recent audit activities found.
                   </div>
-                ))}
+                )}
               </div>
             </div>
 

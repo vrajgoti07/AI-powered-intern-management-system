@@ -56,11 +56,13 @@ export const useDepartments = () => {
   });
 };
 
-export const useReports = () => {
+export const useReports = (filters?: any) => {
   return useQuery({
-    queryKey: ['reports'],
+    queryKey: ['reports', filters],
     queryFn: async () => {
-      const response = await api.get('/reports');
+      const response = await api.get('/reports/internship-summary', {
+        params: { internId: filters?.internId, ...filters },
+      });
       return response.data.data;
     },
   });
