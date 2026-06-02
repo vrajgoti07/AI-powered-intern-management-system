@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import multer from 'multer';
-import * as os from 'os';
 import prisma from '../config/database';
 
 import aiController from '../controllers/ai.controller';
@@ -16,8 +15,15 @@ import {
 
 const router = Router();
 
-// Configure multer for temporary disk storage for forwarding files to the Python microservice
-const upload = multer({ dest: os.tmpdir() });
+import * as path from 'path';
+import * as fs from 'fs';
+
+// Configure multer for temporary disk storage using local project uploads folder
+const localUploadsDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(localUploadsDir)) {
+  fs.mkdirSync(localUploadsDir, { recursive: true });
+}
+const upload = multer({ dest: localUploadsDir });
 
 // Secure all AI routing endpoints under JWT authentication + AI rate limiter
 router.use(authenticate);
