@@ -249,8 +249,8 @@ const ContactPage: React.FC = () => {
                   </div>
                   <div>
                     <div className="font-bold text-sm mb-1">Direct Email</div>
-                    <div className="text-sm text-slate-400">hello@internflow.com</div>
-                    <div className="text-sm text-slate-400">support@internflow.com</div>
+                    <div className="text-sm text-slate-400">hr.internflow@gmail.com</div>
+                    <div className="text-sm text-slate-400">support.internflow@gmail.com</div>
                   </div>
                 </div>
 
@@ -260,7 +260,7 @@ const ContactPage: React.FC = () => {
                   </div>
                   <div>
                     <div className="font-bold text-sm mb-1">Phone</div>
-                    <div className="text-sm text-slate-400">+1 (800) 555-0199</div>
+                    <div className="text-sm text-slate-400">+91 90238 48570</div>
                   </div>
                 </div>
               </div>
