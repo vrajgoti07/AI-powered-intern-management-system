@@ -69,16 +69,7 @@ export class AIService {
       });
       return response.data;
     } catch (error: any) {
-      // Determine if the microservice is actually offline/unreachable or if it returned a real validation/auth error.
-      // If it returned a real non-gateway response (like 400, 401, 500), throw it directly so the client gets correct validation errors.
-      const isOfflineOrTimeout = !error.response || [408, 502, 503, 504].includes(error.response.status) || error.code === 'ECONNABORTED';
-
-      if (!isOfflineOrTimeout) {
-        logger.error(`AI Microservice parse-resume failed: ${error.response?.status} - ${JSON.stringify(error.response?.data)}`);
-        throw new Error(error.response?.data?.detail || error.response?.data?.message || `AI Microservice error: ${error.message}`);
-      }
-
-      logger.warn(`AI Microservice parse-resume offline or building. Triggering robust Node-level PDF text parser fallback: ${error.message}`);
+      logger.warn(`AI Microservice parse-resume failed or offline. Triggering robust Node-level PDF text parser fallback: ${error.message}`);
       
       // Node.js fallback resume parser using pdf-parse
       try {
