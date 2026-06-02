@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Brain, Sparkles, Upload, FileText, CheckCircle2, AlertCircle, Trash2, 
   ChevronRight, ArrowRight, User, Mail, Phone, Calendar, Briefcase, Cpu, Award, 
-  MapPin, Loader2, RefreshCw, Plus, X, Globe, Star, FileJson, CheckSquare, ShieldCheck
+  MapPin, Loader2, RefreshCw, Plus, X, Globe, Star, FileJson, CheckSquare, ShieldCheck,
+  History, Eye
 } from 'lucide-react';
 import { Sidebar } from '../../components/common/Sidebar';
 import { Navbar } from '../../components/common/Navbar';
@@ -41,6 +42,21 @@ interface ParsedResumeData {
   projects: ProjectItem[];
   skillScore: number;
   experienceYears: number;
+}
+
+interface ParsedResumeHistoryItem {
+  id: string;
+  userId: string;
+  name: string;
+  email: string;
+  phone: string;
+  skills: string[];
+  education: any;
+  experience: any;
+  projects: any;
+  skillScore: number;
+  experienceYears: number;
+  createdAt: string;
 }
 
 // Preset Target Benchmarks for auto-filling skills
@@ -89,6 +105,77 @@ export const AIResumeParser: React.FC = () => {
 
   // Sync state
   const [isSyncing, setIsSyncing] = useState(false);
+
+  // Parsing History States
+  const [historyList, setHistoryList] = useState<ParsedResumeHistoryItem[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
+  const fetchHistory = async () => {
+    setIsLoadingHistory(true);
+    try {
+      const res = await api.get('/ai/parse-history');
+      if (res.data?.success && Array.isArray(res.data?.data)) {
+        setHistoryList(res.data.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch parsing history:', err);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
+
+  const handleViewHistoryDetails = (item: ParsedResumeHistoryItem) => {
+    let parsedEducation: EducationItem[] = [];
+    let parsedExperience: ExperienceItem[] = [];
+    let parsedProjects: ProjectItem[] = [];
+
+    try {
+      parsedEducation = Array.isArray(item.education)
+        ? item.education
+        : typeof item.education === 'string'
+          ? JSON.parse(item.education)
+          : [];
+    } catch (e) {
+      console.error('Failed to parse education history:', e);
+    }
+
+    try {
+      parsedExperience = Array.isArray(item.experience)
+        ? item.experience
+        : typeof item.experience === 'string'
+          ? JSON.parse(item.experience)
+          : [];
+    } catch (e) {
+      console.error('Failed to parse experience history:', e);
+    }
+
+    try {
+      parsedProjects = Array.isArray(item.projects)
+        ? item.projects
+        : typeof item.projects === 'string'
+          ? JSON.parse(item.projects)
+          : [];
+    } catch (e) {
+      console.error('Failed to parse projects history:', e);
+    }
+
+    setParsedResult({
+      name: item.name,
+      email: item.email,
+      phone: item.phone,
+      skills: item.skills,
+      education: parsedEducation,
+      experience: parsedExperience,
+      projects: parsedProjects,
+      skillScore: item.skillScore,
+      experienceYears: item.experienceYears,
+    });
+    toast.success(`Loaded parsed results for ${item.name}`);
+  };
 
   // Handle Drag Events
   const handleDrag = (e: React.DragEvent) => {
@@ -184,6 +271,7 @@ export const AIResumeParser: React.FC = () => {
       if (response.data?.success && response.data?.data) {
         setParsedResult(response.data.data);
         toast.success("Resume parsed and evaluated successfully!", { id: parseToast });
+        fetchHistory(); // Refresh history list after a successful parse
       } else {
         throw new Error("Invalid API response structure.");
       }
@@ -275,14 +363,14 @@ export const AIResumeParser: React.FC = () => {
         <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-6">
           
           {/* Top Banner Row */}
-          <div className="bg-gradient-to-r from-slate-900 to-indigo-950 rounded-3xl p-6 text-white text-left relative overflow-hidden shadow-xl border border-indigo-900/60">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.15),transparent)] animate-pulse" />
+          <div className="bg-gradient-to-r from-indigo-50 via-blue-50 to-slate-50 rounded-3xl p-6 text-slate-800 text-left relative overflow-hidden shadow-sm border border-slate-200/60">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.25),transparent)] animate-pulse" />
             <div className="relative z-10 space-y-2">
-              <span className="text-[10px] font-extrabold uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-3 py-1 rounded-full flex items-center gap-1.5 w-fit">
-                <Sparkles className="w-3.5 h-3.5" /> Advanced NLP Parsing Active
+              <span className="text-[10px] font-extrabold uppercase bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 py-1 rounded-full flex items-center gap-1.5 w-fit">
+                <Sparkles className="w-3.5 h-3.5 text-indigo-600" /> Advanced NLP Parsing Active
               </span>
-              <h2 className="text-xl font-extrabold tracking-tight">AI Resume Parser & Skill Screener</h2>
-              <p className="text-xs text-slate-300 font-semibold max-w-2xl leading-relaxed">
+              <h2 className="text-xl font-extrabold tracking-tight text-slate-800">AI Resume Parser & Skill Screener</h2>
+              <p className="text-xs text-slate-500 font-semibold max-w-2xl leading-relaxed">
                 Upload raw PDF CV documents to extract personal contact records, technology skills, educational histories, work timelines, and milestone projects in structured data. Score candidates dynamically against ideal target benchmarks.
               </p>
             </div>
@@ -744,6 +832,103 @@ export const AIResumeParser: React.FC = () => {
             )}
 
           </AnimatePresence>
+
+          {/* Persistent Resume Parsing History */}
+          {!isParsing && !parsedResult && (
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col justify-between text-left mt-6"
+            >
+              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-indigo-50 rounded-xl flex items-center justify-center border border-indigo-100">
+                    <History className="w-4 h-4 text-indigo-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm md:text-base font-extrabold text-slate-800 tracking-tight">Recent Resume Parsing History</h2>
+                    <p className="text-[10px] md:text-xs text-slate-400 font-semibold mt-0.5">Persistent database of successfully parsed credentials</p>
+                  </div>
+                </div>
+                <span className="text-[10px] bg-slate-100 text-slate-650 px-2.5 py-0.5 rounded-md font-bold uppercase">
+                  {historyList.length} Records
+                </span>
+              </div>
+
+              {isLoadingHistory ? (
+                <div className="py-12 flex flex-col items-center justify-center gap-2 text-slate-400">
+                  <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+                  <span className="text-xs font-bold">Loading persistent history...</span>
+                </div>
+              ) : historyList.length === 0 ? (
+                <div className="py-12 text-center">
+                  <p className="text-xs text-slate-400 font-bold italic">No parsed resume history found. Upload a resume above to populate the persistent log.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto flex-1">
+                  <table className="w-full text-xs text-left">
+                    <thead>
+                      <tr className="bg-slate-50 text-[10px] text-slate-400 uppercase tracking-wide border-b border-slate-100">
+                        <th className="px-5 py-3 font-bold">Candidate</th>
+                        <th className="px-4 py-3 font-bold">Email</th>
+                        <th className="px-4 py-3 font-bold">Phone</th>
+                        <th className="px-4 py-3 font-bold">Quality Match</th>
+                        <th className="px-4 py-3 font-bold">Extracted Date</th>
+                        <th className="px-4 py-3 font-bold">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {historyList.map((item) => (
+                        <tr key={item.id} className="hover:bg-slate-50/40 transition-colors">
+                          <td className="px-5 py-3 font-extrabold text-slate-800">
+                            {item.name || "Unknown Candidate"}
+                          </td>
+                          <td className="px-4 py-3 text-slate-500 font-semibold">
+                            {item.email || "N/A"}
+                          </td>
+                          <td className="px-4 py-3 text-slate-500 font-semibold">
+                            {item.phone || "N/A"}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2 font-bold text-slate-700">
+                              <div className="w-14 bg-slate-100 rounded-full h-1.5">
+                                <div 
+                                  className={`h-1.5 rounded-full ${
+                                    item.skillScore >= 80 ? 'bg-emerald-500' : item.skillScore >= 50 ? 'bg-indigo-500' : 'bg-amber-500'
+                                  }`} 
+                                  style={{ width: `${item.skillScore}%` }}
+                                ></div>
+                              </div>
+                              {item.skillScore}%
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-slate-400 font-semibold">
+                            {new Date(item.createdAt).toLocaleDateString(undefined, {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </td>
+                          <td className="px-4 py-3">
+                            <button
+                              onClick={() => handleViewHistoryDetails(item)}
+                              className="p-1.5 hover:bg-slate-100 rounded-xl transition-colors text-slate-400 hover:text-indigo-600 cursor-pointer border-0 bg-transparent flex items-center justify-center gap-1 font-bold text-[10px]"
+                              title="View details"
+                            >
+                              <Eye className="w-4 h-4" />
+                              <span>View Details</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </motion.div>
+          )}
 
         </div>
       </main>

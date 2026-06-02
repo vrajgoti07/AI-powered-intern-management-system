@@ -31,6 +31,29 @@ export class AIController {
       
       const result = await aiService.parseInternResume(req.file.path, requiredSkills, token);
       
+      // Save parsed resume to persistent database
+      const userId = (req as any).user?.id;
+      if (userId) {
+        try {
+          await prisma.parsedResume.create({
+            data: {
+              userId,
+              name: result.name || 'Unknown Candidate',
+              email: result.email || '',
+              phone: result.phone || '',
+              skills: result.skills || [],
+              education: result.education ? JSON.parse(JSON.stringify(result.education)) : [],
+              experience: result.experience ? JSON.parse(JSON.stringify(result.experience)) : [],
+              projects: result.projects ? JSON.parse(JSON.stringify(result.projects)) : [],
+              skillScore: Number(result.skillScore || 0),
+              experienceYears: Number(result.experienceYears || 0),
+            }
+          });
+        } catch (dbErr) {
+          logger.error('Failed to save parsed resume history to database:', dbErr);
+        }
+      }
+
       // Clean up the temporary file
       fs.unlinkSync(req.file.path);
 
@@ -39,6 +62,54 @@ export class AIController {
       if (req.file && fs.existsSync(req.file.path)) {
         fs.unlinkSync(req.file.path);
       }
+      next(error);
+    }
+  }
+
+  /**
+   * Get parsed resume history isolated by user role
+   */
+  async getParseHistory(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const user = (req as any).user;
+      if (!user) {
+        errorResponse(res, 'Authentication required', 401);
+        return;
+      }
+
+      let history = [];
+
+      if (user.role === 'INTERN') {
+        // Interns see only their own parses
+        history = await prisma.parsedResume.findMany({
+          where: { userId: user.id },
+          orderBy: { createdAt: 'desc' },
+          take: 15,
+        });
+      } else if (user.role === 'MENTOR') {
+        // Mentors see their own parses + parses of their assigned interns
+        const mentor = await prisma.mentor.findUnique({
+          where: { userId: user.id },
+          include: { interns: true },
+        });
+        const internUserIds = mentor?.interns.map((i: any) => i.userId) || [];
+        history = await prisma.parsedResume.findMany({
+          where: {
+            userId: { in: [user.id, ...internUserIds] },
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 15,
+        });
+      } else {
+        // HR / SUPER_ADMIN see all parsed resumes
+        history = await prisma.parsedResume.findMany({
+          orderBy: { createdAt: 'desc' },
+          take: 30,
+        });
+      }
+
+      successResponse(res, 'Parsing history retrieved successfully', history);
+    } catch (error) {
       next(error);
     }
   }

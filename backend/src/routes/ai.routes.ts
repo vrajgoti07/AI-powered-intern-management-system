@@ -35,6 +35,7 @@ router.use(aiLimiter);
  * @access  Authenticated Users
  */
 router.post('/parse-resume', upload.single('file'), aiController.parseResume);
+router.get('/parse-history', aiController.getParseHistory);
 
 /**
  * @route   POST /api/ai/match-role
