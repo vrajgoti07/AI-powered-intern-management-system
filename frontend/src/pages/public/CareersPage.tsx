@@ -300,7 +300,7 @@ const CareersPage: React.FC = () => {
           <h2 className="text-3xl font-black font-['Cabinet_Grotesk']">Don't see a perfect fit?</h2>
           <p className="text-slate-400 font-sans">We are always looking for exceptional talent. If you believe you belong here, convince us.</p>
           <div className="pt-4">
-            <a href="mailto:careers@internflow.com" className="inline-flex items-center gap-2 px-8 py-4 bg-white text-slate-900 font-bold font-sans rounded-xl hover:bg-slate-200 transition-colors shadow-xl">
+            <a href="mailto:hr.internflow@gmail.com" className="inline-flex items-center gap-2 px-8 py-4 bg-white text-slate-900 font-bold font-sans rounded-xl hover:bg-slate-200 transition-colors shadow-xl">
               Send us your resume <ArrowRight className="w-5 h-5" />
             </a>
           </div>

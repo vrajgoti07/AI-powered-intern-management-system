@@ -321,14 +321,14 @@ export const MentorDashboard: React.FC = () => {
               </div>
 
               {/* Mentoring Insight */}
-              <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-3xl p-5 text-white text-left space-y-4">
+              <div className="bg-gradient-to-br from-blue-600 to-indigo-600 rounded-3xl p-5 text-white text-left space-y-4 shadow-md shadow-indigo-100/10">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center">
                     <Brain className="w-4 h-4" />
                   </div>
                   <span className="text-xs font-bold tracking-wide uppercase">Supervisor Insight</span>
                 </div>
-                <p className="text-xs text-indigo-100 leading-relaxed font-semibold">
+                <p className="text-xs text-blue-100 leading-relaxed font-semibold">
                   Ankit Patil has maintained an average evaluation score of <strong className="text-white">85%</strong> and attendance is perfect. Recommend assigning more complex task portfolios.
                 </p>
               </div>

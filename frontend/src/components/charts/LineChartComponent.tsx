@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
@@ -16,9 +16,28 @@ export const LineChartComponent: React.FC<LineChartComponentProps> = ({
   gradientColor = '#2563eb',
   height = 160
 }) => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+      <AreaChart 
+        data={data} 
+        margin={{ 
+          top: 10, 
+          right: 10, 
+          left: -20, 
+          bottom: isMobile ? 35 : 0 
+        }}
+      >
         <defs>
           <linearGradient id="areaColorGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor={gradientColor} stopOpacity={0.18} />
@@ -28,9 +47,19 @@ export const LineChartComponent: React.FC<LineChartComponentProps> = ({
         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
         <XAxis 
           dataKey="label" 
-          tick={{ fontSize: 11, fill: "#94a3b8", fontWeight: 600 }} 
+          tick={{ fontSize: isMobile ? 9 : 11, fill: "#94a3b8", fontWeight: 600 }} 
           axisLine={false} 
           tickLine={false} 
+          angle={isMobile ? -35 : 0}
+          textAnchor={isMobile ? "end" : undefined}
+          height={isMobile ? 55 : 30}
+          tickFormatter={(value) => {
+            if (isMobile && typeof value === 'string') {
+              // Strip " Department" from end to fit nicely in mobile views
+              return value.replace(/[\s\-_]+department$/i, '');
+            }
+            return value;
+          }}
         />
         <YAxis 
           tick={{ fontSize: 11, fill: "#94a3b8", fontWeight: 600 }} 

@@ -456,13 +456,13 @@ export const LandingPage: React.FC = () => {
             </p>
             {/* Social Icons */}
             <div className="flex items-center gap-3 pt-1">
-              <a href="#" className="w-8 h-8 bg-slate-800 hover:bg-blue-600 rounded-lg flex items-center justify-center transition-all duration-200 group">
+              <a href="/about" className="w-8 h-8 bg-slate-800 hover:bg-blue-600 rounded-lg flex items-center justify-center transition-all duration-200 group">
                 <Globe className="w-3.5 h-3.5 text-slate-400 group-hover:text-white" />
               </a>
-              <a href="#" className="w-8 h-8 bg-slate-800 hover:bg-blue-600 rounded-lg flex items-center justify-center transition-all duration-200 group">
+              <a href="/contact" className="w-8 h-8 bg-slate-800 hover:bg-blue-600 rounded-lg flex items-center justify-center transition-all duration-200 group">
                 <MessageSquare className="w-3.5 h-3.5 text-slate-400 group-hover:text-white" />
               </a>
-              <a href="#" className="w-8 h-8 bg-slate-800 hover:bg-blue-600 rounded-lg flex items-center justify-center transition-all duration-200 group">
+              <a href="https://github.com/vrajgoti07/AI-powered-intern-management-system" target="_blank" rel="noopener noreferrer" className="w-8 h-8 bg-slate-800 hover:bg-blue-600 rounded-lg flex items-center justify-center transition-all duration-200 group">
                 <GitBranch className="w-3.5 h-3.5 text-slate-400 group-hover:text-white" />
               </a>
             </div>

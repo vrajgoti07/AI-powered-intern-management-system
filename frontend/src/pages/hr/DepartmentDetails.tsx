@@ -21,6 +21,16 @@ export const DepartmentDetails: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [activeTab, setActiveTab] = useState<'overview' | 'interns' | 'mentors' | 'projects' | 'reports'>('overview');
   
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
   // Data States
   const [analytics, setAnalytics] = useState<any>(null);
   const [activities, setActivities] = useState<any[]>([]);
@@ -453,8 +463,26 @@ export const DepartmentDetails: React.FC = () => {
                   {internScoresChartData.length > 0 ? (
                     <div className="h-64 w-full">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={internScoresChartData}>
-                          <XAxis dataKey="name" stroke="#94a3b8" fontSize={9} tickLine={false} />
+                        <BarChart 
+                          data={internScoresChartData}
+                          barSize={isMobile ? 16 : 28}
+                          margin={{ bottom: isMobile ? 35 : 0 }}
+                        >
+                          <XAxis 
+                            dataKey="name" 
+                            stroke="#94a3b8" 
+                            fontSize={isMobile ? 8 : 9} 
+                            tickLine={false}
+                            angle={isMobile ? -35 : 0}
+                            textAnchor={isMobile ? "end" : undefined}
+                            height={isMobile ? 55 : 30}
+                            tickFormatter={(value) => {
+                              if (isMobile && typeof value === 'string' && value.length > 10) {
+                                return value.substring(0, 8) + '...';
+                              }
+                              return value;
+                            }}
+                          />
                           <YAxis stroke="#94a3b8" fontSize={9} tickLine={false} />
                           <Tooltip contentStyle={{ fontSize: '11px', borderRadius: '12px' }} />
                           <Bar dataKey="score" fill="#6366f1" radius={[4, 4, 0, 0]} />
@@ -474,8 +502,19 @@ export const DepartmentDetails: React.FC = () => {
                   </h3>
                   <div className="h-64 w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={attendanceTrendData}>
-                        <XAxis dataKey="name" stroke="#94a3b8" fontSize={9} tickLine={false} />
+                      <LineChart 
+                        data={attendanceTrendData}
+                        margin={{ bottom: isMobile ? 35 : 0 }}
+                      >
+                        <XAxis 
+                          dataKey="name" 
+                          stroke="#94a3b8" 
+                          fontSize={isMobile ? 8 : 9} 
+                          tickLine={false}
+                          angle={isMobile ? -35 : 0}
+                          textAnchor={isMobile ? "end" : undefined}
+                          height={isMobile ? 55 : 30}
+                        />
                         <YAxis stroke="#94a3b8" fontSize={9} tickLine={false} />
                         <Tooltip contentStyle={{ fontSize: '11px', borderRadius: '12px' }} />
                         <Line type="monotone" dataKey="attendance" stroke="#10b981" strokeWidth={3} activeDot={{ r: 6 }} />

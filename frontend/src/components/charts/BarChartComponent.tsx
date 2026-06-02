@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
@@ -14,15 +14,45 @@ export const BarChartComponent: React.FC<BarChartComponentProps> = ({
   barColor = '#2563eb', 
   height = 200 
 }) => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} barSize={28} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+      <BarChart 
+        data={data} 
+        barSize={isMobile ? 16 : 28} 
+        margin={{ 
+          top: 10, 
+          right: 10, 
+          left: -20, 
+          bottom: isMobile ? 35 : 0 
+        }}
+      >
         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
         <XAxis 
           dataKey="label" 
-          tick={{ fontSize: 11, fill: "#94a3b8", fontWeight: 600 }} 
+          tick={{ fontSize: isMobile ? 9 : 11, fill: "#94a3b8", fontWeight: 600 }} 
           axisLine={false} 
           tickLine={false} 
+          angle={isMobile ? -35 : 0}
+          textAnchor={isMobile ? "end" : undefined}
+          height={isMobile ? 55 : 30}
+          tickFormatter={(value) => {
+            if (isMobile && typeof value === 'string') {
+              // Strip " Department" from end to fit nicely in mobile views
+              return value.replace(/[\s\-_]+department$/i, '');
+            }
+            return value;
+          }}
         />
         <YAxis 
           tick={{ fontSize: 11, fill: "#94a3b8", fontWeight: 600 }} 
