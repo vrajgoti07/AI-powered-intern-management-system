@@ -41,9 +41,16 @@ def extract_text_from_pdf(pdf_bytes: bytes) -> str:
     """Extracts text from a PDF file."""
     import fitz  # PyMuPDF
     text = ""
-    with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
-        for page in doc:
-            text += page.get_text()
+    try:
+        with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
+            for page in doc:
+                text += page.get_text()
+    except Exception as e:
+        # Fallback to decoding raw bytes if PyMuPDF open fails
+        try:
+            text = pdf_bytes.decode('utf-8', errors='ignore')
+        except Exception:
+            text = ""
     return text
 
 def extract_email(text: str) -> str:
@@ -65,14 +72,21 @@ def extract_skills(text: str) -> List[str]:
     return list(set(found_skills))
 
 def extract_entities(text: str) -> Dict[str, Any]:
-    nlp = _get_nlp()
-    doc = nlp(text)
-    
     name = ""
-    for ent in doc.ents:
-        if ent.label_ == "PERSON":
-            name = ent.text
-            break
+    try:
+        nlp = _get_nlp()
+        doc = nlp(text)
+        for ent in doc.ents:
+            if ent.label_ == "PERSON":
+                name = ent.text
+                break
+    except Exception as e:
+        # Graceful fallback: Extract name from the first non-empty lines of text
+        lines_clean = [line.strip() for line in text.split('\n') if line.strip()]
+        for line in lines_clean[:3]:
+            if '@' not in line and not any(char.isdigit() for char in line) and len(line) < 35:
+                name = line
+                break
             
     education = []
     experience = []
