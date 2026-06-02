@@ -52,7 +52,9 @@ export class AIService {
    */
   async parseInternResume(filePath: string, requiredSkills: string[], token?: string) {
     const formData = new FormData();
-    formData.append('file', fs.createReadStream(filePath));
+    const originalName = path.basename(filePath);
+    const filename = originalName.endsWith('.pdf') ? originalName : `${originalName}.pdf`;
+    formData.append('file', fs.createReadStream(filePath), { filename });
     // The Python backend expects a JSON string of skills
     formData.append('required_skills', JSON.stringify(requiredSkills));
 
