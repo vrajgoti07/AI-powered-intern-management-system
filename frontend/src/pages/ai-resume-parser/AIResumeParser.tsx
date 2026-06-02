@@ -11,6 +11,7 @@ import { Navbar } from '../../components/common/Navbar';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
+import { ConfirmModal } from '../../components/common/ConfirmModal';
 
 interface EducationItem {
   degree: string;
@@ -106,9 +107,13 @@ export const AIResumeParser: React.FC = () => {
   // Sync state
   const [isSyncing, setIsSyncing] = useState(false);
 
-  // Parsing History States
   const [historyList, setHistoryList] = useState<ParsedResumeHistoryItem[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [confirmDeleteModal, setConfirmDeleteModal] = useState<{
+    isOpen: boolean;
+    recordId: string;
+    candidateName: string;
+  }>({ isOpen: false, recordId: '', candidateName: '' });
 
   const fetchHistory = async () => {
     setIsLoadingHistory(true);
@@ -177,10 +182,11 @@ export const AIResumeParser: React.FC = () => {
     toast.success(`Loaded parsed results for ${item.name}`);
   };
 
-  const handleDeleteHistory = async (id: string) => {
-    if (!window.confirm("Are you sure you want to permanently delete this resume parsing history record?")) {
-      return;
-    }
+  const handleDeleteHistory = async () => {
+    const id = confirmDeleteModal.recordId;
+    if (!id) return;
+
+    setConfirmDeleteModal(prev => ({ ...prev, isOpen: false }));
 
     const deleteToast = toast.loading("Deleting history record...");
     try {
@@ -943,7 +949,7 @@ export const AIResumeParser: React.FC = () => {
                               </button>
                               
                               <button
-                                onClick={() => handleDeleteHistory(item.id)}
+                                onClick={() => setConfirmDeleteModal({ isOpen: true, recordId: item.id, candidateName: item.name })}
                                 className="p-1.5 hover:bg-rose-50 rounded-xl transition-colors text-slate-400 hover:text-rose-600 cursor-pointer border-0 bg-transparent flex items-center justify-center gap-1 font-bold text-[10px]"
                                 title="Delete record"
                               >
@@ -960,6 +966,16 @@ export const AIResumeParser: React.FC = () => {
               )}
             </motion.div>
           )}
+
+          <ConfirmModal
+            isOpen={confirmDeleteModal.isOpen}
+            onClose={() => setConfirmDeleteModal(prev => ({ ...prev, isOpen: false }))}
+            onConfirm={handleDeleteHistory}
+            title="Delete Parsed Resume"
+            message={`Are you sure you want to permanently delete the parsed resume record for ${confirmDeleteModal.candidateName}? This action cannot be undone.`}
+            variant="danger"
+            confirmLabel="Delete Record"
+          />
 
         </div>
       </main>
