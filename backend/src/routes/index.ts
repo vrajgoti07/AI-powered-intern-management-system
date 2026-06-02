@@ -24,6 +24,7 @@ import restoreRoutes from './restore.routes';
 import projectRoutes from './project.routes';
 import emailRoutes from './email.routes';
 import documentRoutes from './document.routes';
+import placementRoutes from './placement.routes';
 import { authenticate } from '../middleware/auth.middleware';
 import { authorize } from '../middleware/role.middleware';
 import prisma from '../config/database';
@@ -90,6 +91,7 @@ router.use('/admin', restoreRoutes);
 router.use('/projects', projectRoutes);
 router.use('/emails', emailRoutes);
 router.use('/documents', documentRoutes);
+router.use('/placements', placementRoutes);
 
 /**
  * GET /api/intern/dashboard-stats

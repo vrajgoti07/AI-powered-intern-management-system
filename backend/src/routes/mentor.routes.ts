@@ -61,6 +61,17 @@ router.get(
 );
 
 /**
+ * @route   GET /api/mentors/:mentorId/availability
+ * @desc    Get mentor current availability status
+ * @access  HR, Mentor
+ */
+router.get(
+  '/:mentorId/availability',
+  authorize('HR', 'MENTOR'),
+  require('../controllers/placement.controller').default.getAvailability
+);
+
+/**
  * @route   POST /api/mentors
  * @desc    Create new mentor
  * @access  HR

@@ -792,3 +792,33 @@ model ParsedResume {
   @@index([userId])
   @@map("parsed_resumes")
 }
+
+model Placement {
+  id              String   @id @default(uuid())
+  internId        String   @map("intern_id")
+  internName      String   @map("intern_name")
+  mentorId        String   @map("mentor_id")
+  mentorName      String   @map("mentor_name")
+  department      String
+  matchScore      Float    @map("match_score")
+  confidenceLevel String   @map("confidence_level")
+  appliedBy       String   @map("applied_by")
+  appliedAt       DateTime @default(now()) @map("applied_at")
+  status          String   @default("Pending") // Pending | Confirmed | Revoked
+  undoDeadline    DateTime @map("undo_deadline")
+  emailSent       Boolean  @default(false) @map("email_sent")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("placements")
+}
+
+model MentorAvailability {
+  mentorId           String   @id @map("mentor_id")
+  currentInternCount Int      @default(0) @map("current_intern_count")
+  maxCapacity        Int      @default(3) @map("max_capacity")
+  status             String   @default("Available") @map("status") // Available | Busy | At Capacity
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@map("mentor_availability")
+}
