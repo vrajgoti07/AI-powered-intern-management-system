@@ -80,14 +80,14 @@ export class AIController {
       let history = [];
 
       if (user.role === 'INTERN') {
-        // Interns see only their own parses
+        // Interns see only their own parses that are not soft-deleted
         history = await prisma.parsedResume.findMany({
-          where: { userId: user.id },
+          where: { userId: user.id, deletedByUser: false },
           orderBy: { createdAt: 'desc' },
           take: 15,
         });
       } else if (user.role === 'MENTOR') {
-        // Mentors see their own parses + parses of their assigned interns
+        // Mentors see their own parses + parses of their assigned interns that are not soft-deleted
         const mentor = await prisma.mentor.findUnique({
           where: { userId: user.id },
           include: { interns: true },
@@ -96,12 +96,13 @@ export class AIController {
         history = await prisma.parsedResume.findMany({
           where: {
             userId: { in: [user.id, ...internUserIds] },
+            deletedByUser: false,
           },
           orderBy: { createdAt: 'desc' },
           take: 15,
         });
       } else {
-        // HR / SUPER_ADMIN see all parsed resumes
+        // HR / SUPER_ADMIN see all parsed resumes, even if soft-deleted by user
         history = await prisma.parsedResume.findMany({
           orderBy: { createdAt: 'desc' },
           take: 30,
@@ -155,9 +156,17 @@ export class AIController {
         }
       }
 
-      await prisma.parsedResume.delete({
-        where: { id: id as string },
-      });
+      // Soft delete for Intern/Mentor, hard delete for HR/Admin
+      if (user.role === 'INTERN' || user.role === 'MENTOR') {
+        await prisma.parsedResume.update({
+          where: { id: id as string },
+          data: { deletedByUser: true },
+        });
+      } else {
+        await prisma.parsedResume.delete({
+          where: { id: id as string },
+        });
+      }
 
       successResponse(res, 'Parsed resume deleted successfully');
     } catch (error) {

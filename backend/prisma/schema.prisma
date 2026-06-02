@@ -784,6 +784,7 @@ model ParsedResume {
   projects        Json?
   skillScore      Float
   experienceYears Float
+  deletedByUser   Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
