@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Users, UserCheck, Building2, BarChart3,
   Megaphone, Settings, LogOut, GraduationCap, ClipboardCheck,
   TrendingUp, Calendar, User, Brain, MessageSquare, Code, Award,
-  ShieldCheck, Milestone
+  ShieldCheck, Milestone, ShieldAlert, ThumbsUp
 } from 'lucide-react';
 
 import { Logo } from './Logo';
@@ -43,6 +43,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onClose }) => {
           { icon: UserCheck, label: "Mentors", path: "/hr/mentors" },
           { icon: Building2, label: "Departments", path: "/hr/departments" },
           { icon: Brain, label: "AI Resume Parser", path: "/shared/resume-parser" },
+          { icon: Milestone, label: "AI Mentor Matching", path: "/hr/ai-recommendations" },
+          { icon: ShieldAlert, label: "AI Risk Assessment", path: "/hr/risk-detection" },
+          { icon: ThumbsUp, label: "AI Feedback Analysis", path: "/shared/ai-feedback" },
           { icon: BarChart3, label: "Reports & Analytics", path: "/hr/reports" },
           { icon: Megaphone, label: "Announcements", path: "/hr/announcements" },
           { icon: Settings, label: "Settings", path: "/hr/settings" }
@@ -52,6 +55,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onClose }) => {
         return [
           { icon: LayoutDashboard, label: "Dashboard", path: "/mentor/dashboard" },
           { icon: MessageSquare, label: "Group Channels", path: "/shared/communication" },
+          { icon: ThumbsUp, label: "AI Feedback Analysis", path: "/shared/ai-feedback" },
           { icon: Brain, label: "AI Resume Parser", path: "/shared/resume-parser" },
           { icon: ClipboardCheck, label: "Task Management", path: "/mentor/tasks" },
           { icon: Award, label: "Grade Deliverables", path: "/mentor/tasks/review" },
@@ -73,6 +77,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onClose }) => {
             { icon: Code, label: "Developer Portfolio", path: "/intern/portfolio" },
             { icon: Brain, label: "AI Resume Parser", path: "/shared/resume-parser" },
             { icon: MessageSquare, label: "Team & AI Help", path: "/shared/communication" },
+            { icon: ThumbsUp, label: "AI Feedback Analysis", path: "/shared/ai-feedback" },
             { icon: BarChart3, label: "Performance & AI Hub", path: "/shared/performance-analytics" },
             { icon: Settings, label: "Settings", path: "/intern/settings" }
           ];

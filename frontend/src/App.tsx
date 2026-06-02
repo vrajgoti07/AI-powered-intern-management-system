@@ -34,6 +34,7 @@ const Announcements = React.lazy(() => import('./pages/hr/Announcements').then(m
 const OnboardingVerification = React.lazy(() => import('./pages/hr/OnboardingVerification').then(m => ({ default: m.OnboardingVerification })));
 const MentorDetailsPage = React.lazy(() => import('./pages/hr/mentor-details/MentorDetailsPage').then(m => ({ default: m.MentorDetailsPage })));
 const AIRecommendations = React.lazy(() => import('./pages/hr/AIRecommendations').then(m => ({ default: m.AIRecommendations })));
+const RiskDetection = React.lazy(() => import('./pages/hr/RiskDetection').then(m => ({ default: m.RiskDetection })));
 const AuditLogs = React.lazy(() => import('./pages/admin/AuditLogs').then(m => ({ default: m.AuditLogs })));
 
 // Mentor Pages
@@ -230,6 +231,14 @@ const App: React.FC = () => {
                   element={
                     <ProtectedRoute allowedRole="hr">
                       <AIRecommendations />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/hr/risk-detection"
+                  element={
+                    <ProtectedRoute allowedRole="hr">
+                      <RiskDetection />
                     </ProtectedRoute>
                   }
                 />
