@@ -42,6 +42,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onClose }) => {
           { icon: ShieldCheck, label: "Onboarding approvals", path: "/hr/onboarding-verification" },
           { icon: UserCheck, label: "Mentors", path: "/hr/mentors" },
           { icon: Building2, label: "Departments", path: "/hr/departments" },
+          { icon: Brain, label: "AI Resume Parser", path: "/shared/resume-parser" },
           { icon: BarChart3, label: "Reports & Analytics", path: "/hr/reports" },
           { icon: Megaphone, label: "Announcements", path: "/hr/announcements" },
           { icon: Settings, label: "Settings", path: "/hr/settings" }
@@ -51,6 +52,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onClose }) => {
         return [
           { icon: LayoutDashboard, label: "Dashboard", path: "/mentor/dashboard" },
           { icon: MessageSquare, label: "Group Channels", path: "/shared/communication" },
+          { icon: Brain, label: "AI Resume Parser", path: "/shared/resume-parser" },
           { icon: ClipboardCheck, label: "Task Management", path: "/mentor/tasks" },
           { icon: Award, label: "Grade Deliverables", path: "/mentor/tasks/review" },
           { icon: TrendingUp, label: "Performance Tracker", path: "/mentor/performance" },
@@ -69,6 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onClose }) => {
             { icon: ClipboardCheck, label: "Tasks & Schedule", path: "/intern/tasks" },
             { icon: Calendar, label: "Attendance & Leaves", path: "/shared/attendance-leave" },
             { icon: Code, label: "Developer Portfolio", path: "/intern/portfolio" },
+            { icon: Brain, label: "AI Resume Parser", path: "/shared/resume-parser" },
             { icon: MessageSquare, label: "Team & AI Help", path: "/shared/communication" },
             { icon: BarChart3, label: "Performance & AI Hub", path: "/shared/performance-analytics" },
             { icon: Settings, label: "Settings", path: "/intern/settings" }

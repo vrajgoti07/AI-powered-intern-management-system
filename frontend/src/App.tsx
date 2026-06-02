@@ -62,6 +62,7 @@ const AttendanceLeave = React.lazy(() => import('./pages/shared/attendance/Atten
 const ReportsCertificates = React.lazy(() => import('./pages/shared/reports/ReportsCertificates').then(m => ({ default: m.ReportsCertificates })));
 const LifecycleTimeline = React.lazy(() => import('./pages/shared/lifecycle/LifecycleTimeline').then(m => ({ default: m.LifecycleTimeline })));
 const SecurityPortal = React.lazy(() => import('./pages/public/SecurityPortal').then(m => ({ default: m.SecurityPortal })));
+const AIResumeParser = React.lazy(() => import('./pages/ai-resume-parser/AIResumeParser').then(m => ({ default: m.AIResumeParser })));
 
 // Super Admin Pages
 const SuperAdmin = React.lazy(() => import('./pages/admin/SuperAdmin').then(m => ({ default: m.SuperAdmin })));
@@ -379,6 +380,14 @@ const App: React.FC = () => {
                 />
 
                 {/* Shared Secure Portals */}
+                <Route
+                  path="/shared/resume-parser"
+                  element={
+                    <ProtectedRoute allowedRoles={['hr', 'mentor', 'intern']}>
+                      <AIResumeParser />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route
                   path="/shared/ai-matching"
                   element={
