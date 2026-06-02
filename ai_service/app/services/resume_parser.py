@@ -20,22 +20,7 @@ TECH_SKILLS = set([
     "devops", "sre", "sysadmin", "networking", "tcp/ip", "dns", "http", "https"
 ])
 
-# Lazy-loaded spacy model
-_nlp = None
 
-def _get_nlp():
-    """Lazy-load the spacy model only when first needed."""
-    global _nlp
-    if _nlp is None:
-        import spacy
-        try:
-            _nlp = spacy.load("en_core_web_sm")
-        except OSError:
-            import subprocess
-            import sys
-            subprocess.check_call([sys.executable, "-m", "spacy", "download", "en_core_web_sm"])
-            _nlp = spacy.load("en_core_web_sm")
-    return _nlp
 
 def extract_text_from_pdf(pdf_bytes: bytes) -> str:
     """Extracts text from a PDF file."""
@@ -72,21 +57,13 @@ def extract_skills(text: str) -> List[str]:
     return list(set(found_skills))
 
 def extract_entities(text: str) -> Dict[str, Any]:
+    # Extract name from the first non-empty lines of text (the first line is usually the candidate's name)
     name = ""
-    try:
-        nlp = _get_nlp()
-        doc = nlp(text)
-        for ent in doc.ents:
-            if ent.label_ == "PERSON":
-                name = ent.text
-                break
-    except Exception as e:
-        # Graceful fallback: Extract name from the first non-empty lines of text
-        lines_clean = [line.strip() for line in text.split('\n') if line.strip()]
-        for line in lines_clean[:3]:
-            if '@' not in line and not any(char.isdigit() for char in line) and len(line) < 35:
-                name = line
-                break
+    lines_clean = [line.strip() for line in text.split('\n') if line.strip()]
+    for line in lines_clean[:3]:
+        if '@' not in line and not any(char.isdigit() for char in line) and len(line) < 35:
+            name = line
+            break
             
     education = []
     experience = []
