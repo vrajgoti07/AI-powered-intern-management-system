@@ -287,14 +287,39 @@ export class AIController {
           ? Math.floor((Date.now() - new Date(lastActiveTask.updatedAt).getTime()) / (1000 * 3600 * 24))
           : 0;
 
+        const overdueHighPriorityTasks = await prisma.task.count({
+          where: {
+            internId: i.id,
+            priority: 'HIGH',
+            status: { in: ['TODO', 'IN_PROGRESS', 'REVIEW'] },
+            dueDate: { lt: new Date() }
+          }
+        });
+
+        const activeTasksCount = await prisma.task.count({
+          where: {
+            internId: i.id,
+            status: { in: ['TODO', 'IN_PROGRESS', 'REVIEW'] }
+          }
+        });
+        const workloadScore = Math.min(100, activeTasksCount * 15);
+
+        const lastReviewedTask = await prisma.task.findFirst({
+          where: { internId: i.id, status: 'COMPLETED' },
+          orderBy: { updatedAt: 'desc' }
+        });
+        const daysSinceMentorInteraction = lastReviewedTask
+          ? Math.floor((Date.now() - new Date(lastReviewedTask.updatedAt).getTime()) / (1000 * 3600 * 24))
+          : 5;
+
         return {
-          intern_id: i.id,
+          internId: i.id,
           name: i.user?.name || 'Unknown',
-          attendance_rate: i.attendance || 0,
-          days_since_last_activity: days_since_last_activity,
-          avg_task_rating: (i.score || 0) / 20,
-          sentiment_score: 0.5,
-          productivity_trend: 0
+          attendance: i.attendance || 0,
+          days_since_last_task: days_since_last_activity,
+          overdue_high_priority_tasks: overdueHighPriorityTasks,
+          workload_score: workloadScore,
+          days_since_mentor_interaction: daysSinceMentorInteraction
         };
       }));
 

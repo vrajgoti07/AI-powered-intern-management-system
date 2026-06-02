@@ -9,11 +9,19 @@ import { Navbar } from '../../../components/common/Navbar';
 import toast from 'react-hot-toast';
 import api from '../../../services/api';
 
-import { useSubmitFeedback } from '../../../hooks/queries';
+import { useSubmitFeedback, useInterns } from '../../../hooks/queries';
+import { useAuth } from '../../../hooks/useAuth';
 
 export const AIFeedback: React.FC = () => {
+  const { user } = useAuth();
+  const userRole = user?.role?.toLowerCase();
+
   const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
-  const [activeTab, setActiveTab] = useState<'mentor' | 'intern' | 'insights'>('insights');
+  const [activeTab, setActiveTab] = useState<'mentor' | 'intern' | 'insights'>(() => {
+    if (userRole === 'mentor') return 'mentor';
+    if (userRole === 'intern') return 'intern';
+    return 'insights';
+  });
   const [text, setText] = useState('');
   const [rating, setRating] = useState(5);
   const [loading, setLoading] = useState(false);
@@ -24,13 +32,39 @@ export const AIFeedback: React.FC = () => {
   const [history, setHistory] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
+  // Fetch interns for cohort selection if user is mentor or admin
+  const { data: allInterns = [] } = useInterns();
+  const myInterns = userRole === 'hr' || userRole === 'admin'
+    ? allInterns
+    : allInterns.filter((i: any) => i.mentor?.user?.name === user?.name || i.mentor?.userId === user?.id);
+
+  const [selectedInternId, setSelectedInternId] = useState<string>('');
+
+  useEffect(() => {
+    if (myInterns.length > 0 && !selectedInternId) {
+      setSelectedInternId(myInterns[0].id);
+    }
+  }, [myInterns, selectedInternId]);
+
   const fetchHistory = async () => {
+    if (activeTab === 'mentor' && !selectedInternId) {
+      setHistory([]);
+      return;
+    }
     setHistoryLoading(true);
     try {
-      const res = await api.get('/ai/feedback/history');
-      if (res.data.success) {
-        const rawData = res.data.data?.data || res.data.data || [];
-        setHistory(Array.isArray(rawData) ? rawData : []);
+      const url = activeTab === 'mentor'
+        ? `/interns/${selectedInternId}`
+        : '/ai/feedback/history';
+      const res = await api.get(url);
+      if (activeTab === 'mentor') {
+        const rawFeedbacks = res.data.data?.feedbacks || res.data.feedbacks || [];
+        setHistory(Array.isArray(rawFeedbacks) ? rawFeedbacks : []);
+      } else {
+        if (res.data.success) {
+          const rawData = res.data.data?.data || res.data.data || [];
+          setHistory(Array.isArray(rawData) ? rawData : []);
+        }
       }
     } catch (err) {
       console.error("Failed to fetch feedback history", err);
@@ -43,7 +77,7 @@ export const AIFeedback: React.FC = () => {
     if (activeTab === 'mentor' || activeTab === 'intern') {
       fetchHistory();
     }
-  }, [activeTab]);
+  }, [activeTab, selectedInternId]);
   
   const submitFeedbackMutation = useSubmitFeedback();
   
@@ -76,19 +110,45 @@ export const AIFeedback: React.FC = () => {
       toast.error("Please insert feedback remarks.");
       return;
     }
+    if (activeTab === 'mentor' && !selectedInternId) {
+      toast.error("Please select an intern to submit feedback for.");
+      return;
+    }
     setLoading(true);
     setSubmitError(null);
     setSentimentResult(null);
     try {
-      const response = await api.post('/ai/feedback', {
-        rating,
-        text,
-        comment: text
-      });
-      const data = response.data.data || response.data;
-      
-      const resolvedSentiment = data.sentiment || data.label || 'NEUTRAL';
-      setSentimentResult(resolvedSentiment);
+      if (activeTab === 'mentor') {
+        // Submit mentor feedback to general endpoint
+        await api.post('/feedback/mentor', {
+          rating,
+          comment: text,
+          category: 'GENERAL',
+          internId: selectedInternId
+        });
+
+        // Trigger AI sentiment analysis on the text
+        try {
+          const aiRes = await api.post('/ai/sentiment-analysis', {
+            feedbackText: text
+          });
+          const resolvedSentiment = aiRes.data.data?.sentiment || aiRes.data.data?.label || 'NEUTRAL';
+          setSentimentResult(resolvedSentiment);
+        } catch (aiErr) {
+          console.error("AI sentiment analysis failed", aiErr);
+        }
+      } else {
+        // Intern submits self-evaluation
+        const response = await api.post('/ai/feedback', {
+          rating,
+          text,
+          comment: text
+        });
+        const data = response.data.data || response.data;
+        const resolvedSentiment = data.sentiment || data.label || 'NEUTRAL';
+        setSentimentResult(resolvedSentiment);
+      }
+
       toast.success("Feedback submitted and sentiment analyzed!");
 
       // Clear input fields
@@ -119,30 +179,36 @@ export const AIFeedback: React.FC = () => {
           
           {/* Tabs */}
           <div className="flex border-b border-slate-200 gap-6">
-            <button 
-              onClick={() => setActiveTab('insights')}
-              className={`pb-3 font-extrabold text-xs tracking-tight transition-colors cursor-pointer border-b-2 ${
-                activeTab === 'insights' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-400 hover:text-slate-600'
-              }`}
-            >
-              AI Insights Dashboard
-            </button>
-            <button 
-              onClick={() => setActiveTab('mentor')}
-              className={`pb-3 font-extrabold text-xs tracking-tight transition-colors cursor-pointer border-b-2 ${
-                activeTab === 'mentor' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-400 hover:text-slate-600'
-              }`}
-            >
-              Mentor Feedback Submission
-            </button>
-            <button 
-              onClick={() => setActiveTab('intern')}
-              className={`pb-3 font-extrabold text-xs tracking-tight transition-colors cursor-pointer border-b-2 ${
-                activeTab === 'intern' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-400 hover:text-slate-600'
-              }`}
-            >
-              Intern Self Evaluation
-            </button>
+            {(userRole === 'hr' || userRole === 'admin' || userRole === 'mentor' || userRole === 'intern') && (
+              <button 
+                onClick={() => setActiveTab('insights')}
+                className={`pb-3 font-extrabold text-xs tracking-tight transition-colors cursor-pointer border-b-2 ${
+                  activeTab === 'insights' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-400 hover:text-slate-600'
+                }`}
+              >
+                AI Insights Dashboard
+              </button>
+            )}
+            {(userRole === 'mentor' || userRole === 'admin') && (
+              <button 
+                onClick={() => setActiveTab('mentor')}
+                className={`pb-3 font-extrabold text-xs tracking-tight transition-colors cursor-pointer border-b-2 ${
+                  activeTab === 'mentor' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-400 hover:text-slate-600'
+                }`}
+              >
+                Mentor Feedback Submission
+              </button>
+            )}
+            {(userRole === 'intern' || userRole === 'admin') && (
+              <button 
+                onClick={() => setActiveTab('intern')}
+                className={`pb-3 font-extrabold text-xs tracking-tight transition-colors cursor-pointer border-b-2 ${
+                  activeTab === 'intern' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-400 hover:text-slate-600'
+                }`}
+              >
+                Intern Self Evaluation
+              </button>
+            )}
           </div>
 
           <div className="text-left">
@@ -274,17 +340,34 @@ export const AIFeedback: React.FC = () => {
 
                     <form onSubmit={handleAnalyzeFeedback} className="space-y-4">
                       {activeTab === 'mentor' && (
-                        <div className="space-y-1 pb-2">
-                          <label className="text-xs font-bold text-slate-600">Rating (1-5 Stars)</label>
-                          <input 
-                            type="number" 
-                            min="1" 
-                            max="5"
-                            value={rating}
-                            onChange={(e) => setRating(Number(e.target.value))}
-                            className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-150 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white"
-                          />
-                        </div>
+                        <>
+                          <div className="space-y-1 pb-2">
+                            <label className="text-xs font-bold text-slate-600">Select Intern</label>
+                            <select
+                              value={selectedInternId}
+                              onChange={(e) => setSelectedInternId(e.target.value)}
+                              className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-150 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white cursor-pointer"
+                              required
+                            >
+                              <option value="">-- Select Intern --</option>
+                              {myInterns.map((i: any) => (
+                                <option key={i.id} value={i.id}>{i.user?.name || 'Unknown'}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="space-y-1 pb-2">
+                            <label className="text-xs font-bold text-slate-600">Rating (1-5 Stars)</label>
+                            <input 
+                              type="number" 
+                              min="1" 
+                              max="5"
+                              value={rating}
+                              onChange={(e) => setRating(Number(e.target.value))}
+                              className="w-full text-xs font-semibold px-4 py-2.5 bg-slate-50 border border-slate-150 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white"
+                            />
+                          </div>
+                        </>
                       )}
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-600">Feedback Details</label>

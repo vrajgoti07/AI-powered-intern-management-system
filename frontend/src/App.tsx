@@ -424,7 +424,7 @@ const App: React.FC = () => {
                 <Route
                   path="/shared/ai-feedback"
                   element={
-                    <ProtectedRoute allowedRoles={['intern', 'mentor']} requireActiveIntern>
+                    <ProtectedRoute allowedRoles={['hr', 'mentor', 'intern']} requireActiveIntern>
                       <AIFeedback />
                     </ProtectedRoute>
                   }
