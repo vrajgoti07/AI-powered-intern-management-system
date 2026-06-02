@@ -115,6 +115,57 @@ export class AIController {
   }
 
   /**
+   * Delete parsed resume from history with strict role check
+   */
+  async deleteParseHistory(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const user = (req as any).user;
+      if (!user) {
+        errorResponse(res, 'Authentication required', 401);
+        return;
+      }
+
+      const parsedResume = await prisma.parsedResume.findUnique({
+        where: { id: id as string },
+      });
+
+      if (!parsedResume) {
+        errorResponse(res, 'Parsed resume not found', 404);
+        return;
+      }
+
+      // Role isolation check for deletion
+      if (user.role === 'INTERN') {
+        if (parsedResume.userId !== user.id) {
+          errorResponse(res, 'You are not authorized to delete this resume', 403);
+          return;
+        }
+      } else if (user.role === 'MENTOR') {
+        const mentor = await prisma.mentor.findUnique({
+          where: { userId: user.id },
+          include: { interns: true },
+        });
+        const internUserIds = mentor?.interns.map((i: any) => i.userId) || [];
+        const authorizedUserIds = [user.id, ...internUserIds];
+
+        if (!authorizedUserIds.includes(parsedResume.userId)) {
+          errorResponse(res, 'You are not authorized to delete this resume', 403);
+          return;
+        }
+      }
+
+      await prisma.parsedResume.delete({
+        where: { id: id as string },
+      });
+
+      successResponse(res, 'Parsed resume deleted successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * Match an intern profile to department and role requirements
    */
   async matchRole(req: Request, res: Response, next: NextFunction): Promise<void> {

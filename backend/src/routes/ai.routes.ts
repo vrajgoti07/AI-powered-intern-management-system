@@ -36,6 +36,7 @@ router.use(aiLimiter);
  */
 router.post('/parse-resume', upload.single('file'), aiController.parseResume);
 router.get('/parse-history', aiController.getParseHistory);
+router.delete('/parse-history/:id', aiController.deleteParseHistory);
 
 /**
  * @route   POST /api/ai/match-role

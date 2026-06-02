@@ -177,6 +177,26 @@ export const AIResumeParser: React.FC = () => {
     toast.success(`Loaded parsed results for ${item.name}`);
   };
 
+  const handleDeleteHistory = async (id: string) => {
+    if (!window.confirm("Are you sure you want to permanently delete this resume parsing history record?")) {
+      return;
+    }
+
+    const deleteToast = toast.loading("Deleting history record...");
+    try {
+      const res = await api.delete(`/ai/parse-history/${id}`);
+      if (res.data?.success) {
+        toast.success("History record deleted successfully", { id: deleteToast });
+        fetchHistory(); // Refresh history log
+      } else {
+        throw new Error("Failed to delete record");
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.response?.data?.message || "Failed to delete parsing history record", { id: deleteToast });
+    }
+  };
+
   // Handle Drag Events
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -912,14 +932,25 @@ export const AIResumeParser: React.FC = () => {
                             })}
                           </td>
                           <td className="px-4 py-3">
-                            <button
-                              onClick={() => handleViewHistoryDetails(item)}
-                              className="p-1.5 hover:bg-slate-100 rounded-xl transition-colors text-slate-400 hover:text-indigo-600 cursor-pointer border-0 bg-transparent flex items-center justify-center gap-1 font-bold text-[10px]"
-                              title="View details"
-                            >
-                              <Eye className="w-4 h-4" />
-                              <span>View Details</span>
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleViewHistoryDetails(item)}
+                                className="p-1.5 hover:bg-slate-100 rounded-xl transition-colors text-slate-400 hover:text-indigo-600 cursor-pointer border-0 bg-transparent flex items-center justify-center gap-1 font-bold text-[10px]"
+                                title="View details"
+                              >
+                                <Eye className="w-4 h-4" />
+                                <span>View Details</span>
+                              </button>
+                              
+                              <button
+                                onClick={() => handleDeleteHistory(item.id)}
+                                className="p-1.5 hover:bg-rose-50 rounded-xl transition-colors text-slate-400 hover:text-rose-600 cursor-pointer border-0 bg-transparent flex items-center justify-center gap-1 font-bold text-[10px]"
+                                title="Delete record"
+                              >
+                                <Trash2 className="w-4 h-4 text-rose-500" />
+                                <span>Delete</span>
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
