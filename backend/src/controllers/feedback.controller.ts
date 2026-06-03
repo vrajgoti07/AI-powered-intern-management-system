@@ -201,7 +201,7 @@ export class FeedbackController {
         const mentor = await prisma.mentor.findUnique({
           where: { userId: req.user!.id }
         });
-        if (!mentor || mentor.id !== mentorId) {
+        if (!mentor || (mentor.id !== mentorId && mentor.userId !== mentorId)) {
           res.status(403).json({ success: false, message: 'Forbidden: You can only view your own mentor dashboard' });
           return;
         }
