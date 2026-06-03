@@ -117,6 +117,7 @@ model Intern {
   updatedAt           DateTime            @updatedAt
   attendances         Attendance[]
   feedbacks           Feedback[]
+  actionItems         ActionItem[]
   department          Department          @relation("ProfileInterns", fields: [departmentId], references: [id])
   mentor              Mentor?             @relation(fields: [mentorId], references: [id])
   user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -169,6 +170,7 @@ model Mentor {
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
   feedbacks      Feedback[]
+  actionItems    ActionItem[]
   interns        Intern[]
   activities     MentorActivity[]
   analytics      MentorAnalytics[]
@@ -262,10 +264,16 @@ model Feedback {
   rating    Int
   comment   String
   category  String?
+  sentiment String?
+  sentimentScore Float?
+  confidenceScore Float?
+  keywords  String[] @default([])
+  executiveInsight String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   intern    Intern   @relation(fields: [internId], references: [id], onDelete: Cascade)
   mentor    Mentor   @relation(fields: [mentorId], references: [id])
+  actionItems ActionItem[]
 
   @@index([internId])
   @@index([mentorId])
@@ -821,4 +829,23 @@ model MentorAvailability {
   updatedAt          DateTime @updatedAt @map("updated_at")
 
   @@map("mentor_availability")
+}
+
+model ActionItem {
+  id         String   @id @default(uuid())
+  feedbackId String?
+  internId   String
+  mentorId   String?
+  task       String
+  status     String   @default("TODO") // TODO, IN_PROGRESS, COMPLETED
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  feedback   Feedback? @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  intern     Intern    @relation(fields: [internId], references: [id], onDelete: Cascade)
+  mentor     Mentor?   @relation(fields: [mentorId], references: [id])
+
+  @@index([feedbackId])
+  @@index([internId])
+  @@index([mentorId])
+  @@map("action_items")
 }

@@ -2,18 +2,28 @@ import { Router } from 'express';
 import feedbackController from '../controllers/feedback.controller';
 import { authenticate } from '../middleware/auth.middleware';
 import { authorize } from '../middleware/role.middleware';
-import { validate } from '../middleware/validate.middleware';
-import { createFeedbackSchema } from '../validations/feedback.validation';
 
 const router = Router();
 
 router.use(authenticate);
 
-// Intern submits feedback
+// HR aggregated insights
+router.get(
+  '/insights',
+  authorize('HR', 'SUPER_ADMIN', 'MENTOR'),
+  feedbackController.getHRInsights
+);
+
+// Scoped feedback history
+router.get(
+  '/history',
+  feedbackController.getFeedbackHistory
+);
+
+// Intern submits self-evaluation reflection
 router.post(
-  '/',
+  '/intern',
   authorize('INTERN'),
-  validate(createFeedbackSchema),
   feedbackController.createFeedback
 );
 
@@ -24,11 +34,18 @@ router.post(
   feedbackController.createMentorFeedback
 );
 
-// HR retrieves feedbacks
+// HR retrieves feedbacks list
 router.get(
   '/hr',
-  authorize('HR', 'ADMIN'),
+  authorize('HR', 'ADMIN', 'SUPER_ADMIN'),
   feedbackController.getHRFeedbacks
+);
+
+// Seed realistic demo feedback and action items data
+router.post(
+  '/seed',
+  authorize('HR', 'ADMIN', 'SUPER_ADMIN'),
+  feedbackController.seedFeedbackData
 );
 
 export default router;
