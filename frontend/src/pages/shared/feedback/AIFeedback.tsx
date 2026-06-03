@@ -13,6 +13,7 @@ import toast from 'react-hot-toast';
 import api from '../../../services/api';
 import { useAuth } from '../../../hooks/useAuth';
 import { useInterns, useDepartments } from '../../../hooks/queries';
+import { useNavigate } from 'react-router-dom';
 
 interface ActionItem {
   id: string;
@@ -58,11 +59,19 @@ interface HRInsights {
 }
 
 export const AIFeedback: React.FC = () => {
-  const { user } = useAuth();
-  const realRole = user?.role || 'INTERN';
+  const useSession = useAuth;
+  const { user, isLoading } = useSession();
+  const navigate = useNavigate();
   
-  // Local role override switcher for development testing
-  const [activeRole, setActiveRole] = useState<string>(realRole);
+  // Normalize user role: 'hr_admin' | 'mentor' | 'intern'
+  const rawRole = user?.role as string | undefined;
+  const role = (rawRole === 'hr' || rawRole === 'admin' || rawRole === 'super_admin' || rawRole === 'hr_admin')
+    ? 'hr_admin'
+    : rawRole; // 'mentor' | 'intern'
+  
+  // Local role override switcher for development testing (developers only)
+  const [activeRoleOverride, setActiveRoleOverride] = useState<'hr_admin' | 'mentor' | 'intern' | null>(null);
+  const displayRole = activeRoleOverride || role;
   
   const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [loading, setLoading] = useState(true);
@@ -96,8 +105,17 @@ export const AIFeedback: React.FC = () => {
   const { data: allInterns = [] } = useInterns();
   const { data: departments = [] } = useDepartments();
 
+  // Redirect if not logged in or invalid role
+  useEffect(() => {
+    if (!isLoading) {
+      if (!user || !role || !['hr_admin', 'mentor', 'intern'].includes(role)) {
+        navigate('/login');
+      }
+    }
+  }, [user, role, isLoading, navigate]);
+
   // Scoped list of interns for the logged-in mentor
-  const myInterns = activeRole === 'MENTOR'
+  const myInterns = displayRole === 'mentor'
     ? allInterns.filter((i: any) => i.mentor?.user?.name === user?.name || i.mentor?.userId === user?.id)
     : allInterns;
 
@@ -110,73 +128,47 @@ export const AIFeedback: React.FC = () => {
 
   // Load Dashboards Data
   const loadDashboardData = async () => {
+    if (!user || !displayRole) return;
     setLoading(true);
     try {
-      if (activeRole === 'HR' || activeRole === 'SUPER_ADMIN') {
-        const insRes = await api.get('/feedback/insights', {
+      if (displayRole === 'hr_admin') {
+        const res = await api.get('/feedback/all', {
           params: {
             departmentId: selectedDeptId || undefined,
             internId: selectedInternId || undefined,
             cycle: selectedCycle
           }
         });
-        if (insRes.data.success) {
-          setInsights(insRes.data.data);
-        }
-
-        // Load all action items
-        const actRes = await api.get('/action-items');
-        if (actRes.data.success) {
-          setActionItems(actRes.data.data || []);
+        if (res.data.success) {
+          setInsights(res.data.data.insights);
+          setActionItems(res.data.data.actionItems || []);
         }
       } 
       
-      else if (activeRole === 'MENTOR') {
-        // Mentor details/history for selected intern
-        if (selectedInternId) {
-          const insRes = await api.get('/feedback/insights', {
-            params: { internId: selectedInternId }
-          });
-          if (insRes.data.success) {
-            setInsights(insRes.data.data);
-          }
-
-          const histRes = await api.get('/feedback/history', {
-            params: { internId: selectedInternId }
-          });
-          if (histRes.data.success) {
-            setFeedbackHistory(histRes.data.data || []);
-          }
-
-          const actRes = await api.get('/action-items', {
-            params: { internId: selectedInternId }
-          });
-          if (actRes.data.success) {
-            setActionItems(actRes.data.data || []);
-          }
+      else if (displayRole === 'mentor') {
+        const mentorId = user?.mentor?.id || user?.id;
+        const res = await api.get(`/feedback/mentor/${mentorId}`, {
+          params: { internId: selectedInternId || undefined }
+        });
+        if (res.data.success) {
+          setInsights(res.data.data.insights);
+          setFeedbackHistory(res.data.data.feedbackHistory || []);
+          setActionItems(res.data.data.actionItems || []);
         }
       } 
       
-      else if (activeRole === 'INTERN') {
-        // Intern sees their own insights & history
-        const insRes = await api.get('/feedback/insights');
-        if (insRes.data.success) {
-          setInsights(insRes.data.data);
-        }
-
-        const histRes = await api.get('/feedback/history');
-        if (histRes.data.success) {
-          setFeedbackHistory(histRes.data.data || []);
-        }
-
-        const actRes = await api.get('/action-items');
-        if (actRes.data.success) {
-          setActionItems(actRes.data.data || []);
+      else if (displayRole === 'intern') {
+        const internId = user?.intern?.id || user?.id;
+        const res = await api.get(`/feedback/intern/${internId}`);
+        if (res.data.success) {
+          setInsights(res.data.data.insights);
+          setFeedbackHistory(res.data.data.feedbackHistory || []);
+          setActionItems(res.data.data.actionItems || []);
         }
       }
     } catch (error) {
       console.error('Failed to load feedback dashboard data', error);
-      toast.error('Could not sync feedback insights. Seeding might be required.');
+      toast.error('Could not sync feedback insights.');
     } finally {
       setLoading(false);
     }
@@ -184,7 +176,7 @@ export const AIFeedback: React.FC = () => {
 
   useEffect(() => {
     loadDashboardData();
-  }, [activeRole, selectedInternId, selectedDeptId, selectedCycle]);
+  }, [displayRole, selectedInternId, selectedDeptId, selectedCycle]);
 
   // Seed demo data helper
   const handleSeedDemoData = async () => {
@@ -213,7 +205,7 @@ export const AIFeedback: React.FC = () => {
     
     setSubmittingFeedback(true);
     try {
-      if (activeRole === 'MENTOR') {
+      if (displayRole === 'mentor') {
         if (!selectedInternId) {
           toast.error('Please select an intern.');
           setSubmittingFeedback(false);
@@ -389,30 +381,32 @@ export const AIFeedback: React.FC = () => {
         <Navbar onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} title="AI Feedback & Sentiments" />
 
         {/* Development Override Switcher Pill */}
-        <div className="bg-white border-b border-slate-100 px-6 py-2.5 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black uppercase tracking-wider text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-md">Dev Mode Switcher</span>
-            <p className="text-xs font-bold text-slate-400">Force render role layouts for testing:</p>
+        {import.meta.env.DEV && role === 'hr_admin' && (
+          <div className="bg-white border-b border-slate-100 px-6 py-2.5 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black uppercase tracking-wider text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-md">Dev Mode Switcher</span>
+              <p className="text-xs font-bold text-slate-400">Force render role layouts for testing:</p>
+            </div>
+            <div className="flex bg-slate-105 p-0.5 rounded-xl border border-slate-200 shadow-inner">
+              {['hr_admin', 'mentor', 'intern'].map((r) => (
+                <button
+                  key={r}
+                  onClick={() => {
+                    setActiveRoleOverride(r as any);
+                    setSelectedInternId('');
+                  }}
+                  className={`px-3 py-1 text-[10px] font-extrabold tracking-tight rounded-lg cursor-pointer transition-all ${
+                    displayRole === r 
+                      ? 'bg-white text-slate-800 shadow-sm border border-slate-200' 
+                      : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  {r === 'hr_admin' ? 'HR Admin View' : r === 'mentor' ? 'Mentor View' : 'Intern View'}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex bg-slate-100 p-0.5 rounded-xl border border-slate-200 shadow-inner">
-            {['HR', 'MENTOR', 'INTERN'].map((role) => (
-              <button
-                key={role}
-                onClick={() => {
-                  setActiveRole(role);
-                  setSelectedInternId('');
-                }}
-                className={`px-3 py-1 text-[10px] font-extrabold tracking-tight rounded-lg cursor-pointer transition-all ${
-                  activeRole === role 
-                    ? 'bg-white text-slate-800 shadow-sm border border-slate-200' 
-                    : 'text-slate-400 hover:text-slate-600'
-                }`}
-              >
-                {role === 'HR' ? 'HR Admin View' : role === 'MENTOR' ? 'Mentor View' : 'Intern View'}
-              </button>
-            ))}
-          </div>
-        </div>
+        )}
 
         {/* Scrollable Workspace */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -428,7 +422,7 @@ export const AIFeedback: React.FC = () => {
               {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
               {/* DASHBOARD 1: HR ADMIN VIEW                                       */}
               {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-              {(activeRole === 'HR' || activeRole === 'SUPER_ADMIN') && (
+              {displayRole === 'hr_admin' && (
                 <motion.div
                   key="hr-dash"
                   initial={{ opacity: 0, y: 10 }}
@@ -742,7 +736,7 @@ export const AIFeedback: React.FC = () => {
               {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
               {/* DASHBOARD 2: MENTOR VIEW                                         */}
               {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-              {activeRole === 'MENTOR' && (
+              {displayRole === 'mentor' && (
                 <motion.div
                   key="mentor-dash"
                   initial={{ opacity: 0, y: 10 }}
@@ -935,7 +929,7 @@ export const AIFeedback: React.FC = () => {
               {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
               {/* DASHBOARD 3: INTERN VIEW                                         */}
               {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-              {activeRole === 'INTERN' && (
+              {displayRole === 'intern' && (
                 <motion.div
                   key="intern-dash"
                   initial={{ opacity: 0, y: 10 }}

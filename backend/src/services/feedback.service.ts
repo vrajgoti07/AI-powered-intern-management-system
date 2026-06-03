@@ -290,6 +290,98 @@ export class FeedbackService {
   }
 
   /**
+   * Get Consolidated HR Dashboard Data
+   */
+  async getHRDashboardData(params: { departmentId?: string; internId?: string; cycle?: string }) {
+    const insights = await this.getHRInsights(params);
+    const actionItems = await prisma.actionItem.findMany({
+      where: params.internId 
+        ? { internId: params.internId } 
+        : (params.departmentId ? { intern: { departmentId: params.departmentId } } : {}),
+      include: {
+        intern: { include: { user: { select: { name: true } } } }
+      },
+      orderBy: { updatedAt: 'desc' }
+    });
+    return { insights, actionItems };
+  }
+
+  /**
+   * Get Consolidated Mentor Dashboard Data
+   */
+  async getMentorDashboardData(params: { mentorUserId: string; internId?: string }) {
+    const mentor = await prisma.mentor.findUnique({
+      where: { userId: params.mentorUserId }
+    });
+    if (!mentor) throw new Error('Mentor profile not found');
+
+    const filterInternId = params.internId || undefined;
+
+    // 1. Fetch insights
+    const insights = await this.getHRInsights({
+      internId: filterInternId
+    });
+
+    // 2. Fetch feedback history
+    const feedbackHistory = await prisma.feedback.findMany({
+      where: {
+        mentorId: mentor.id,
+        internId: filterInternId
+      },
+      include: {
+        intern: { include: { user: { select: { name: true, avatarUrl: true } } } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // 3. Fetch action items
+    const actionItems = await prisma.actionItem.findMany({
+      where: {
+        mentorId: mentor.id,
+        internId: filterInternId
+      },
+      include: {
+        intern: { include: { user: { select: { name: true } } } }
+      },
+      orderBy: { updatedAt: 'desc' }
+    });
+
+    return { insights, feedbackHistory, actionItems };
+  }
+
+  /**
+   * Get Consolidated Intern Dashboard Data
+   */
+  async getInternDashboardData(params: { internUserId: string }) {
+    const intern = await prisma.intern.findUnique({
+      where: { userId: params.internUserId }
+    });
+    if (!intern) throw new Error('Intern profile not found');
+
+    // 1. Fetch insights
+    const insights = await this.getHRInsights({
+      internId: intern.id
+    });
+
+    // 2. Fetch feedback history
+    const feedbackHistory = await prisma.feedback.findMany({
+      where: { internId: intern.id },
+      include: {
+        mentor: { include: { user: { select: { name: true, avatarUrl: true } } } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // 3. Fetch action items
+    const actionItems = await prisma.actionItem.findMany({
+      where: { internId: intern.id },
+      orderBy: { updatedAt: 'desc' }
+    });
+
+    return { insights, feedbackHistory, actionItems };
+  }
+
+  /**
    * Update an Action Item Status
    */
   async updateActionItem(id: string, status: string, userId: string, role: string) {

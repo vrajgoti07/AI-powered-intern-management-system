@@ -14,6 +14,27 @@ router.get(
   feedbackController.getHRInsights
 );
 
+// Consolidated HR Admin route
+router.get(
+  '/all',
+  authorize('HR', 'ADMIN', 'SUPER_ADMIN'),
+  feedbackController.getHRAllData
+);
+
+// Consolidated Mentor route
+router.get(
+  '/mentor/:mentorId',
+  authorize('HR', 'ADMIN', 'SUPER_ADMIN', 'MENTOR', 'DEPARTMENT_HEAD'),
+  feedbackController.getMentorAllData
+);
+
+// Consolidated Intern route
+router.get(
+  '/intern/:internId',
+  authorize('HR', 'ADMIN', 'SUPER_ADMIN', 'INTERN'),
+  feedbackController.getInternAllData
+);
+
 // Scoped feedback history
 router.get(
   '/history',
