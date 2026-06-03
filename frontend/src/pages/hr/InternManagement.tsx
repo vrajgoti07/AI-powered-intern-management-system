@@ -188,7 +188,7 @@ export const InternManagement: React.FC = () => {
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setIsDeptOpen(false)} />
                     <div className="absolute top-full left-0 mt-1.5 w-48 bg-white border border-slate-100 shadow-xl rounded-2xl py-1.5 z-20 animate-in fade-in zoom-in-95 duration-200">
-                      {['All', 'Engineering', 'Design', 'Marketing', 'HR', 'Finance'].map(dept => (
+                      {['All', 'Engineering', 'Design', 'Marketing', 'HR', 'Finance', 'AIML', 'Web Development', 'Data Science', 'Cybersecurity'].map(dept => (
                         <button
                           key={dept}
                           onClick={() => { setDeptFilter(dept); setIsDeptOpen(false); }}

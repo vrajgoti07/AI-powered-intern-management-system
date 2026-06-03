@@ -122,6 +122,10 @@ export const RegisterPage: React.FC = () => {
                 <option>Design</option>
                 <option>Marketing</option>
                 <option>HR</option>
+                <option>AIML</option>
+                <option>Web Development</option>
+                <option>Data Science</option>
+                <option>Cybersecurity</option>
               </select>
             </div>
           </div>

@@ -20,6 +20,10 @@ const deptColors: Record<string, string> = {
   Marketing: "bg-pink-50 text-pink-700 border border-pink-100",
   HR: "bg-emerald-50 text-emerald-700 border border-emerald-100",
   Finance: "bg-amber-50 text-amber-700 border border-amber-100",
+  AIML: "bg-blue-50 text-blue-700 border border-blue-100",
+  "Web Development": "bg-sky-50 text-sky-700 border border-sky-100",
+  "Data Science": "bg-teal-50 text-teal-700 border border-teal-100",
+  Cybersecurity: "bg-rose-50 text-rose-700 border border-rose-100",
 };
 
 const priorityColors: Record<string, string> = {

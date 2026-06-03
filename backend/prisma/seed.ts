@@ -12,6 +12,7 @@ async function main() {
 
   // Delete all existing data in correct dependency order
   console.log('Cleaning up database tables...');
+  await prisma.aIRecommendation.deleteMany({});
   await prisma.departmentActivity.deleteMany({});
   await prisma.project.deleteMany({});
   await prisma.leave.deleteMany({});
@@ -122,6 +123,46 @@ async function main() {
       headId: hrHeadUser.id,
       colorTheme: 'emerald',
       description: 'Human resources, talent onboarding, and culture management',
+      isActive: true,
+    },
+  });
+
+  await prisma.department.create({
+    data: {
+      name: 'AIML',
+      code: 'AIML',
+      colorTheme: 'blue',
+      description: 'Artificial Intelligence and Machine Learning research and development',
+      isActive: true,
+    },
+  });
+
+  await prisma.department.create({
+    data: {
+      name: 'Web Development',
+      code: 'WDEV',
+      colorTheme: 'sky',
+      description: 'Frontend, backend, and full-stack web applications development',
+      isActive: true,
+    },
+  });
+
+  await prisma.department.create({
+    data: {
+      name: 'Data Science',
+      code: 'DSCI',
+      colorTheme: 'teal',
+      description: 'Data analytics, business intelligence, and statistical modeling',
+      isActive: true,
+    },
+  });
+
+  await prisma.department.create({
+    data: {
+      name: 'Cybersecurity',
+      code: 'CYBR',
+      colorTheme: 'rose',
+      description: 'Security audits, penetration testing, and zero-trust engineering',
       isActive: true,
     },
   });

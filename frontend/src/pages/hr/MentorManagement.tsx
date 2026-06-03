@@ -285,6 +285,10 @@ export const MentorManagement: React.FC = () => {
                   <option value="Marketing">Marketing</option>
                   <option value="HR">HR</option>
                   <option value="Finance">Finance</option>
+                  <option value="AIML">AIML</option>
+                  <option value="Web Development">Web Development</option>
+                  <option value="Data Science">Data Science</option>
+                  <option value="Cybersecurity">Cybersecurity</option>
                 </>
               )}
             </select>
