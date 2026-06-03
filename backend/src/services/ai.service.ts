@@ -424,8 +424,111 @@ export class AIService {
       });
       return response.data;
     } catch (error: any) {
-      logger.error(`Risk evaluation failed: ${error.message}`);
-      throw error;
+      logger.warn('AI Microservice offline. Triggering fallback Risk evaluation heuristics...');
+
+      // Local fallback: compute risk scores from the raw intern telemetry
+      const results = internsData.map(intern => {
+        const attendance = intern.attendance ?? 100;
+        const daysSinceTask = intern.days_since_last_task ?? 0;
+        const overdueHigh = intern.overdue_high_priority_tasks ?? 0;
+        const workload = intern.workload_score ?? 0;
+        const daysSinceMentor = intern.days_since_mentor_interaction ?? 0;
+
+        // Build risk issues and reasons dynamically
+        const riskIssues: string[] = [];
+        const reasons: string[] = [];
+        let penalty = 0;
+
+        if (attendance < 70) {
+          riskIssues.push('Attendance Dips');
+          reasons.push(`Attendance rate has dropped to ${attendance}%, well below the 75% safety threshold.`);
+          penalty += 25;
+        } else if (attendance < 80) {
+          riskIssues.push('Marginal Attendance');
+          reasons.push(`Attendance rate is ${attendance}%, approaching the warning threshold.`);
+          penalty += 10;
+        }
+
+        if (daysSinceTask > 5) {
+          riskIssues.push('Task Inactivity');
+          reasons.push(`No task activity recorded for ${daysSinceTask} days.`);
+          penalty += 20;
+        } else if (daysSinceTask > 3) {
+          riskIssues.push('Task Pace Drop');
+          reasons.push(`Days since last task submission has risen to ${daysSinceTask} days.`);
+          penalty += 10;
+        }
+
+        if (overdueHigh > 0) {
+          riskIssues.push('Overdue High-Priority Tasks');
+          reasons.push(`${overdueHigh} high-priority task${overdueHigh > 1 ? 's' : ''} past due date.`);
+          penalty += 15 * overdueHigh;
+        }
+
+        if (workload > 70) {
+          riskIssues.push('Workload Overload');
+          reasons.push(`Workload score is ${workload}%, indicating potential burnout risk.`);
+          penalty += 10;
+        }
+
+        if (daysSinceMentor > 7) {
+          riskIssues.push('Mentor Engagement Gap');
+          reasons.push(`No mentor interaction recorded for ${daysSinceMentor} days.`);
+          penalty += 15;
+        } else if (daysSinceMentor > 4) {
+          riskIssues.push('Low Mentor Contact');
+          reasons.push(`Last mentor interaction was ${daysSinceMentor} days ago.`);
+          penalty += 5;
+        }
+
+        // Calculate success probability (capped between 5 and 99)
+        const baseScore = Math.min(100, attendance);
+        const successProbability = Math.max(5, Math.min(99, baseScore - penalty));
+
+        // Determine risk level
+        let riskLevel: 'HIGH' | 'MEDIUM' | 'LOW';
+        if (successProbability < 50 || penalty >= 40) {
+          riskLevel = 'HIGH';
+        } else if (successProbability < 75 || penalty >= 20) {
+          riskLevel = 'MEDIUM';
+        } else {
+          riskLevel = 'LOW';
+        }
+
+        // Stable profiles should reflect that
+        if (riskIssues.length === 0) {
+          riskIssues.push('None / Stable Profile');
+          reasons.push('All tracked indicators are within healthy operational ranges.');
+        }
+
+        // Generate recommendation
+        let recommendation: string;
+        if (riskLevel === 'HIGH') {
+          recommendation = 'Flagged for immediate mentor evaluation. Recommend reducing active task quotas and scheduling a 1-on-1 check-in.';
+        } else if (riskLevel === 'MEDIUM') {
+          recommendation = 'Workload balancing recommended. Advise mentor to review task difficulty and engagement metrics.';
+        } else {
+          recommendation = 'Stable profile. Continue current trajectory and consider for advanced project assignments.';
+        }
+
+        return {
+          internId: intern.internId,
+          name: intern.name,
+          attendance,
+          department: intern.department || '',
+          college: intern.college || '',
+          riskLevel,
+          successProbability,
+          riskIssues,
+          reasons,
+          recommendation,
+          days_since_last_task: daysSinceTask,
+          workload_score: workload,
+          days_since_mentor_interaction: daysSinceMentor,
+        };
+      });
+
+      return results;
     }
   }
 }

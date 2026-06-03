@@ -274,7 +274,8 @@ export class AIController {
       // Fetch interns to evaluate
       const interns = await prisma.intern.findMany({
         include: {
-          user: { select: { name: true } }
+          user: { select: { name: true } },
+          department: { select: { name: true } }
         }
       });
 
@@ -316,6 +317,8 @@ export class AIController {
           internId: i.id,
           name: i.user?.name || 'Unknown',
           attendance: i.attendance || 0,
+          department: (i as any).department?.name || '',
+          college: (i as any).college || '',
           days_since_last_task: days_since_last_activity,
           overdue_high_priority_tasks: overdueHighPriorityTasks,
           workload_score: workloadScore,
