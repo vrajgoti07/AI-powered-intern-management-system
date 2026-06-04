@@ -71,23 +71,32 @@ export const PortfolioDashboard: React.FC = () => {
   const [newTech, setNewTech] = useState('React & TS');
   const [newLink, setNewLink] = useState('https://github.com');
 
-  // Load custom links and location on start
+  // Load custom links and location on start, auto-syncing from localStorage to DB if missing
   useEffect(() => {
     const savedGit = localStorage.getItem(`git_${user?.id}`);
     const savedLink = localStorage.getItem(`link_${user?.id}`);
     const savedLoc = localStorage.getItem(`loc_${user?.id}`);
     
+    let shouldSync = false;
+    let gitToSet = '';
+    let linkToSet = '';
+
     if (myInternData?.githubUrl) {
-      setGithubUrl(myInternData.githubUrl);
+      gitToSet = myInternData.githubUrl;
     } else if (savedGit) {
-      setGithubUrl(savedGit);
+      gitToSet = savedGit;
+      shouldSync = true;
     }
     
     if (myInternData?.linkedinUrl) {
-      setLinkedinUrl(myInternData.linkedinUrl);
+      linkToSet = myInternData.linkedinUrl;
     } else if (savedLink) {
-      setLinkedinUrl(savedLink);
+      linkToSet = savedLink;
+      shouldSync = true;
     }
+
+    if (gitToSet) setGithubUrl(gitToSet);
+    if (linkToSet) setLinkedinUrl(linkToSet);
 
     if (myInternData?.workAddress) {
       setLocationVal(myInternData.workAddress);
@@ -95,6 +104,19 @@ export const PortfolioDashboard: React.FC = () => {
       setLocationVal(myInternData.address);
     } else if (savedLoc) {
       setLocationVal(savedLoc);
+    }
+
+    if (shouldSync && myInternData?.id) {
+      api.put(`/interns/${myInternData.id}`, {
+        githubUrl: gitToSet || null,
+        linkedinUrl: linkToSet || null
+      })
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ['interns', 'user', user?.id] });
+      })
+      .catch((err) => {
+        console.error("Auto-sync of profile links failed:", err);
+      });
     }
   }, [user, myInternData]);
 
