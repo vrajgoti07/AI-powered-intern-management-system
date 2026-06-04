@@ -37,6 +37,80 @@ const FAKE_LOCAL_PARTS = new Set([
   'do-not-reply', 'admin', 'user', 'hello', 'info',
 ]);
 
+const getEditDistance = (a: string, b: string): number => {
+  if (a.length === 0) return b.length;
+  if (b.length === 0) return a.length;
+  const matrix: number[][] = [];
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1, // substitution
+          matrix[i][j - 1] + 1,     // insertion
+          matrix[i - 1][j] + 1      // deletion
+        );
+      }
+    }
+  }
+  return matrix[b.length][a.length];
+};
+
+const COMMON_SERVICE_TYPOS = new Set([
+  'gamil', 'gmaill', 'gmal', 'gail', 'gmial', 'gmeil', 'gmai', 'gml',
+  'yaho', 'yhoo', 'yahooo', 'hotail', 'hotamil', 'hotmaill', 'hotmal',
+  'outlok', 'outllok', 'outlookk'
+]);
+
+const isFakeDomainName = (domain: string): boolean => {
+  const parts = domain.split('.');
+  const name = parts[0]?.toLowerCase() || '';
+
+  // 1. Check exact blocklist / substrings
+  const blockedSubstrings = [
+    'example', 'mailinator', 'yopmail', 'trashmail', 'tempmail', 
+    'dispostable', 'guerrillamail', 'placeholder', 'disposable'
+  ];
+  if (blockedSubstrings.some(sub => name.includes(sub))) {
+    return true;
+  }
+
+  // 2. Levenshtein distance checks for typos
+  if (getEditDistance(name, 'example') <= 2) return true;
+  if (getEditDistance(name, 'mailinator') <= 2) return true;
+  if (getEditDistance(name, 'yopmail') <= 2) return true;
+  
+  // For short words, limit distance to <= 1 to avoid blocking legit words
+  if (getEditDistance(name, 'test') <= 1) return true;
+  if (getEditDistance(name, 'fake') <= 1) return true;
+  if (getEditDistance(name, 'dummy') <= 1) return true;
+  if (getEditDistance(name, 'temp') <= 1) return true;
+
+  // 3. Pattern checks (e.g. test123.com, fake-site.com)
+  const regexPatterns = [
+    /^(test|fake|dummy|temp)\d*$/,
+    /^(test|fake|dummy|temp)-/,
+    /-(test|fake|dummy|temp)$/
+  ];
+  if (regexPatterns.some(regex => regex.test(name))) {
+    return true;
+  }
+
+  // 4. Common email provider typos
+  if (COMMON_SERVICE_TYPOS.has(name)) {
+    return true;
+  }
+
+  return false;
+};
+
 type EmailValidationResult = {
   valid: boolean;
   error: string | null;
@@ -57,8 +131,8 @@ const validateEmailRealTime = (emailValue: string): EmailValidationResult => {
   const localPart = parts[0].toLowerCase();
   const domain = parts[1]?.toLowerCase() || '';
 
-  // Block disposable / fake domains
-  if (BLOCKED_DOMAINS.has(domain)) {
+  // Block disposable / fake domains / typos
+  if (BLOCKED_DOMAINS.has(domain) || isFakeDomainName(domain)) {
     return {
       valid: false,
       error: `Emails from "${domain}" are not accepted. Please use your personal or college email address.`,
@@ -164,8 +238,11 @@ export const ApplyPage: React.FC = () => {
     if (step === 1) {
       if (!name.trim()) { toast.error('Full name is required.'); return; }
       if (!email.trim()) { toast.error('Email address is required.'); return; }
-      if (!emailValid) {
-        toast.error(emailError || 'Please enter a valid email address before continuing.');
+      const result = validateEmailRealTime(email);
+      if (!result.valid) {
+        setEmailError(result.error);
+        setEmailValid(false);
+        toast.error(result.error || 'Please enter a valid email address before continuing.');
         return;
       }
       if (emailChecking) { toast.error('Please wait — verifying your email address…'); return; }
@@ -181,7 +258,26 @@ export const ApplyPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agreed) { toast.error("You must agree to the terms."); return; }
-    if (!emailValid) { toast.error(emailError || 'Please fix the email address before submitting.'); return; }
+    
+    // Re-verify email validation on submit
+    const result = validateEmailRealTime(email);
+    if (!result.valid) {
+      setEmailError(result.error);
+      setEmailValid(false);
+      toast.error(result.error || 'Please fix the email address before submitting.');
+      return;
+    }
+
+    // Double check duplicate on submit
+    setEmailChecking(true);
+    const duplicateError = await checkEmailDuplicate(email);
+    setEmailChecking(false);
+    if (duplicateError) {
+      setEmailError(duplicateError);
+      setEmailValid(false);
+      toast.error(duplicateError);
+      return;
+    }
 
     const loadingToast = toast.loading("Submitting your application...");
 

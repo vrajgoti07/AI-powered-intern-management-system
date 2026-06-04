@@ -1,6 +1,80 @@
 import { z } from 'zod';
 import { InternStatus } from '@prisma/client';
 
+const getEditDistance = (a: string, b: string): number => {
+  if (a.length === 0) return b.length;
+  if (b.length === 0) return a.length;
+  const matrix: number[][] = [];
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1, // substitution
+          matrix[i][j - 1] + 1,     // insertion
+          matrix[i - 1][j] + 1      // deletion
+        );
+      }
+    }
+  }
+  return matrix[b.length][a.length];
+};
+
+const COMMON_SERVICE_TYPOS = new Set([
+  'gamil', 'gmaill', 'gmal', 'gail', 'gmial', 'gmeil', 'gmai', 'gml',
+  'yaho', 'yhoo', 'yahooo', 'hotail', 'hotamil', 'hotmaill', 'hotmal',
+  'outlok', 'outllok', 'outlookk'
+]);
+
+const isFakeDomainName = (domain: string): boolean => {
+  const parts = domain.split('.');
+  const name = parts[0]?.toLowerCase() || '';
+
+  // 1. Check exact blocklist / substrings
+  const blockedSubstrings = [
+    'example', 'mailinator', 'yopmail', 'trashmail', 'tempmail', 
+    'dispostable', 'guerrillamail', 'placeholder', 'disposable'
+  ];
+  if (blockedSubstrings.some(sub => name.includes(sub))) {
+    return true;
+  }
+
+  // 2. Levenshtein distance checks for typos
+  if (getEditDistance(name, 'example') <= 2) return true;
+  if (getEditDistance(name, 'mailinator') <= 2) return true;
+  if (getEditDistance(name, 'yopmail') <= 2) return true;
+  
+  // For short words, limit distance to <= 1 to avoid blocking legit words
+  if (getEditDistance(name, 'test') <= 1) return true;
+  if (getEditDistance(name, 'fake') <= 1) return true;
+  if (getEditDistance(name, 'dummy') <= 1) return true;
+  if (getEditDistance(name, 'temp') <= 1) return true;
+
+  // 3. Pattern checks (e.g. test123.com, fake-site.com)
+  const regexPatterns = [
+    /^(test|fake|dummy|temp)\d*$/,
+    /^(test|fake|dummy|temp)-/,
+    /-(test|fake|dummy|temp)$/
+  ];
+  if (regexPatterns.some(regex => regex.test(name))) {
+    return true;
+  }
+
+  // 4. Common email provider typos
+  if (COMMON_SERVICE_TYPOS.has(name)) {
+    return true;
+  }
+
+  return false;
+};
+
 /**
  * Public Candidate Apply Validation Schema
  */
@@ -51,9 +125,11 @@ export const applyInternSchema = z.object({
           '30minutemail.com', '33mail.com', '3d-painting.com',
           'spamevader.com', 'inboxbear.com', 'mailsac.com'
         ];
-        const domain = val.split('@')[1]?.toLowerCase();
-        return !blockedDomains.includes(domain);
-      }, 'Disposable or placeholder email addresses are not allowed. Please use your real email.')
+        const domain = val.split('@')[1]?.toLowerCase() || '';
+        if (blockedDomains.includes(domain)) return false;
+        if (isFakeDomainName(domain)) return false;
+        return true;
+      }, 'Disposable, fake, or placeholder email addresses are not allowed. Please use your real email.')
       .refine((val) => {
         // Only allow real professional/personal email domains
         // Block obviously fake TLD patterns
