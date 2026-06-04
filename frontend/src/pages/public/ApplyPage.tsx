@@ -488,13 +488,7 @@ export const ApplyPage: React.FC = () => {
                             </p>
                           )}
 
-                          {/* Helper text — only shown when field is empty or being typed and no error yet */}
-                          {!emailError && !emailValid && email.trim() !== '' && (
-                            <p className="mt-1.5 text-[11px] text-slate-400 font-semibold">Use your personal, college, or work email address.</p>
-                          )}
-                          {email.trim() === '' && (
-                            <p className="mt-1.5 text-[11px] text-slate-400 font-semibold">Use your personal, college, or work email. Disposable emails are not allowed.</p>
-                          )}
+
                         </div>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
