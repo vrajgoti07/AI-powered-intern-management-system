@@ -38,6 +38,15 @@ class SocketService {
     }
   }
 
+  updateToken(token: string) {
+    if (this.socket) {
+      this.socket.auth = { token };
+      if (this.socket.connected) {
+        this.socket.disconnect().connect();
+      }
+    }
+  }
+
   getSocket(): Socket | null {
     return this.socket;
   }

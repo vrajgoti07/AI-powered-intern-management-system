@@ -237,6 +237,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (err) {
       console.error('Backend logout call failed:', err);
     } finally {
+      // Disconnect socket connection
+      try {
+        import('../services/socket.service').then(({ socketService }) => {
+          socketService.disconnect();
+        });
+      } catch (socketErr) {
+        console.warn('Failed to disconnect socket on logout:', socketErr);
+      }
+
       setUser(null);
       localStorage.removeItem('internflow_access_token');
       localStorage.removeItem('internflow_refresh_token');
@@ -249,6 +258,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const res = await api.delete('/security/logout-all');
       if (res.data.success) {
+        // Disconnect socket connection
+        try {
+          import('../services/socket.service').then(({ socketService }) => {
+            socketService.disconnect();
+          });
+        } catch (socketErr) {
+          console.warn('Failed to disconnect socket on logoutAll:', socketErr);
+        }
+
         setUser(null);
         localStorage.removeItem('internflow_access_token');
         localStorage.removeItem('internflow_refresh_token');

@@ -51,6 +51,15 @@ api.interceptors.response.use(
           localStorage.setItem('internflow_access_token', accessToken);
           localStorage.setItem('internflow_refresh_token', newRefreshToken);
 
+          // Update socket token dynamically if socket is active
+          try {
+            import('./socket.service').then(({ socketService }) => {
+              socketService.updateToken(accessToken);
+            });
+          } catch (socketErr) {
+            console.warn('Failed to update socket token after refresh:', socketErr);
+          }
+
           // Update authorization header with new valid access token and retry the original request
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
           return api(originalRequest);
