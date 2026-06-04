@@ -50,7 +50,7 @@ const getViewableUrl = (url: string | null | undefined): { viewUrl: string; down
   // PDF in /image/upload/ — Cloudinary can render page 1 as JPG
   if (cleanUrl.includes('/image/upload/') && /\.pdf(\?|$)/i.test(cleanUrl)) {
     const jpgUrl = cleanUrl.replace(/\.pdf(\?|$)/i, '.jpg$1');
-    return { viewUrl: jpgUrl, downloadUrl: cleanUrl, isImage: true };
+    return { viewUrl: jpgUrl, downloadUrl: `${proxyUrl}&download=true`, isImage: true };
   }
 
   // Word documents (.doc or .docx) cannot be rendered natively in browsers, so we wrap them with Google Docs Viewer
@@ -58,7 +58,7 @@ const getViewableUrl = (url: string | null | undefined): { viewUrl: string; down
   if (isWordDoc) {
     return {
       viewUrl: `https://docs.google.com/gview?url=${encodeURIComponent(cleanUrl)}&embedded=true`,
-      downloadUrl: cleanUrl,
+      downloadUrl: `${proxyUrl}&download=true`,
       isImage: false,
     };
   }
@@ -66,7 +66,7 @@ const getViewableUrl = (url: string | null | undefined): { viewUrl: string; down
   // Use backend proxy for images, PDFs, and files without extensions
   return {
     viewUrl: proxyUrl,
-    downloadUrl: cleanUrl,
+    downloadUrl: `${proxyUrl}&download=true`,
     isImage: isImage,
   };
 };
@@ -428,7 +428,7 @@ export const OnboardingVerification: React.FC = () => {
                       <Download className="w-3.5 h-3.5" /> Download
                     </a>
                     <a
-                      href={previewDoc.downloadUrl}
+                      href={previewDoc.viewUrl}
                       target="_blank"
                       rel="noreferrer"
                       className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 border border-slate-200 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 rounded-xl font-bold text-[10px] transition-all cursor-pointer"

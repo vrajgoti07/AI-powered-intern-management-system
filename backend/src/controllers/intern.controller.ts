@@ -435,8 +435,13 @@ export const viewDocument = async (
     res.removeHeader('X-Frame-Options');
     res.removeHeader('Content-Security-Policy');
 
+    const isDownload = req.query.download === 'true';
+
     res.setHeader('Content-Type', mimeType);
-    res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+    res.setHeader(
+      'Content-Disposition',
+      isDownload ? `attachment; filename="${filename}"` : `inline; filename="${filename}"`
+    );
     res.setHeader('Cache-Control', 'private, max-age=3600');
     res.send(buffer);
   } catch (error) {
