@@ -154,6 +154,19 @@ app.add_middleware(
 # ── Request Logging Middleware ───────────────────────────────────────
 
 @app.middleware("http")
+async def clean_double_slashes(request: Request, call_next):
+    """Clean up double/multiple consecutive slashes in request path."""
+    path = request.scope.get("path", "")
+    if "//" in path:
+        import re
+        clean_path = re.sub(r"/+", "/", path)
+        request.scope["path"] = clean_path
+        if "raw_path" in request.scope:
+            request.scope["raw_path"] = clean_path.encode("ascii")
+    return await call_next(request)
+
+
+@app.middleware("http")
 async def log_requests(request: Request, call_next):
     """Log every incoming request with method, path, and duration."""
     start = time.time()
