@@ -208,6 +208,8 @@ export const updateInternSchema = z.object({
     gender: z.string().optional().nullable(),
     address: z.string().optional().nullable(),
     workAddress: z.string().optional().nullable(),
+    githubUrl: z.string().optional().nullable(),
+    linkedinUrl: z.string().optional().nullable(),
     parentName: z.string().optional().nullable(),
     parentPhone: z.string().optional().nullable(),
     emergencyName: z.string().optional().nullable(),

@@ -86,7 +86,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onClose }) => {
             icon: Brain,
             label: "AI Co-Pilot Hub",
             children: [
-              { icon: Brain, label: "AI Resume Parser", path: "/shared/resume-parser" },
               { icon: ThumbsUp, label: "AI Feedback Analysis", path: "/shared/ai-feedback" }
             ]
           },

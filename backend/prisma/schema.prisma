@@ -97,6 +97,8 @@ model Intern {
   resumeUrl           String?
   address             String?
   workAddress         String?
+  githubUrl           String?
+  linkedinUrl         String?
   emergencyName       String?
   emergencyRelation   String?
   emergencyPhone      String?

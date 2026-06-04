@@ -50,7 +50,7 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
   try {
     const userId = req.user!.id;
     const role = req.user!.role;
-    const { name, phone, dob, college, degree, branch, cgpa, skills, address, workAddress, designation, experience, bio, expertise } = req.body;
+    const { name, phone, dob, college, degree, branch, cgpa, skills, address, workAddress, githubUrl, linkedinUrl, designation, experience, bio, expertise } = req.body;
 
     // Handle uploaded file url (profile pictures or resumes)
     // Cloudinary multer adapter sets `path` = Cloudinary URL, `filename` = public_id
@@ -104,6 +104,8 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
           skills: parsedSkills !== undefined ? parsedSkills : undefined,
           address: address !== undefined ? address : undefined,
           workAddress: workAddress !== undefined ? workAddress : undefined,
+          githubUrl: githubUrl !== undefined ? githubUrl : undefined,
+          linkedinUrl: linkedinUrl !== undefined ? linkedinUrl : undefined,
           resumeUrl: !req.body.isAvatarUpload && fileUrl ? fileUrl : undefined
         }
       });

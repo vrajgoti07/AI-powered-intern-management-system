@@ -392,7 +392,7 @@ const App: React.FC = () => {
                 <Route
                   path="/shared/resume-parser"
                   element={
-                    <ProtectedRoute allowedRoles={['hr', 'mentor', 'intern']}>
+                    <ProtectedRoute allowedRoles={['hr', 'intern']}>
                       <AIResumeParser />
                     </ProtectedRoute>
                   }

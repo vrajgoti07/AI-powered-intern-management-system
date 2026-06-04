@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Award, ExternalLink, GitBranch,
@@ -14,6 +15,7 @@ import { useInternByUser, useTasks } from '../../hooks/queries';
 import api from '../../services/api';
 
 export const PortfolioDashboard: React.FC = () => {
+  const queryClient = useQueryClient();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const { user } = useAuth();
   const { data: myInternData } = useInternByUser(user?.id || '');
@@ -74,8 +76,19 @@ export const PortfolioDashboard: React.FC = () => {
     const savedGit = localStorage.getItem(`git_${user?.id}`);
     const savedLink = localStorage.getItem(`link_${user?.id}`);
     const savedLoc = localStorage.getItem(`loc_${user?.id}`);
-    if (savedGit) setGithubUrl(savedGit);
-    if (savedLink) setLinkedinUrl(savedLink);
+    
+    if (myInternData?.githubUrl) {
+      setGithubUrl(myInternData.githubUrl);
+    } else if (savedGit) {
+      setGithubUrl(savedGit);
+    }
+    
+    if (myInternData?.linkedinUrl) {
+      setLinkedinUrl(myInternData.linkedinUrl);
+    } else if (savedLink) {
+      setLinkedinUrl(savedLink);
+    }
+
     if (myInternData?.workAddress) {
       setLocationVal(myInternData.workAddress);
     } else if (myInternData?.address) {
@@ -119,7 +132,23 @@ export const PortfolioDashboard: React.FC = () => {
     setLinkedinUrl(tempLinkedin);
     localStorage.setItem(`git_${user?.id}`, tempGithub);
     localStorage.setItem(`link_${user?.id}`, tempLinkedin);
-    toast.success("Professional profiles linked successfully!");
+    
+    if (myInternData?.id) {
+      api.put(`/interns/${myInternData.id}`, {
+        githubUrl: tempGithub || null,
+        linkedinUrl: tempLinkedin || null
+      })
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ['interns', 'user', user?.id] });
+        toast.success("Professional profiles synced and linked successfully!");
+      })
+      .catch((err) => {
+        console.error("Database sync failed", err);
+        toast.error("Failed to sync profiles with the server.");
+      });
+    } else {
+      toast.success("Professional profiles linked successfully!");
+    }
     setShowLinksModal(false);
   };
 
