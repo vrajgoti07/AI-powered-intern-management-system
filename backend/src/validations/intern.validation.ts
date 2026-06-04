@@ -7,7 +7,70 @@ import { InternStatus } from '@prisma/client';
 export const applyInternSchema = z.object({
   body: z.object({
     name: z.string().min(2, 'Name must be at least 2 characters'),
-    email: z.string().email('Invalid email address'),
+    email: z.string()
+      .min(1, 'Email is required.')
+      .email('Please enter a valid email address.')
+      .refine((val) => {
+        // Block all disposable / fake / placeholder domains
+        const blockedDomains = [
+          'example.com', 'example.org', 'example.net',
+          'test.com', 'test.org', 'test.net',
+          'fake.com', 'fake.org',
+          'mailinator.com', 'guerrillamail.com', 'guerrillamail.org',
+          'guerrillamail.net', 'guerrillamail.biz', 'guerrillamail.de',
+          'trashmail.com', 'trashmail.net', 'trashmail.org',
+          'yopmail.com', 'yopmail.fr', 'cool.fr.nf',
+          'jetable.fr.nf', 'nospam.ze.tc', 'nomail.xl.cx',
+          'mega.zik.dj', 'speed.1s.fr', 'courriel.fr.nf',
+          'moncourrier.fr.nf', 'monemail.fr.nf', 'monmail.fr.nf',
+          'dispostable.com', 'spamgourmet.com', 'spamgourmet.org',
+          'spamgourmet.net', 'trashmail.at', 'trashmail.io',
+          'throwam.com', 'throwaway.email', 'filzmail.com',
+          'sharklasers.com', 'guerrillamailblock.com', 'grr.la',
+          'guerrillamail.info', 'spam4.me', 'tempr.email',
+          'discard.email', 'discardmail.com', 'discardmail.de',
+          'spamspot.com', 'spamthisplease.com', 'tempmail.com',
+          'tempmail.net', 'tempmail.org', 'temp-mail.org',
+          'getnada.com', 'mailnull.com', 'spamcannon.com',
+          'spamcannon.net', 'spamcon.org', 'spameverywhere.net',
+          'spamfree24.org', 'spamgob.com', 'spamherelots.com',
+          'spamhereplease.com', 'spamhole.com', 'spamify.com',
+          'spaminator.de', 'spamkill.info', 'spaml.com',
+          'spaml.de', 'spammotel.com', 'spamobox.com',
+          'spamslicer.com', 'spamstack.net', 'spamthis.co.uk',
+          'spamtrap.ro', 'spamwc.de', 'spamz.de',
+          'tempinbox.com', 'tempinbox.co.uk', 'tempemail.net',
+          'mailnesia.com', 'maildrop.cc', 'fakeinbox.com',
+          'mailnull.com', 'spamgenie.com', 'spamgob.com',
+          'getairmail.com', 'filzmail.com', 'mt2015.com',
+          'mt2014.com', 'veryrealemail.com', 'chogmail.com',
+          'dispostable.com', '0-mail.com', '0815.ru',
+          '0clickemail.com', '0wnd.net', '0wnd.org',
+          '10minutemail.com', '10minutemail.net', '10minutemail.org',
+          '10minutesmail.com', '20minutemail.com', '2prong.com',
+          '30minutemail.com', '33mail.com', '3d-painting.com',
+          'spamevader.com', 'inboxbear.com', 'mailsac.com'
+        ];
+        const domain = val.split('@')[1]?.toLowerCase();
+        return !blockedDomains.includes(domain);
+      }, 'Disposable or placeholder email addresses are not allowed. Please use your real email.')
+      .refine((val) => {
+        // Only allow real professional/personal email domains
+        // Block obviously fake TLD patterns
+        const domain = val.split('@')[1]?.toLowerCase() || '';
+        const localPart = val.split('@')[0]?.toLowerCase() || '';
+
+        // Block if local part is obviously fake
+        const fakePrefixes = ['test', 'fake', 'dummy', 'sample', 'demo', 'placeholder', 'noreply', 'no-reply', 'donotreply', 'do-not-reply'];
+        if (fakePrefixes.some(p => localPart === p || localPart.startsWith(p + '.'))) return false;
+
+        // Block if domain has no TLD or is clearly fake
+        if (!domain.includes('.')) return false;
+        const tld = domain.split('.').pop() || '';
+        if (tld.length < 2) return false;
+
+        return true;
+      }, 'Please provide a valid, active email address.'),
     phone: z.string().optional(),
     dob: z.string().optional(),
     college: z.string().min(2, 'College name must be at least 2 characters'),

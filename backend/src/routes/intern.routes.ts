@@ -13,6 +13,8 @@ import {
   internQuerySchema,
 } from '../validations/intern.validation';
 
+import prisma from '../config/database';
+
 const router = Router();
 
 /**
@@ -25,6 +27,29 @@ router.post(
   validate(applyInternSchema),
   internController.applyIntern
 );
+
+/**
+ * @route   GET /api/interns/check-email?email=xxx
+ * @desc    Public lightweight duplicate email check for the apply form
+ * @access  Public
+ */
+router.get('/check-email', async (req: any, res: any) => {
+  const { email } = req.query;
+  if (!email || typeof email !== 'string') {
+    return res.status(400).json({ success: false, message: 'Email query param required.' });
+  }
+  const existing = await prisma.user.findUnique({
+    where: { email: email.toLowerCase().trim() },
+    select: { id: true }
+  });
+  if (existing) {
+    return res.status(409).json({
+      success: false,
+      message: 'An application with this email address already exists. Please check your inbox or contact HR if you need help.'
+    });
+  }
+  return res.json({ success: true, message: 'Email is available.' });
+});
 
 // All routes below require authentication
 router.use(authenticate);

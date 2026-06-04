@@ -202,7 +202,38 @@ export const applyIntern = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const intern = await internService.applyIntern(req.body);
+    const body = req.body;
+
+    // 1. Duplicate email check — prevent same email from applying twice
+    const existingByEmail = await prisma.user.findUnique({
+      where: { email: body.email.toLowerCase().trim() }
+    });
+    if (existingByEmail) {
+      res.status(409).json({
+        success: false,
+        message: 'An application with this email already exists. If you applied before, please check your email for login credentials or contact HR.'
+      });
+      return;
+    }
+
+    // Also check in candidates/interns table directly
+    const existingCandidate = await prisma.intern.findFirst({
+      where: {
+        user: { email: body.email.toLowerCase().trim() }
+      }
+    });
+    if (existingCandidate) {
+      res.status(409).json({
+        success: false,
+        message: 'An internship application with this email address has already been submitted and is under review.'
+      });
+      return;
+    }
+
+    // Normalize email before saving
+    body.email = body.email.toLowerCase().trim();
+
+    const intern = await internService.applyIntern(body);
     successResponse(res, 'Application submitted successfully', intern, 201);
   } catch (error) {
     next(error);

@@ -9,6 +9,99 @@ import { Logo } from '../../components/common/Logo';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 
+// ─── Email validation utilities ───────────────────────────────────────────
+
+const BLOCKED_DOMAINS = new Set([
+  'example.com', 'example.org', 'example.net',
+  'test.com', 'test.org', 'test.net',
+  'fake.com', 'fake.org', 'mailinator.com',
+  'guerrillamail.com', 'guerrillamail.org', 'guerrillamail.net',
+  'guerrillamail.biz', 'guerrillamail.de', 'guerrillamail.info',
+  'trashmail.com', 'trashmail.net', 'trashmail.org', 'trashmail.at', 'trashmail.io',
+  'yopmail.com', 'yopmail.fr', 'dispostable.com',
+  'spamgourmet.com', 'throwam.com', 'throwaway.email',
+  'filzmail.com', 'sharklasers.com', 'grr.la',
+  'spam4.me', 'tempr.email', 'discard.email',
+  'discardmail.com', 'spamspot.com', 'tempmail.com',
+  'tempmail.net', 'tempmail.org', 'temp-mail.org',
+  'getnada.com', 'mailnull.com', 'tempinbox.com',
+  'tempemail.net', 'mailnesia.com', 'maildrop.cc',
+  'fakeinbox.com', 'mailsac.com', '10minutemail.com',
+  '10minutemail.net', '10minutemail.org', '20minutemail.com',
+  '30minutemail.com', 'inboxbear.com', 'spamevader.com',
+]);
+
+const FAKE_LOCAL_PARTS = new Set([
+  'test', 'fake', 'dummy', 'sample', 'demo',
+  'placeholder', 'noreply', 'no-reply', 'donotreply',
+  'do-not-reply', 'admin', 'user', 'hello', 'info',
+]);
+
+type EmailValidationResult = {
+  valid: boolean;
+  error: string | null;
+};
+
+const validateEmailRealTime = (emailValue: string): EmailValidationResult => {
+  const val = emailValue.trim();
+
+  if (!val) return { valid: false, error: null }; // empty = no error shown yet
+
+  // Basic format check
+  const emailRegex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+  if (!emailRegex.test(val)) {
+    return { valid: false, error: 'Enter a valid email address (e.g. yourname@gmail.com).' };
+  }
+
+  const parts = val.split('@');
+  const localPart = parts[0].toLowerCase();
+  const domain = parts[1]?.toLowerCase() || '';
+
+  // Block disposable / fake domains
+  if (BLOCKED_DOMAINS.has(domain)) {
+    return {
+      valid: false,
+      error: `Emails from "${domain}" are not accepted. Please use your personal or college email address.`,
+    };
+  }
+
+  // Block fake local parts (exact match only — e.g. test@gmail.com is blocked, testuser@gmail.com is fine)
+  if (FAKE_LOCAL_PARTS.has(localPart)) {
+    return {
+      valid: false,
+      error: `"${localPart}" is not a valid personal email username. Please use your actual email address.`,
+    };
+  }
+
+  // Block if domain has no proper TLD
+  const domainParts = domain.split('.');
+  const tld = domainParts[domainParts.length - 1];
+  if (!tld || tld.length < 2 || domainParts.length < 2) {
+    return { valid: false, error: 'Email domain appears invalid. Please check and try again.' };
+  }
+
+  // Block suspiciously short domains (e.g. x.co is fine but a.b is not)
+  if (domain.length < 4) {
+    return { valid: false, error: 'Email domain appears invalid. Please use a real email address.' };
+  }
+
+  return { valid: true, error: null };
+};
+
+// Check duplicate against backend (debounced — called onBlur)
+const checkEmailDuplicate = async (emailValue: string): Promise<string | null> => {
+  try {
+    const res = await api.get(`/interns/check-email?email=${encodeURIComponent(emailValue.trim())}`);
+    return null;
+  } catch (err: any) {
+    if (err.response?.status === 409) {
+      const data = err.response?.data;
+      return data?.message || 'This email address has already been used to apply.';
+    }
+    return null; // If check fails, don't block — backend will catch it on submit
+  }
+};
+
 
 const stepMeta = [
   { num: 1, title: "Personal Information", subtitle: "Basic details & contact info", icon: User },
@@ -39,13 +132,45 @@ export const ApplyPage: React.FC = () => {
   const [whyJoin, setWhyJoin] = useState('');
   const [agreed, setAgreed] = useState(false);
 
+  // Email validation state
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [emailValid, setEmailValid] = useState(false);
+  const [emailChecking, setEmailChecking] = useState(false);
+
   const animateStep = (newStep: number) => {
     setAnimating(true);
     setTimeout(() => { setStep(newStep); setAnimating(false); }, 200);
   };
 
+  const handleEmailChange = (val: string) => {
+    setEmail(val);
+    const result = validateEmailRealTime(val);
+    setEmailError(result.error);
+    setEmailValid(result.valid);
+  };
+
+  const handleEmailBlur = async () => {
+    if (!emailValid || !email.trim()) return;
+    setEmailChecking(true);
+    const duplicateError = await checkEmailDuplicate(email);
+    setEmailChecking(false);
+    if (duplicateError) {
+      setEmailError(duplicateError);
+      setEmailValid(false);
+    }
+  };
+
   const nextStep = () => {
-    if (step === 1 && (!name || !email || !phone)) { toast.error("Please fill in all required fields."); return; }
+    if (step === 1) {
+      if (!name.trim()) { toast.error('Full name is required.'); return; }
+      if (!email.trim()) { toast.error('Email address is required.'); return; }
+      if (!emailValid) {
+        toast.error(emailError || 'Please enter a valid email address before continuing.');
+        return;
+      }
+      if (emailChecking) { toast.error('Please wait — verifying your email address…'); return; }
+      if (!phone.trim()) { toast.error('Phone number is required.'); return; }
+    }
     if (step === 2 && (!college || !cgpa)) { toast.error("Please fill in all required fields."); return; }
     if (step === 3 && (!startDate || !whyJoin)) { toast.error("Please fill in all required fields."); return; }
     animateStep(step + 1);
@@ -56,6 +181,7 @@ export const ApplyPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agreed) { toast.error("You must agree to the terms."); return; }
+    if (!emailValid) { toast.error(emailError || 'Please fix the email address before submitting.'); return; }
 
     const loadingToast = toast.loading("Submitting your application...");
 
@@ -306,8 +432,69 @@ export const ApplyPage: React.FC = () => {
                           <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. John Doe" className={`${inputClass} text-base`} />
                         </div>
                         <div>
-                          <label className={labelClass}>Email Address *</label>
-                          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="e.g. aarav@example.com" className={`${inputClass} text-base`} />
+                          <label className={labelClass}>
+                            Email Address *
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="email"
+                              value={email}
+                              onChange={(e) => handleEmailChange(e.target.value)}
+                              onBlur={handleEmailBlur}
+                              placeholder="e.g. yourname@gmail.com"
+                              className={`${inputClass} text-base pr-10 ${
+                                email.trim() === ''
+                                  ? ''
+                                  : emailError
+                                  ? 'border-rose-400 bg-rose-50/30 focus:ring-rose-300 focus:border-rose-400'
+                                  : emailValid
+                                  ? 'border-emerald-400 bg-emerald-50/30 focus:ring-emerald-300 focus:border-emerald-400'
+                                  : ''
+                              }`}
+                            />
+                            {/* Status icon inside the input */}
+                            <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                              {emailChecking && (
+                                <svg className="animate-spin w-4 h-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                                </svg>
+                              )}
+                              {!emailChecking && email.trim() !== '' && emailValid && (
+                                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                              )}
+                              {!emailChecking && email.trim() !== '' && emailError && (
+                                <svg className="w-4 h-4 text-rose-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                  <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 10-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 101.06 1.06L12 13.06l1.72 1.72a.75.75 0 101.06-1.06L13.06 12l1.72-1.72a.75.75 0 10-1.06-1.06L12 10.94l-1.72-1.72z" clipRule="evenodd" />
+                                </svg>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Error message */}
+                          {emailError && email.trim() !== '' && (
+                            <div className="mt-2 flex items-start gap-2 p-2.5 bg-rose-50 border border-rose-100 rounded-lg">
+                              <svg className="w-3.5 h-3.5 text-rose-500 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                <path fillRule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+                              </svg>
+                              <p className="text-[11px] font-semibold text-rose-700 leading-relaxed">{emailError}</p>
+                            </div>
+                          )}
+
+                          {/* Success hint */}
+                          {emailValid && !emailError && email.trim() !== '' && (
+                            <p className="mt-1.5 text-[11px] font-semibold text-emerald-600 flex items-center gap-1">
+                              <CheckCircle2 className="w-3 h-3" /> Email address looks good.
+                            </p>
+                          )}
+
+                          {/* Helper text — only shown when field is empty or being typed and no error yet */}
+                          {!emailError && !emailValid && email.trim() !== '' && (
+                            <p className="mt-1.5 text-[11px] text-slate-400 font-semibold">Use your personal, college, or work email address.</p>
+                          )}
+                          {email.trim() === '' && (
+                            <p className="mt-1.5 text-[11px] text-slate-400 font-semibold">Use your personal, college, or work email. Disposable emails are not allowed.</p>
+                          )}
                         </div>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
