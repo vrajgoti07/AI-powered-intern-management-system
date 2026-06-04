@@ -4,6 +4,9 @@ import { successResponse } from '../utils/response';
 import notificationService from '../services/notification.service';
 import { emailQueue } from '../queues/queue.config';
 import prisma from '../config/database';
+import axios from 'axios';
+import fs from 'fs';
+import path from 'path';
 
 /**
  * Create new intern
@@ -344,6 +347,94 @@ export const removeOnboardingDoc = async (
 
     const intern = await internService.removeOnboardingDoc(internId, field);
     successResponse(res, 'Document removed successfully', intern);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * View onboarding documents inline (by proxying local/remote file requests)
+ */
+export const viewDocument = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { url } = req.query;
+    if (!url || typeof url !== 'string') {
+      res.status(400).json({ success: false, message: 'URL query parameter is required.' });
+      return;
+    }
+
+    let buffer: Buffer;
+    let mimeType = 'application/octet-stream';
+    let filename = 'document';
+
+    // Parse the URL to get local or remote file
+    if (url.includes('/uploads/')) {
+      const parts = url.split('/uploads/');
+      const localFilename = parts[parts.length - 1];
+      // Secure against directory traversal
+      const safeFilename = path.basename(localFilename);
+      const localFilePath = path.join(process.cwd(), 'uploads', safeFilename);
+      
+      if (!fs.existsSync(localFilePath)) {
+        res.status(404).json({ success: false, message: 'File not found on local storage.' });
+        return;
+      }
+      buffer = fs.readFileSync(localFilePath);
+      filename = safeFilename;
+    } else if (url.startsWith('http://') || url.startsWith('https://')) {
+      const response = await axios.get(url, { responseType: 'arraybuffer' });
+      buffer = Buffer.from(response.data);
+      const urlParts = url.split('/');
+      filename = urlParts[urlParts.length - 1].split('?')[0] || 'document';
+    } else {
+      res.status(400).json({ success: false, message: 'Invalid document URL format.' });
+      return;
+    }
+
+    // Detect MIME type based on extension
+    const ext = path.extname(filename).toLowerCase();
+    const mimeMap: Record<string, string> = {
+      '.pdf': 'application/pdf',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.png': 'image/png',
+      '.gif': 'image/gif',
+      '.webp': 'image/webp',
+      '.doc': 'application/msword',
+      '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      '.zip': 'application/zip',
+    };
+
+    if (mimeMap[ext]) {
+      mimeType = mimeMap[ext];
+    } else {
+      // Magic number detection for files without extension
+      if (buffer.length >= 4) {
+        const hex = buffer.toString('hex', 0, 4).toUpperCase();
+        if (hex.startsWith('25504446')) {
+          mimeType = 'application/pdf';
+          if (!filename.endsWith('.pdf')) filename += '.pdf';
+        } else if (hex.startsWith('FFD8FF')) {
+          mimeType = 'image/jpeg';
+          if (!filename.endsWith('.jpg')) filename += '.jpg';
+        } else if (hex.startsWith('89504E47')) {
+          mimeType = 'image/png';
+          if (!filename.endsWith('.png')) filename += '.png';
+        } else if (hex.startsWith('504B0304')) {
+          mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+          if (!filename.endsWith('.docx')) filename += '.docx';
+        }
+      }
+    }
+
+    res.setHeader('Content-Type', mimeType);
+    res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+    res.setHeader('Cache-Control', 'private, max-age=3600');
+    res.send(buffer);
   } catch (error) {
     next(error);
   }

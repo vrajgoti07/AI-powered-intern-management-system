@@ -1,36 +1,74 @@
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   UserCheck, UserX, FileText, Check, X, Eye,
   ExternalLink, Calendar, Search, ShieldCheck,
-  CreditCard, BookOpen, Camera, User
+  CreditCard, BookOpen, Camera, User, Download, Maximize2
 } from 'lucide-react';
 import { Sidebar } from '../../components/common/Sidebar';
 import { Navbar } from '../../components/common/Navbar';
 import toast from 'react-hot-toast';
 import { useInterns } from '../../hooks/queries';
-import api from '../../services/api';
+import api, { API_BASE_URL } from '../../services/api';
 import { useQueryClient } from '@tanstack/react-query';
 
 /**
- * Fix Cloudinary URLs for PDFs/documents that were uploaded with resource_type 'auto'
- * which incorrectly uses /image/upload/ instead of /raw/upload/
+ * Determine if a URL points to an image file (by extension or Cloudinary image bucket).
  */
-const fixDocUrl = (url: string | null | undefined): string | null => {
+const isImageUrl = (url: string): boolean => {
+  const lower = url.toLowerCase();
+  if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?|$)/.test(lower)) return true;
+  // Cloudinary image bucket URLs that don't end in .pdf/.doc are typically images
+  if (lower.includes('/image/upload/') && !/\.(pdf|doc|docx)(\?|$)/.test(lower)) return true;
+  return false;
+};
+
+/**
+ * Build a viewable URL for Cloudinary documents.
+ * - Images: return directly (Cloudinary serves them inline).
+ * - PDFs in /image/upload/: convert extension to .jpg (Cloudinary renders page 1).
+ * - PDFs/docs in /raw/upload/: wrap with Google Docs Viewer for inline preview.
+ * - Non-Cloudinary URLs: wrap with Google Docs Viewer if they look like docs.
+ */
+const getViewableUrl = (url: string | null | undefined): { viewUrl: string; downloadUrl: string; isImage: boolean } | null => {
   if (!url) return null;
-  if (url.includes('res.cloudinary.com')) {
-    // 1. Clean up any legacy fl_attachment:false that was previously injected or stored
-    let cleanUrl = url.replace('fl_attachment:false/', '').replace('/fl_attachment:false', '');
-    
-    // 2. Fallback for legacy PDFs uploaded as 'image' resource type.
-    // Convert legacy image-bucket PDF URLs to JPG so that they bypass the Cloudinary PDF security settings and display properly.
-    if (cleanUrl.includes('/image/upload/') && /\.pdf(\?|$)/i.test(cleanUrl)) {
-      cleanUrl = cleanUrl.replace(/\.pdf(\?|$)/i, '.jpg$1');
-    }
-    return cleanUrl;
+
+  const cleanUrl = url
+    .replace('fl_attachment:false/', '')
+    .replace('/fl_attachment:false', '')
+    .replace(/^http:\/\//, 'https://');
+
+  const token = localStorage.getItem('internflow_access_token') || '';
+  const proxyUrl = `${API_BASE_URL}/interns/view-document?url=${encodeURIComponent(cleanUrl)}&token=${encodeURIComponent(token)}`;
+
+  // Detect if the file is an image
+  const lower = cleanUrl.toLowerCase();
+  const isImage = /\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?|$)/.test(lower) || 
+                  (lower.includes('/image/upload/') && !/\.(pdf|doc|docx)(\?|$)/.test(lower));
+
+  // PDF in /image/upload/ — Cloudinary can render page 1 as JPG
+  if (cleanUrl.includes('/image/upload/') && /\.pdf(\?|$)/i.test(cleanUrl)) {
+    const jpgUrl = cleanUrl.replace(/\.pdf(\?|$)/i, '.jpg$1');
+    return { viewUrl: jpgUrl, downloadUrl: cleanUrl, isImage: true };
   }
-  return url;
+
+  // Word documents (.doc or .docx) cannot be rendered natively in browsers, so we wrap them with Google Docs Viewer
+  const isWordDoc = /\.(doc|docx)(\?|$)/i.test(cleanUrl);
+  if (isWordDoc) {
+    return {
+      viewUrl: `https://docs.google.com/gview?url=${encodeURIComponent(cleanUrl)}&embedded=true`,
+      downloadUrl: cleanUrl,
+      isImage: false,
+    };
+  }
+
+  // Use backend proxy for images, PDFs, and files without extensions
+  return {
+    viewUrl: proxyUrl,
+    downloadUrl: cleanUrl,
+    isImage: isImage,
+  };
 };
 
 export const OnboardingVerification: React.FC = () => {
@@ -43,6 +81,18 @@ export const OnboardingVerification: React.FC = () => {
 
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
+
+  // Document Preview Modal state
+  const [previewDoc, setPreviewDoc] = useState<{ title: string; viewUrl: string; downloadUrl: string; isImage: boolean } | null>(null);
+
+  const openDocPreview = (url: string | null | undefined, title: string) => {
+    const result = getViewableUrl(url);
+    if (!result) {
+      toast.error('Document not available');
+      return;
+    }
+    setPreviewDoc({ title, ...result });
+  };
 
   const handleAction = async (id: string, newStatus: 'ACTIVE' | 'TERMINATED') => {
     try {
@@ -243,101 +293,38 @@ export const OnboardingVerification: React.FC = () => {
                     <h3 className="font-extrabold text-slate-800 text-xs">Submitted Credentials & Contracts</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
 
-                      {/* Document 1: Resume */}
-                      <div className={`border border-slate-100 bg-slate-50/50 rounded-2xl p-4 space-y-3 relative ${!selectedCandidate.resumeUrl ? 'opacity-50' : ''}`}>
-                        <div className="flex justify-between items-start">
-                          <FileText className="w-6 h-6 text-slate-400" />
-                          {selectedCandidate.resumeUrl ? (
-                            <a href={fixDocUrl(selectedCandidate.resumeUrl) || '#'} target="_blank" rel="noreferrer" className="p-1 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer">
-                              <Eye className="w-4 h-4 text-indigo-500" />
-                            </a>
-                          ) : (
-                            <button className="p-1 hover:bg-slate-200 rounded-lg transition-colors cursor-not-allowed">
-                              <Eye className="w-4 h-4 text-slate-400" />
-                            </button>
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-extrabold text-slate-800 text-xs">Updated Resume / CV</p>
-                          {selectedCandidate.resumeUrl ? (
-                            <a href={fixDocUrl(selectedCandidate.resumeUrl) || '#'} target="_blank" rel="noreferrer" className="text-[10px] text-indigo-500 font-semibold mt-0.5 hover:underline truncate block">View Resume</a>
-                          ) : (
-                            <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Not Uploaded</p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Document 2: Aadhaar / PAN */}
-                      <div className={`border border-slate-100 bg-slate-50/50 rounded-2xl p-4 space-y-3 relative ${!selectedCandidate.aadhaarPanUrl ? 'opacity-50' : ''}`}>
-                        <div className="flex justify-between items-start">
-                          <User className="w-6 h-6 text-slate-400" />
-                          {selectedCandidate.aadhaarPanUrl ? (
-                            <a href={fixDocUrl(selectedCandidate.aadhaarPanUrl) || '#'} target="_blank" rel="noreferrer" className="p-1 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer">
-                              <Eye className="w-4 h-4 text-indigo-500" />
-                            </a>
-                          ) : (
-                            <button className="p-1 hover:bg-slate-200 rounded-lg transition-colors cursor-not-allowed">
-                              <Eye className="w-4 h-4 text-slate-400" />
-                            </button>
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-extrabold text-slate-800 text-xs">Aadhaar / PAN Card</p>
-                          {selectedCandidate.aadhaarPanUrl ? (
-                            <a href={fixDocUrl(selectedCandidate.aadhaarPanUrl) || '#'} target="_blank" rel="noreferrer" className="text-[10px] text-indigo-500 font-semibold mt-0.5 hover:underline truncate block">View ID Proof</a>
-                          ) : (
-                            <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Not Uploaded</p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Document 3: College ID */}
-                      <div className={`border border-slate-100 bg-slate-50/50 rounded-2xl p-4 space-y-3 relative ${!selectedCandidate.collegeIdUrl ? 'opacity-50' : ''}`}>
-                        <div className="flex justify-between items-start">
-                          <BookOpen className="w-6 h-6 text-slate-400" />
-                          {selectedCandidate.collegeIdUrl ? (
-                            <a href={fixDocUrl(selectedCandidate.collegeIdUrl) || '#'} target="_blank" rel="noreferrer" className="p-1 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer">
-                              <Eye className="w-4 h-4 text-indigo-500" />
-                            </a>
-                          ) : (
-                            <button className="p-1 hover:bg-slate-200 rounded-lg transition-colors cursor-not-allowed">
-                              <Eye className="w-4 h-4 text-slate-400" />
-                            </button>
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-extrabold text-slate-800 text-xs">College ID Card</p>
-                          {selectedCandidate.collegeIdUrl ? (
-                            <a href={fixDocUrl(selectedCandidate.collegeIdUrl) || '#'} target="_blank" rel="noreferrer" className="text-[10px] text-indigo-500 font-semibold mt-0.5 hover:underline truncate block">View College ID</a>
-                          ) : (
-                            <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Not Uploaded</p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Document 4: Passport Photo */}
-                      <div className={`border border-slate-100 bg-slate-50/50 rounded-2xl p-4 space-y-3 relative ${!selectedCandidate.passportPhotoUrl ? 'opacity-50' : ''}`}>
-                        <div className="flex justify-between items-start">
-                          <Camera className="w-6 h-6 text-slate-400" />
-                          {selectedCandidate.passportPhotoUrl ? (
-                            <a href={fixDocUrl(selectedCandidate.passportPhotoUrl) || '#'} target="_blank" rel="noreferrer" className="p-1 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer">
-                              <Eye className="w-4 h-4 text-indigo-500" />
-                            </a>
-                          ) : (
-                            <button className="p-1 hover:bg-slate-200 rounded-lg transition-colors cursor-not-allowed">
-                              <Eye className="w-4 h-4 text-slate-400" />
-                            </button>
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-extrabold text-slate-800 text-xs">Passport Size Photo</p>
-                          {selectedCandidate.passportPhotoUrl ? (
-                            <a href={fixDocUrl(selectedCandidate.passportPhotoUrl) || '#'} target="_blank" rel="noreferrer" className="text-[10px] text-indigo-500 font-semibold mt-0.5 hover:underline truncate block">View Passport Photo</a>
-                          ) : (
-                            <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Not Uploaded</p>
-                          )}
-                        </div>
-                      </div>
+                      {[
+                        { url: selectedCandidate.resumeUrl, label: 'Updated Resume / CV', viewLabel: 'View Resume', icon: FileText },
+                        { url: selectedCandidate.aadhaarPanUrl, label: 'Aadhaar / PAN Card', viewLabel: 'View ID Proof', icon: User },
+                        { url: selectedCandidate.collegeIdUrl, label: 'College ID Card', viewLabel: 'View College ID', icon: BookOpen },
+                        { url: selectedCandidate.passportPhotoUrl, label: 'Passport Size Photo', viewLabel: 'View Passport Photo', icon: Camera },
+                      ].map((doc) => {
+                        const DocIcon = doc.icon;
+                        return (
+                          <div key={doc.label} className={`border border-slate-100 bg-slate-50/50 rounded-2xl p-4 space-y-3 relative ${!doc.url ? 'opacity-50' : ''}`}>
+                            <div className="flex justify-between items-start">
+                              <DocIcon className="w-6 h-6 text-slate-400" />
+                              {doc.url ? (
+                                <button onClick={() => openDocPreview(doc.url, doc.label)} className="p-1 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer">
+                                  <Eye className="w-4 h-4 text-indigo-500" />
+                                </button>
+                              ) : (
+                                <button className="p-1 hover:bg-slate-200 rounded-lg transition-colors cursor-not-allowed">
+                                  <Eye className="w-4 h-4 text-slate-400" />
+                                </button>
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-extrabold text-slate-800 text-xs">{doc.label}</p>
+                              {doc.url ? (
+                                <button onClick={() => openDocPreview(doc.url, doc.label)} className="text-[10px] text-indigo-500 font-semibold mt-0.5 hover:underline truncate block cursor-pointer text-left">{doc.viewLabel}</button>
+                              ) : (
+                                <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Not Uploaded</p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
 
                     </div>
                   </div>
@@ -399,8 +386,103 @@ export const OnboardingVerification: React.FC = () => {
           </div>
 
         </div>
+
+        {/* ─── Document Preview Modal ─── */}
+        <AnimatePresence>
+          {previewDoc && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+              onClick={() => setPreviewDoc(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.92, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.92, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden border border-slate-200"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Modal Header */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50 shrink-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center shadow-md shadow-indigo-100">
+                      <FileText className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-slate-800 text-sm tracking-tight">{previewDoc.title}</h3>
+                      <p className="text-[10px] text-slate-400 font-bold">Document Preview</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={previewDoc.downloadUrl}
+                      download
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 border border-slate-200 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 rounded-xl font-bold text-[10px] transition-all cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5" /> Download
+                    </a>
+                    <a
+                      href={previewDoc.downloadUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 border border-slate-200 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 rounded-xl font-bold text-[10px] transition-all cursor-pointer"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" /> Open in Tab
+                    </a>
+                    <button
+                      onClick={() => setPreviewDoc(null)}
+                      className="p-2 hover:bg-red-50 hover:text-red-600 text-slate-400 rounded-xl transition-colors cursor-pointer"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Modal Body — Document Display */}
+                <div className="flex-1 overflow-hidden bg-slate-100 relative">
+                  {previewDoc.isImage ? (
+                    <div className="w-full h-full flex items-center justify-center p-6 overflow-auto">
+                      <img
+                        src={previewDoc.viewUrl}
+                        alt={previewDoc.title}
+                        className="max-w-full max-h-full object-contain rounded-xl shadow-lg border border-slate-200"
+                        onError={(e) => {
+                          // If image fails to load, try Google Docs Viewer as fallback
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent) {
+                            const iframe = document.createElement('iframe');
+                            iframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(previewDoc.downloadUrl)}&embedded=true`;
+                            iframe.className = 'w-full h-full border-0 rounded-xl';
+                            iframe.title = previewDoc.title;
+                            parent.className = 'w-full h-full';
+                            parent.appendChild(iframe);
+                          }
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <iframe
+                      src={previewDoc.viewUrl}
+                      title={previewDoc.title}
+                      className="w-full h-full border-0"
+                      sandbox="allow-scripts allow-same-origin allow-popups"
+                    />
+                  )}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
       </main>
     </div>
   );
 };
-

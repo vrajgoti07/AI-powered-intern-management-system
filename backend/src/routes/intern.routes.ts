@@ -55,6 +55,16 @@ router.get('/check-email', async (req: any, res: any) => {
 router.use(authenticate);
 
 /**
+ * @route   GET /api/interns/view-document
+ * @desc    View onboarding documents inline via backend secure stream
+ * @access  Authenticated
+ */
+router.get(
+  '/view-document',
+  internController.viewDocument
+);
+
+/**
  * @route   PUT /api/interns/me/onboarding
  * @desc    Save onboarding form data for the logged-in intern
  * @access  Intern only

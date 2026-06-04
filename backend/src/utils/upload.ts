@@ -28,12 +28,16 @@ const isCloudinaryConfigured = !!config.cloudinary.cloudName && !!config.cloudin
 const taskStorage = isCloudinaryConfigured ? new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (_req: Request, file: Express.Multer.File) => {
-    const isImage = file.mimetype.startsWith('image/');
+    const ext = path.extname(file.originalname);
+    const baseName = path.basename(file.originalname, ext);
+    const isImageOrPdf = file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf' || ext.toLowerCase() === '.pdf';
     return {
       folder: 'intern-management/tasks',
       allowed_formats: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'zip'],
-      resource_type: isImage ? 'image' : 'raw',
-      public_id: `task-${Date.now()}-${file.originalname.split('.')[0]}`,
+      resource_type: isImageOrPdf ? 'image' : 'raw',
+      public_id: isImageOrPdf
+        ? `task-${Date.now()}-${baseName}`
+        : `task-${Date.now()}-${baseName}${ext}`,
     };
   },
 }) : localStorage;
@@ -42,11 +46,16 @@ const taskStorage = isCloudinaryConfigured ? new CloudinaryStorage({
 const resumeStorage = isCloudinaryConfigured ? new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (_req: Request, file: Express.Multer.File) => {
+    const ext = path.extname(file.originalname);
+    const baseName = path.basename(file.originalname, ext);
+    const isPdf = file.mimetype === 'application/pdf' || ext.toLowerCase() === '.pdf';
     return {
       folder: 'intern-management/resumes',
       allowed_formats: ['pdf', 'doc', 'docx'],
-      resource_type: 'raw',
-      public_id: `resume-${Date.now()}-${file.originalname.split('.')[0]}`,
+      resource_type: isPdf ? 'image' : 'raw',
+      public_id: isPdf
+        ? `resume-${Date.now()}-${baseName}`
+        : `resume-${Date.now()}-${baseName}${ext}`,
     };
   },
 }) : localStorage;
@@ -55,12 +64,16 @@ const resumeStorage = isCloudinaryConfigured ? new CloudinaryStorage({
 const certificateStorage = isCloudinaryConfigured ? new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (_req: Request, file: Express.Multer.File) => {
-    const isImage = file.mimetype.startsWith('image/');
+    const ext = path.extname(file.originalname);
+    const baseName = path.basename(file.originalname, ext);
+    const isImageOrPdf = file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf' || ext.toLowerCase() === '.pdf';
     return {
       folder: 'intern-management/certificates',
       allowed_formats: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'zip'],
-      resource_type: isImage ? 'image' : 'raw',
-      public_id: `certificate-${Date.now()}-${file.originalname.split('.')[0]}`,
+      resource_type: isImageOrPdf ? 'image' : 'raw',
+      public_id: isImageOrPdf
+        ? `certificate-${Date.now()}-${baseName}`
+        : `certificate-${Date.now()}-${baseName}${ext}`,
     };
   },
 }) : localStorage;

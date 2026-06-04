@@ -139,8 +139,9 @@ const validateEmailRealTime = (emailValue: string): EmailValidationResult => {
     };
   }
 
-  // Block fake local parts (exact match only — e.g. test@gmail.com is blocked, testuser@gmail.com is fine)
-  if (FAKE_LOCAL_PARTS.has(localPart)) {
+  // Block fake local parts (exact match or prefix with suffix digits/delimiters — e.g. test12345@gmail.com, fake_user@gmail.com)
+  const fakeLocalPartRegex = /^(test|fake|dummy|sample|demo|placeholder|noreply|no-reply|donotreply|do-not-reply)[0-9_\-\.]*$/i;
+  if (FAKE_LOCAL_PARTS.has(localPart) || fakeLocalPartRegex.test(localPart)) {
     return {
       valid: false,
       error: `"${localPart}" is not a valid personal email username. Please use your actual email address.`,

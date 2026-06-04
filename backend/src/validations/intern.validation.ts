@@ -136,9 +136,9 @@ export const applyInternSchema = z.object({
         const domain = val.split('@')[1]?.toLowerCase() || '';
         const localPart = val.split('@')[0]?.toLowerCase() || '';
 
-        // Block if local part is obviously fake
-        const fakePrefixes = ['test', 'fake', 'dummy', 'sample', 'demo', 'placeholder', 'noreply', 'no-reply', 'donotreply', 'do-not-reply'];
-        if (fakePrefixes.some(p => localPart === p || localPart.startsWith(p + '.'))) return false;
+        // Block if local part is obviously fake (e.g. test, test1234, fake_user, etc.)
+        const fakeLocalPartRegex = /^(test|fake|dummy|sample|demo|placeholder|noreply|no-reply|donotreply|do-not-reply)[0-9_\-\.]*$/i;
+        if (fakeLocalPartRegex.test(localPart)) return false;
 
         // Block if domain has no TLD or is clearly fake
         if (!domain.includes('.')) return false;
