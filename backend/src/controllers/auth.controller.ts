@@ -493,6 +493,14 @@ export const refreshSession = asyncHandler(async (req: Request, res: Response) =
   const payload = { userId: user.id, email: user.email, role: user.role };
   const tokens = generateTokenPair(payload);
 
+  // Update refresh token in user model to keep in sync
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      refreshToken: tokens.refreshToken
+    }
+  });
+
   successResponse(res, 'Trusted session extended and tokens refreshed.', {
     accessToken: tokens.accessToken,
     refreshToken: tokens.refreshToken,
