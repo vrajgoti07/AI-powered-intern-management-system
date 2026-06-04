@@ -473,7 +473,6 @@ export const OnboardingVerification: React.FC = () => {
                       src={previewDoc.viewUrl}
                       title={previewDoc.title}
                       className="w-full h-full border-0"
-                      sandbox="allow-scripts allow-same-origin allow-popups"
                     />
                   )}
                 </div>
