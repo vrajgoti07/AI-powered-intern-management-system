@@ -431,6 +431,10 @@ export const viewDocument = async (
       }
     }
 
+    // Override global Helmet security headers to allow displaying this document inside an iframe on the frontend
+    res.removeHeader('X-Frame-Options');
+    res.removeHeader('Content-Security-Policy');
+
     res.setHeader('Content-Type', mimeType);
     res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
     res.setHeader('Cache-Control', 'private, max-age=3600');
