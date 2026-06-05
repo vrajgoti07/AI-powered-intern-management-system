@@ -13,10 +13,24 @@ class RAGChatbotService:
         
     def _lazy_load(self):
         if self._loaded: return
-        from langchain_community.embeddings import HuggingFaceEmbeddings
         from langchain_text_splitters import RecursiveCharacterTextSplitter
+        from app.config.settings import settings
         
-        self.embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        openai_api_key = settings.OPENAI_API_KEY
+        if openai_api_key:
+            try:
+                from langchain_openai import OpenAIEmbeddings
+                self.embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
+                print("[INFO] Using OpenAIEmbeddings for RAG Chatbot")
+            except Exception as e:
+                print(f"[WARNING] Failed to load OpenAIEmbeddings: {e}. Falling back to HuggingFaceEmbeddings.")
+                from langchain_community.embeddings import HuggingFaceEmbeddings
+                self.embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        else:
+            from langchain_community.embeddings import HuggingFaceEmbeddings
+            self.embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+            print("[INFO] No OpenAI key configured. Using HuggingFaceEmbeddings")
+            
         self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
         self._load_vector_store()
         self._loaded = True
@@ -85,8 +99,9 @@ Answer:"""
                 ]
                 response = chat.invoke(messages)
                 return response.content
-            except ImportError:
-                pass  # Fall through to Ollama fallback
+            except Exception as e:
+                print(f"[WARNING] OpenAI ChatOpenAI generation failed: {e}. Falling back to Ollama.")
+                # Fall through to Ollama fallback
         # Fallback to local Ollama (requires Ollama running locally with a model like llama3)
         try:
             from langchain_community.llms import Ollama
