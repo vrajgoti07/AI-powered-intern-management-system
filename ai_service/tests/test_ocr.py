@@ -1,10 +1,8 @@
 import io
-import shutil
 import pytest
+from unittest.mock import patch
 from PIL import Image, ImageDraw
 from app.services.resume_parser import parse_resume
-
-TESSERACT_AVAILABLE = shutil.which("tesseract") is not None
 
 def generate_scanned_image_bytes() -> bytes:
     # Create a simple white image
@@ -20,8 +18,16 @@ def generate_scanned_image_bytes() -> bytes:
     img.save(buf, format='PNG')
     return buf.getvalue()
 
-@pytest.mark.skipif(not TESSERACT_AVAILABLE, reason="Tesseract-OCR binary not installed on this host system.")
-def test_scanned_image_ocr():
+@patch("pytesseract.image_to_string")
+def test_scanned_image_ocr(mock_image_to_string):
+    # Mock return value of pytesseract for the direct image test
+    mock_image_to_string.return_value = (
+        "Candidate: John Doe\n"
+        "Email: johndoe@example.com\n"
+        "Skills: Python, JavaScript, SQL\n"
+        "Experience: Software Engineer at TechCorp"
+    )
+    
     image_bytes = generate_scanned_image_bytes()
     
     # Run the parse_resume function directly for the image
@@ -29,6 +35,36 @@ def test_scanned_image_ocr():
     
     # Assertions
     assert result is not None, "Parsed result should not be None"
-    assert result["email"] != "", "Expected email to be extracted via OCR"
-    assert len(result["skills"]) > 0, "Expected skills to be extracted via OCR"
-    assert "python" in result["skills"] or "javascript" in result["skills"] or "sql" in result["skills"], "Expected matching taxonomy skills to be found"
+    assert result["email"] == "johndoe@example.com", "Expected email to be extracted via OCR mock"
+    assert "python" in result["skills"] and "javascript" in result["skills"] and "sql" in result["skills"], "Expected matching taxonomy skills to be found"
+    
+    # Verify pytesseract was invoked
+    mock_image_to_string.assert_called_once()
+
+@patch("pytesseract.image_to_string")
+def test_pdf_scanned_ocr_fallback(mock_image_to_string):
+    # Mock return value of pytesseract for the PDF fallback test
+    mock_image_to_string.return_value = (
+        "Candidate: John Doe\n"
+        "Email: johndoe@example.com\n"
+        "Skills: Python, JavaScript, SQL\n"
+        "Experience: Software Engineer at TechCorp"
+    )
+    
+    # Generate a mock blank PDF page with no selectable text
+    import fitz
+    doc = fitz.open()
+    doc.new_page(width=595, height=842)
+    pdf_bytes = doc.write()
+    doc.close()
+    
+    # Run parsing on the scanned/empty PDF
+    result = parse_resume(pdf_bytes, file_type="pdf")
+    
+    # Assertions
+    assert result is not None, "Parsed result should not be None"
+    assert result["email"] == "johndoe@example.com", "Expected fallback OCR to extract email"
+    assert "python" in result["skills"], "Expected fallback OCR to find matching skills"
+    
+    # Verify pytesseract was invoked for the PDF pages
+    assert mock_image_to_string.called, "Expected fallback OCR to be triggered"

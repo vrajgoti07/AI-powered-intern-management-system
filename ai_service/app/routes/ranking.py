@@ -23,7 +23,7 @@ class RankingRequest(BaseModel):
 async def get_ranking(
     request: RankingRequest,
     departmentId: Optional[str] = Query(None),
-    period: str = Query("monthly", regex="^(monthly|weekly)$")
+    period: str = Query("monthly", pattern="^(monthly|weekly)$")
 ):
     """
     Expects a list of intern metrics. In a real microservices architecture, 
