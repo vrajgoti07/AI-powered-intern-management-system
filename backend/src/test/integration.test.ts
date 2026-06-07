@@ -22,15 +22,56 @@ describe('AI-Powered Intern Management System - Integration Test Suite', () => {
   let _leaveRequestId: string;
 
   beforeAll(async () => {
-    // 1. Cleanup existing test data
-    await prisma.task.deleteMany({});
-    await prisma.leaveRequest.deleteMany({});
-    await prisma.attendance.deleteMany({});
-    await prisma.intern.deleteMany({});
-    await prisma.mentor.deleteMany({});
-    await prisma.department.deleteMany({});
-    await prisma.user.deleteMany({});
-    await prisma.attendanceSettings.deleteMany({});
+    // 1. Cleanup existing integration test data to prevent database constraint issues
+    await prisma.task.deleteMany({
+      where: {
+        intern: {
+          user: {
+            email: { endsWith: '@internflow.io' }
+          }
+        }
+      }
+    });
+    await prisma.leaveRequest.deleteMany({
+      where: {
+        user: {
+          email: { endsWith: '@internflow.io' }
+        }
+      }
+    });
+    await prisma.attendance.deleteMany({
+      where: {
+        intern: {
+          user: {
+            email: { endsWith: '@internflow.io' }
+          }
+        }
+      }
+    });
+    await prisma.intern.deleteMany({
+      where: {
+        user: {
+          email: { endsWith: '@internflow.io' }
+        }
+      }
+    });
+    await prisma.mentor.deleteMany({
+      where: {
+        user: {
+          email: { endsWith: '@internflow.io' }
+        }
+      }
+    });
+    await prisma.user.deleteMany({
+      where: {
+        email: { endsWith: '@internflow.io' }
+      }
+    });
+    await prisma.department.deleteMany({
+      where: {
+        code: { in: ['ENG_TEST', 'MKT_TEST'] }
+      }
+    });
 
 
     // 2. Hash Password
@@ -39,8 +80,8 @@ describe('AI-Powered Intern Management System - Integration Test Suite', () => {
     // 3. Create Department
     const department = await prisma.department.create({
       data: {
-        name: 'Engineering Department',
-        code: 'ENG',
+        name: 'Engineering Dept Test',
+        code: 'ENG_TEST',
         description: 'Software Engineering and AI R&D',
         colorTheme: 'blue',
       },
@@ -320,8 +361,8 @@ describe('AI-Powered Intern Management System - Integration Test Suite', () => {
         .post('/api/v1/departments')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
-          name: 'Marketing Department',
-          code: 'MKT',
+          name: 'Marketing Dept Test',
+          code: 'MKT_TEST',
           description: 'Sales and Content Strategy',
           colorTheme: 'green',
         });
@@ -335,7 +376,7 @@ describe('AI-Powered Intern Management System - Integration Test Suite', () => {
         .set('Authorization', `Bearer ${adminToken}`);
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.name).toBe('Engineering Department');
+      expect(res.body.data.name).toBe('Engineering Dept Test');
     });
   });
 

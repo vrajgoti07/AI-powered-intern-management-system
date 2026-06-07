@@ -131,25 +131,59 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  // Clean up database tables to keep tests isolated
-  const tables = [
-    'users',
-    'departments',
-    'interns',
-    'mentors',
-    'tasks',
-    'leaves',
-    'leave_requests',
-    'attendances',
-    'attendance_settings',
-    'holidays'
-  ];
-  for (const table of tables) {
-    try {
-      await prisma.$executeRawUnsafe(`TRUNCATE TABLE "${table}" CASCADE;`);
-    } catch (err) {
-      // Ignored if table doesn't exist under this name
-    }
+  // Targeted cleanup of only the integration test data to protect developer data
+  try {
+    await prisma.task.deleteMany({
+      where: {
+        intern: {
+          user: {
+            email: { endsWith: '@internflow.io' }
+          }
+        }
+      }
+    });
+    await prisma.leaveRequest.deleteMany({
+      where: {
+        user: {
+          email: { endsWith: '@internflow.io' }
+        }
+      }
+    });
+    await prisma.attendance.deleteMany({
+      where: {
+        intern: {
+          user: {
+            email: { endsWith: '@internflow.io' }
+          }
+        }
+      }
+    });
+    await prisma.intern.deleteMany({
+      where: {
+        user: {
+          email: { endsWith: '@internflow.io' }
+        }
+      }
+    });
+    await prisma.mentor.deleteMany({
+      where: {
+        user: {
+          email: { endsWith: '@internflow.io' }
+        }
+      }
+    });
+    await prisma.user.deleteMany({
+      where: {
+        email: { endsWith: '@internflow.io' }
+      }
+    });
+    await prisma.department.deleteMany({
+      where: {
+        code: { in: ['ENG_TEST', 'MKT_TEST'] }
+      }
+    });
+  } catch (err) {
+    console.error('Failed to cleanup test data:', err);
   }
   await prisma.$disconnect();
 });
