@@ -112,7 +112,12 @@ class PerformancePredictor:
         if self.explainer is not None:
             try:
                 shap_values = self.explainer.shap_values(df)
-                class_shap_values = shap_values[pred_class][0]
+                if isinstance(shap_values, list):
+                    class_shap_values = shap_values[pred_class][0]
+                elif hasattr(shap_values, "ndim") and shap_values.ndim == 3:
+                    class_shap_values = shap_values[0, :, pred_class]
+                else:
+                    class_shap_values = shap_values[0]
                 for i, val in enumerate(class_shap_values):
                     top_factors.append({
                         "factor": FEATURE_NAMES[i],

@@ -414,6 +414,50 @@ export class AIController {
         sessionId: userId,
       });
 
+      if (result.sources && Array.isArray(result.sources)) {
+        result.sources = await Promise.all(
+          result.sources.map(async (source: any) => {
+            let fileUrl = '';
+            const filename = source.source_file;
+            if (filename && filename !== 'Unknown') {
+              try {
+                const mentorDoc = await prisma.mentorDocument.findFirst({
+                  where: { fileName: { contains: filename, mode: 'insensitive' } },
+                });
+                if (mentorDoc) {
+                  fileUrl = mentorDoc.fileUrl;
+                } else {
+                  const internDoc = await prisma.internDocument.findFirst({
+                    where: {
+                      OR: [
+                        { name: { contains: filename, mode: 'insensitive' } },
+                        { url: { contains: filename, mode: 'insensitive' } },
+                      ],
+                    },
+                  });
+                  if (internDoc) {
+                    fileUrl = internDoc.url;
+                  } else {
+                    const taskFile = await prisma.taskFile.findFirst({
+                      where: { fileName: { contains: filename, mode: 'insensitive' } },
+                    });
+                    if (taskFile) {
+                      fileUrl = taskFile.fileUrl;
+                    }
+                  }
+                }
+              } catch (dbErr) {
+                logger.warn('Failed to resolve Cloudinary URL for source file:', dbErr);
+              }
+            }
+            return {
+              ...source,
+              file_url: fileUrl || `https://res.cloudinary.com/dummy-cloud/image/upload/${filename}`,
+            };
+          })
+        );
+      }
+
       successResponse(res, 'Chatbot dialog sequence completed successfully', result);
     } catch (error) {
       next(error);

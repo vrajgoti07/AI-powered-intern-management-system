@@ -628,7 +628,7 @@ export const OnboardingWorkflow: React.FC = () => {
                                 </div>
                                 <div>
                                   <p className="text-xs font-bold text-slate-700">{doc.label} <span className="text-red-500 ml-0.5">*</span></p>
-                                  <p className="text-[10px] text-slate-400 font-semibold">{url ? 'Uploaded successfully' : (<><span className="hidden sm:inline">Drag and drop or click to browse</span><span className="sm:hidden">Tap to browse</span></>)}</p>
+                                  <p className="text-[10px] text-slate-400 font-semibold">{url ? 'Uploaded successfully' : 'Accepted formats: PDF, JPG, PNG (Max 5MB)'}</p>
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
@@ -644,7 +644,7 @@ export const OnboardingWorkflow: React.FC = () => {
                                 ) : (
                                   <label className={`p-2 bg-indigo-50 border border-indigo-100 rounded-lg text-indigo-600 hover:bg-indigo-100 transition-colors cursor-pointer ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
                                     {isUploading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                                    <input type="file" className="hidden text-base" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.zip" onChange={(e) => {
+                                    <input type="file" className="hidden text-base" accept=".jpg,.jpeg,.png,.pdf" onChange={(e) => {
                                       if (e.target.files && e.target.files[0]) {
                                         handleFileUpload(doc.docType, e.target.files[0]);
                                       }
@@ -1157,7 +1157,7 @@ export const OnboardingWorkflow: React.FC = () => {
                                         <input 
                                           type="file" 
                                           className="hidden text-base" 
-                                          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.zip" 
+                                          accept=".jpg,.jpeg,.png,.pdf" 
                                           onChange={(e) => {
                                             if (e.target.files && e.target.files[0]) {
                                               handleFileUpload(doc.docType, e.target.files[0]);

@@ -49,19 +49,28 @@ class RAGChatbotService:
         self._lazy_load()
         import fitz
         from langchain_community.vectorstores import FAISS as FAISSStore
-        text = ""
+        
+        chunks = []
+        metadatas = []
+        
         with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
-            for page in doc:
-                text += page.get_text()
-                
-        chunks = self.text_splitter.split_text(text)
+            for page_idx, page in enumerate(doc):
+                page_text = page.get_text()
+                if not page_text.strip():
+                    continue
+                # Split page text into chunks
+                page_chunks = self.text_splitter.split_text(page_text)
+                for chunk in page_chunks:
+                    chunks.append(chunk)
+                    metadatas.append({
+                        "source": filename,
+                        "page": page_idx + 1,  # 1-indexed page number
+                        "chunk": len(chunks) - 1
+                    })
         
         if not chunks:
             return 0
             
-        # Create metadata
-        metadatas = [{"source": filename, "chunk": i} for i in range(len(chunks))]
-        
         if self.vector_store is None:
             self.vector_store = FAISSStore.from_texts(chunks, self.embeddings, metadatas=metadatas)
         else:
@@ -123,7 +132,25 @@ Answer:"""
         docs = self.vector_store.similarity_search(question, k=3)
         
         context = "\n\n".join([d.page_content for d in docs])
-        sources = list(set([d.metadata.get("source", "Unknown") for d in docs]))
+        
+        sources = []
+        seen = set()
+        for d in docs:
+            sf = d.metadata.get("source", "Unknown")
+            pn = d.metadata.get("page")
+            if pn is None:
+                pn = 1
+            ct = d.page_content[:120]
+            
+            # Deduplicate by (source_file, page_number, chunk_text)
+            key = (sf, pn, ct)
+            if key not in seen:
+                seen.add(key)
+                sources.append({
+                    "source_file": sf,
+                    "page_number": pn,
+                    "chunk_text": ct
+                })
         
         answer = self._get_llm_response(context, question)
         

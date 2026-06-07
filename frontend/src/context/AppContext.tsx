@@ -3,13 +3,20 @@ import { Intern, Mentor, Department, Task, Announcement, LeaveRequest } from '..
 import { useAuth } from '../hooks/useAuth';
 import api from '../services/api';
 
+export interface ChatSource {
+  source_file: string;
+  page_number: number;
+  chunk_text: string;
+  file_url?: string;
+}
+
 interface AppState {
   interns: Intern[];
   mentors: Mentor[];
   departments: Department[];
   tasks: Task[];
   announcements: Announcement[];
-  chatHistory: { sender: 'user' | 'bot'; text: string }[];
+  chatHistory: { sender: 'user' | 'bot'; text: string; sources?: ChatSource[] }[];
   attendanceLogs: Record<string, { date: string; checkIn: string; checkOut: string; status: 'Present' | 'Absent' | 'Half Day' }[]>;
   leaveRequests: LeaveRequest[];
 }
@@ -35,8 +42,8 @@ type Action =
       } 
     }
   | { type: 'ADD_ANNOUNCEMENT'; payload: Announcement }
-  | { type: 'SEND_CHAT_MESSAGE'; payload: { sender: 'user' | 'bot'; text: string } }
-  | { type: 'SET_CHAT_HISTORY'; payload: { sender: 'user' | 'bot'; text: string }[] }
+  | { type: 'SEND_CHAT_MESSAGE'; payload: { sender: 'user' | 'bot'; text: string; sources?: ChatSource[] } }
+  | { type: 'SET_CHAT_HISTORY'; payload: { sender: 'user' | 'bot'; text: string; sources?: ChatSource[] }[] }
   | { type: 'CLEAR_CHAT_HISTORY' }
   | { type: 'PUNCH_ATTENDANCE'; payload: { name: string } }
   | { type: 'LOG_ATTENDANCE'; payload: { internEmail: string; date: string; checkIn: string; checkOut: string; status: 'Present' | 'Absent' | 'Half Day' } }

@@ -98,9 +98,41 @@ def extract_entities(text: str) -> Dict[str, Any]:
         "projects": projects[:3]
     }
 
-def parse_resume(pdf_bytes: bytes, required_skills: List[str] = None) -> Dict[str, Any]:
-    text = extract_text_from_pdf(pdf_bytes)
+def parse_resume(file_bytes: bytes, file_type: str = "pdf", required_skills: List[str] = None) -> Dict[str, Any]:
+    text = ""
     
+    if file_type.lower() in ["jpg", "jpeg", "png"]:
+        # Direct image OCR
+        import io
+        from PIL import Image
+        import pytesseract
+        try:
+            img = Image.open(io.BytesIO(file_bytes))
+            text = pytesseract.image_to_string(img)
+        except Exception:
+            text = ""
+    else:
+        # Standard PDF text extraction
+        text = extract_text_from_pdf(file_bytes)
+        
+        # Scanned PDF OCR Fallback
+        if len(text.strip()) < 50:
+            import io
+            import fitz
+            from PIL import Image
+            import pytesseract
+            ocr_text = ""
+            try:
+                with fitz.open(stream=file_bytes, filetype="pdf") as doc:
+                    for page in doc:
+                        pix = page.get_pixmap()
+                        img = Image.open(io.BytesIO(pix.tobytes("png")))
+                        ocr_text += pytesseract.image_to_string(img) + "\n"
+                if len(ocr_text.strip()) >= 50:
+                    text = ocr_text
+            except Exception:
+                pass
+                
     email = extract_email(text)
     phone = extract_phone(text)
     skills = extract_skills(text)

@@ -46,11 +46,9 @@ const SubmissionReview = React.lazy(() => import('./pages/mentor/SubmissionRevie
 // Intern Pages
 const InternDashboard = React.lazy(() => import('./pages/intern/InternDashboard').then(m => ({ default: m.InternDashboard })));
 const MyTasks = React.lazy(() => import('./pages/intern/MyTasks').then(m => ({ default: m.MyTasks })));
-// const Attendance = React.lazy(() => import('./pages/intern/Attendance').then(m => ({ default: m.Attendance })));
 const Settings = React.lazy(() => import('./pages/shared/Settings').then(m => ({ default: m.Settings })));
 const AIChatbot = React.lazy(() => import('./pages/intern/AIChatbot').then(m => ({ default: m.AIChatbot })));
 const OnboardingWorkflow = React.lazy(() => import('./pages/intern/onboarding/OnboardingWorkflow').then(m => ({ default: m.OnboardingWorkflow })));
-// const TaskLifecycle = React.lazy(() => import('./pages/intern/TaskLifecycle').then(m => ({ default: m.TaskLifecycle })));
 const PortfolioDashboard = React.lazy(() => import('./pages/intern/PortfolioDashboard').then(m => ({ default: m.PortfolioDashboard })));
 
 // Shared Pages across portals

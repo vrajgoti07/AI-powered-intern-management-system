@@ -14,6 +14,7 @@ import { Modal } from '../../../components/common/Modal';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../../hooks/useAuth';
 import { useApp } from '../../../hooks/useApp';
+import { ChatSource } from '../../../context/AppContext';
 import { useInternByUser, useTasks, useInterns } from '../../../hooks/queries';
 import api from '../../../services/api';
 import { useSocket } from '../../../hooks/useSocket';
@@ -809,7 +810,9 @@ export const CommunicationSystem: React.FC = () => {
   const [botInput, setBotInput] = useState('');
   const [isBotTyping, setIsBotTyping] = useState(false);
   const [micActive, setMicActive] = useState(false);
+  const [selectedSource, setSelectedSource] = useState<ChatSource | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null);
 
   // Auto-scroll AI chatbot history
@@ -821,7 +824,7 @@ export const CommunicationSystem: React.FC = () => {
 
   // Speech Recognition Setup
   useEffect(() => {
-    // @ts-ignore
+    // @ts-expect-error window speech recognition support check
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
@@ -829,6 +832,7 @@ export const CommunicationSystem: React.FC = () => {
       recognition.interimResults = false;
       recognition.lang = 'en-US';
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
         if (micTargetRef.current === 'bot') {
@@ -840,6 +844,7 @@ export const CommunicationSystem: React.FC = () => {
         toast.success("Voice input captured!");
       };
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       recognition.onerror = (event: any) => {
         console.error("Speech recognition error", event.error);
         setMicActive(false);
@@ -871,6 +876,7 @@ export const CommunicationSystem: React.FC = () => {
       }));
 
       // Build task data to pass to AI service
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const taskData = Array.isArray(myTasks) ? myTasks.map((t: any) => ({
         title: t.title,
         status: t.status,
@@ -893,10 +899,11 @@ export const CommunicationSystem: React.FC = () => {
       });
 
       const botResponse = response.data?.data?.reply || response.data?.data?.response || 'I could not process that request.';
+      const sources = response.data?.data?.sources || [];
 
       dispatch({
         type: 'SEND_CHAT_MESSAGE',
-        payload: { sender: 'bot', text: botResponse }
+        payload: { sender: 'bot', text: botResponse, sources }
       });
     } catch (error) {
       console.error(error);
@@ -2124,6 +2131,30 @@ export const CommunicationSystem: React.FC = () => {
                             <div className="whitespace-pre-line">
                               {formatMessageText(msg.text, isUser)}
                             </div>
+                            {!isUser && (
+                              <div className="mt-3 pt-2 border-t border-slate-100 flex flex-wrap gap-1.5 items-center" data-testid="sources-container">
+                                {msg.sources && msg.sources.length > 0 ? (
+                                  <>
+                                    <span className="text-[10px] text-slate-400 font-bold mr-1">Sources:</span>
+                                    {msg.sources.map((src: ChatSource, sIdx: number) => (
+                                      <button
+                                        key={sIdx}
+                                        type="button"
+                                        onClick={() => setSelectedSource(src)}
+                                        className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-slate-600 hover:text-indigo-600 rounded-lg shadow-sm transition-all duration-150 cursor-pointer"
+                                        data-testid="source-pill"
+                                      >
+                                        <FileText className="w-3 h-3 text-slate-400" />
+                                        <span className="max-w-[100px] truncate">{src.source_file}</span>
+                                        <span className="text-[9px] bg-slate-200/60 text-slate-500 px-1 rounded font-normal">p. {src.page_number}</span>
+                                      </button>
+                                    ))}
+                                  </>
+                                ) : (
+                                  <span className="text-[10px] text-slate-400 font-bold italic" data-testid="no-references">No references</span>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
                       );
@@ -2740,6 +2771,71 @@ export const CommunicationSystem: React.FC = () => {
             </div>
           </div>
         </Modal>
+      )}
+      {/* ─── Source Detail Modal ─── */}
+      {selectedSource && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in" data-testid="source-modal">
+          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden transform transition-all duration-300 scale-100 flex flex-col">
+            {/* Header */}
+            <div className="px-6 py-4 bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-150 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-indigo-600" />
+                <h4 className="text-sm font-black text-slate-800 tracking-tight">Source Reference</h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedSource(null)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 hover:bg-slate-200/60 rounded-xl transition-colors cursor-pointer"
+                aria-label="Close"
+                data-testid="close-modal-btn"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            {/* Body */}
+            <div className="p-6 space-y-4 text-left flex-1">
+              <div>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Document Name</p>
+                <p className="text-xs font-bold text-slate-700 mt-1" data-testid="modal-source-file">{selectedSource.source_file}</p>
+              </div>
+              
+              <div>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Page Reference</p>
+                <p className="text-xs font-bold text-slate-700 mt-1" data-testid="modal-page-number">Page {selectedSource.page_number}</p>
+              </div>
+
+              <div>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Matched Policy Text Chunk</p>
+                <div className="mt-2 p-3 bg-slate-50 rounded-2xl border border-slate-150 text-xs text-slate-600 font-medium leading-relaxed max-h-[200px] overflow-y-auto italic" data-testid="modal-chunk-text">
+                  "{selectedSource.chunk_text}..."
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-150 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setSelectedSource(null)}
+                className="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-200/60 rounded-xl transition-all cursor-pointer"
+              >
+                Close
+              </button>
+              {selectedSource.file_url && (
+                <a
+                  href={selectedSource.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-lg shadow-indigo-150 transition-all cursor-pointer flex items-center gap-1.5"
+                  data-testid="modal-pdf-link"
+                >
+                  View Document
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

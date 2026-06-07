@@ -6,6 +6,7 @@ import { AuthProvider, AuthContext } from '../context/AuthContext';
 import api from '../services/api';
 
 vi.mock('../services/api', () => ({
+  API_BASE_URL: 'http://localhost:5000/api/v1',
   default: {
     get: vi.fn(),
     post: vi.fn(),
