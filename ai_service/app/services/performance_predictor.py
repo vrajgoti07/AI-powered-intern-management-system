@@ -14,20 +14,26 @@ FEATURE_NAMES = [
     "week_number"
 ]
 
+import threading
+
 class PerformancePredictor:
     def __init__(self):
         self.model = None
         self.explainer = None
         self._loaded = False
+        self._lock = threading.Lock()
 
     def _ensure_loaded(self):
         """Lazy-load model only when first needed."""
         if self._loaded:
             return
-        self._loaded = True
-        if os.path.exists(MODEL_PATH):
-            import joblib
-            self.model = joblib.load(MODEL_PATH)
+        with self._lock:
+            if self._loaded:
+                return
+            if os.path.exists(MODEL_PATH):
+                import joblib
+                self.model = joblib.load(MODEL_PATH)
+            self._loaded = True
 
     def train_model(self, X_train, y_train):
         """Trains the model with GridSearch and saves it."""

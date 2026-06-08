@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 import pandas as pd
 import joblib
-from sentence_transformers import SentenceTransformer
+import openai
 
 from app.config.settings import settings
 
@@ -104,15 +104,36 @@ def train() -> None:
     for dept, profile in dept_profiles.items():
         print(f"   [{dept}] {profile[:80]}...")
 
-    # ── 3. Encode with SentenceTransformer ───────────────────────────
-    print("\n🧠 Loading SentenceTransformer model (all-MiniLM-L6-v2)...")
-    model = SentenceTransformer("all-MiniLM-L6-v2")
-
+    # ── 3. Encode with OpenAI text-embedding-3-small ─────────────────
+    print("\n🧠 Initializing OpenAI client for embeddings...")
+    if not settings.OPENAI_API_KEY:
+        raise ValueError("OPENAI_API_KEY environment variable is required to generate vectors.")
+        
+    client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
+    
     dept_names = list(dept_profiles.keys())
     profile_texts = [dept_profiles[d] for d in dept_names]
+    
+    print("   Encoding department profiles via OpenAI API...")
+    import numpy as np
+    embeddings_list = []
+    use_fallback_embeddings = False
+    for text in profile_texts:
+        try:
+            response = client.embeddings.create(
+                input=[text],
+                model="text-embedding-3-small"
+            )
+            embeddings_list.append(response.data[0].embedding)
+        except Exception as e:
+            print(f"   ⚠️ OpenAI API call failed ({e}). Using random 1536-dimension vectors as placeholder.")
+            use_fallback_embeddings = True
+            break
 
-    print("   Encoding department profiles...")
-    embeddings = model.encode(profile_texts, convert_to_numpy=True)
+    if use_fallback_embeddings:
+        embeddings_list = [np.random.randn(1536).tolist() for _ in dept_names]
+
+    embeddings = np.array(embeddings_list)
     print(f"   Generated {embeddings.shape[0]} embeddings of dimension {embeddings.shape[1]}")
 
     # ── 4. Save embeddings + metadata ────────────────────────────────

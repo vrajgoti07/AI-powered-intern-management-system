@@ -30,16 +30,21 @@ _WEAKNESS_INDICATORS = {
 }
 
 
+import threading
+
 class SentimentService:
     """Analyses mentor feedback using a DistilBERT sentiment pipeline."""
 
     def __init__(self) -> None:
         self._pipeline = None
         self._model_loaded = False
+        self._lock = threading.Lock()
 
     def _load_model(self) -> None:
         """Load NLTK VADER sentiment analyzer."""
         if self._model_loaded: return
+        with self._lock:
+            if self._model_loaded: return
         try:
             import nltk
             try:

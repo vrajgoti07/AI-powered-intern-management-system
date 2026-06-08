@@ -97,6 +97,13 @@ async def lifespan(app: FastAPI):
 
     app.state.models_loaded = models_loaded
 
+    # 3. Start APScheduler if enabled
+    try:
+        from app.services.risk_detector import init_scheduler
+        init_scheduler()
+    except Exception as exc:
+        logger.warning("Failed to initialize background scheduler: %s", exc)
+
     logger.info("-" * 60)
     logger.info("  AI Microservice ready on http://%s:%s", settings.FASTAPI_HOST, settings.FASTAPI_PORT)
     logger.info("-" * 60)
@@ -107,6 +114,12 @@ async def lifespan(app: FastAPI):
 
     # --- SHUTDOWN -----------------------------------------------------
     logger.info("Shutting down AI Microservice...")
+
+    try:
+        from app.services.risk_detector import shutdown_scheduler
+        shutdown_scheduler()
+    except Exception:
+        pass
 
     if app.state.redis is not None:
         try:

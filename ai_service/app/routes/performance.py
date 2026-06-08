@@ -38,28 +38,23 @@ async def predict_performance(request: Request):
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid JSON payload")
 
+    redis_client = getattr(request.app.state, "redis", None)
+    cache_key = None
+    if redis_client:
+        try:
+            # Deterministic serialization of JSON body to create stable hash key
+            body_str = json.dumps(body, sort_keys=True)
+            cache_key = f"perf_cache:{hashlib.sha256(body_str.encode('utf-8')).hexdigest()}"
+            cached_res = redis_client.get(cache_key)
+            if cached_res:
+                return json.loads(cached_res)
+        except Exception:
+            pass
+
     # 1. XGBoost Payload (internId + features) -> ai.service.ts
     if "features" in body:
-        redis_client = getattr(request.app.state, "redis", None)
-        cache_key = None
-        
-        intern_id = body.get("internId", "unknown")
-        features_dict = body.get("features", {})
-        
-        if redis_client:
-            try:
-                # Build stable deterministic string representation
-                feat_str = ",".join(f"{k}:{features_dict.get(k)}" for k in sorted(features_dict.keys()))
-                key_str = f"perf:{intern_id}:{feat_str}"
-                cache_key = f"perf_cache:{hashlib.sha256(key_str.encode('utf-8')).hexdigest()}"
-                
-                cached_res = redis_client.get(cache_key)
-                if cached_res:
-                    return json.loads(cached_res)
-            except Exception:
-                pass
-
         try:
+            features_dict = body.get("features", {})
             # Fill default values if any features are missing to prevent runtime errors
             features = {
                 "attendance_rate": float(features_dict.get("attendance_rate", 0.95)),
@@ -71,14 +66,6 @@ async def predict_performance(request: Request):
                 "week_number": int(features_dict.get("week_number", 4))
             }
             result = predictor_instance.predict(features)
-            
-            if redis_client and cache_key:
-                try:
-                    redis_client.set(cache_key, json.dumps(result), ex=600)
-                except Exception:
-                    pass
-                    
-            return result
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
@@ -91,7 +78,7 @@ async def predict_performance(request: Request):
                 feedback_sentiment_score=float(body.get("feedback_sentiment_score", 0.0)),
                 productivity_score=float(body.get("productivity_score", 0.0))
             )
-            return _performance_service.predict_performance(data)
+            result = _performance_service.predict_performance(data)
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
@@ -104,20 +91,34 @@ async def predict_performance(request: Request):
             productivity_score = float(body.get("productivity_score", 0.5))
             submission_rate = float(body.get("submission_rate", 0.5))
             
-            result = _prediction_service.predict_performance(
+            raw_result = _prediction_service.predict_performance(
                 attendance_rate=attendance_rate,
                 task_completion_rate=task_completion_rate,
                 feedback_score=feedback_score,
                 productivity_score=productivity_score,
                 submission_rate=submission_rate
             )
-            return PredictionResponse(
+            result = PredictionResponse(
                 success=True,
-                data=PredictionData(**result),
+                data=PredictionData(**raw_result),
                 error=None
             )
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+
+    if redis_client and cache_key:
+        try:
+            if hasattr(result, "model_dump"):
+                serializable = result.model_dump()
+            elif hasattr(result, "dict"):
+                serializable = result.dict()
+            else:
+                serializable = result
+            redis_client.set(cache_key, json.dumps(serializable), ex=900)
+        except Exception:
+            pass
+
+    return result
 
 
 @router.get("/feature-importance")

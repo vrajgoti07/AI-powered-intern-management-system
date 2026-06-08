@@ -17,6 +17,8 @@ from app.utils.helpers import cosine_similarity_score, normalize_confidence
 logger = logging.getLogger(__name__)
 
 
+import threading
+
 class MatchingService:
     """Matches intern profiles to departments using sentence-transformer embeddings."""
 
@@ -24,39 +26,42 @@ class MatchingService:
         self._model = None
         self._dept_data: Optional[Dict[str, Any]] = None
         self._loaded = False
+        self._lock = threading.Lock()
 
     def _load_models(self) -> None:
         """Load the department vectors and initialize the OpenAI client."""
         if self._loaded: return
-        vectors_path = os.path.join(settings.VECTOR_DIR, "department_vectors.pkl")
+        with self._lock:
+            if self._loaded: return
+            vectors_path = os.path.join(settings.VECTOR_DIR, "department_vectors.pkl")
 
-        try:
-            import joblib
-            self._dept_data = joblib.load(vectors_path)
-            logger.info(
-                "Loaded department vectors for %d departments from %s",
-                len(self._dept_data["department_names"]),
-                vectors_path,
-            )
-        except FileNotFoundError:
-            logger.warning(
-                "Department vectors not found at %s — run regenerate_vectors.py first",
-                vectors_path,
-            )
-            self._dept_data = None
-
-        if settings.OPENAI_API_KEY:
             try:
-                from openai import OpenAI
-                self._model = OpenAI(api_key=settings.OPENAI_API_KEY)
-                logger.info("OpenAI client initialized successfully for matching service")
-            except Exception as exc:
-                logger.error("Failed to initialize OpenAI client: %s", exc)
+                import joblib
+                self._dept_data = joblib.load(vectors_path)
+                logger.info(
+                    "Loaded department vectors for %d departments from %s",
+                    len(self._dept_data["department_names"]),
+                    vectors_path,
+                )
+            except FileNotFoundError:
+                logger.warning(
+                    "Department vectors not found at %s — run regenerate_vectors.py first",
+                    vectors_path,
+                )
+                self._dept_data = None
+
+            if settings.OPENAI_API_KEY:
+                try:
+                    from openai import OpenAI
+                    self._model = OpenAI(api_key=settings.OPENAI_API_KEY)
+                    logger.info("OpenAI client initialized successfully for matching service")
+                except Exception as exc:
+                    logger.error("Failed to initialize OpenAI client: %s", exc)
+                    self._model = None
+            else:
+                logger.warning("OPENAI_API_KEY not configured — matching service will fallback")
                 self._model = None
-        else:
-            logger.warning("OPENAI_API_KEY not configured — matching service will fallback")
-            self._model = None
-        self._loaded = True
+            self._loaded = True
 
     def match_role(
         self,

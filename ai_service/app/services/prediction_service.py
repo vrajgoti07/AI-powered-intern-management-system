@@ -17,6 +17,8 @@ from app.utils.helpers import normalize_confidence
 logger = logging.getLogger(__name__)
 
 
+import threading
+
 class PredictionService:
     """Predicts intern performance using a pre-trained sklearn pipeline."""
 
@@ -24,11 +26,14 @@ class PredictionService:
         self._pipeline = None
         self._label_encoder = None
         self._loaded = False
+        self._lock = threading.Lock()
 
     def _load_models(self) -> None:
         """Load the performance model and label encoder from disk."""
         if self._loaded: return
-        model_path = os.path.join(settings.MODEL_DIR, "performance_model.pkl")
+        with self._lock:
+            if self._loaded: return
+            model_path = os.path.join(settings.MODEL_DIR, "performance_model.pkl")
         encoder_path = os.path.join(settings.MODEL_DIR, "performance_label_encoder.pkl")
 
         import joblib

@@ -47,3 +47,15 @@ async def get_risks(departmentId: Optional[str] = Query(None)):
             "urgency": "this-week"
         }
     ]
+
+@router.post("/trigger-risk-scan")
+async def trigger_risk_scan():
+    """
+    Manually triggers the daily risk detection scan.
+    """
+    try:
+        from app.services.risk_detector import run_daily_risk_detection
+        run_daily_risk_detection()
+        return {"status": "success", "message": "Manual risk detection scan completed successfully."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

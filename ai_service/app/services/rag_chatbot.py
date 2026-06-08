@@ -1,4 +1,5 @@
 import os
+import threading
 from typing import Dict, List, Any
 
 FAISS_INDEX_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "faiss_index")
@@ -10,23 +11,26 @@ class RAGChatbotService:
         self.vector_store = None
         self.chat_history: Dict[str, List[Dict[str, str]]] = {}
         self._loaded = False
+        self._lock = threading.Lock()
         
     def _lazy_load(self):
         if self._loaded: return
-        from langchain_text_splitters import RecursiveCharacterTextSplitter
-        from app.config.settings import settings
-        
-        openai_api_key = settings.OPENAI_API_KEY
-        if not openai_api_key:
-            raise ValueError("OPENAI_API_KEY is not configured. RAG Chatbot cannot be initialized.")
-
-        from langchain_openai import OpenAIEmbeddings
-        self.embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
-        print("[INFO] Using OpenAIEmbeddings for RAG Chatbot")
+        with self._lock:
+            if self._loaded: return
+            from langchain_text_splitters import RecursiveCharacterTextSplitter
+            from app.config.settings import settings
             
-        self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
-        self._load_vector_store()
-        self._loaded = True
+            openai_api_key = settings.OPENAI_API_KEY
+            if not openai_api_key:
+                raise ValueError("OPENAI_API_KEY is not configured. RAG Chatbot cannot be initialized.")
+
+            from langchain_openai import OpenAIEmbeddings
+            self.embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key, model="text-embedding-3-small")
+            print("[INFO] Using OpenAIEmbeddings (text-embedding-3-small) for RAG Chatbot")
+                
+            self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+            self._load_vector_store()
+            self._loaded = True
         
     def _load_vector_store(self):
         from langchain_community.vectorstores import FAISS

@@ -30,8 +30,9 @@ async def query_chatbot(query_req: QueryRequest, request: Request):
     cache_key = None
     if redis_client:
         try:
-            # Create unique hash key based on userId and question
-            key_str = f"chatbot:{query_req.userId}:{query_req.question}"
+            # Normalize question to prevent duplicate cache keys
+            normalized_q = query_req.question.strip().lower()
+            key_str = f"chatbot:{query_req.userId}:{normalized_q}"
             cache_key = f"chatbot_cache:{hashlib.sha256(key_str.encode('utf-8')).hexdigest()}"
             cached_res = redis_client.get(cache_key)
             if cached_res:
@@ -44,8 +45,8 @@ async def query_chatbot(query_req: QueryRequest, request: Request):
         
         if redis_client and cache_key:
             try:
-                # Cache for 15 minutes (900 seconds)
-                redis_client.set(cache_key, json.dumps(response), ex=900)
+                # Cache for 5 minutes (300 seconds)
+                redis_client.set(cache_key, json.dumps(response), ex=300)
             except Exception:
                 pass
                 

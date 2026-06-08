@@ -75,6 +75,12 @@ class RiskDetectorService:
         
         return risks
 
+import os
+import threading
+
+_scheduler = None
+_scheduler_lock = threading.Lock()
+
 def run_daily_risk_detection():
     """
     Function to be called by APScheduler.
@@ -86,3 +92,34 @@ def run_daily_risk_detection():
     # risks = RiskDetectorService.detect_risks(interns_data)
     # Save to db
     print("Risk detection completed.")
+
+def init_scheduler():
+    global _scheduler
+    enable_scheduler = os.getenv("ENABLE_SCHEDULER", "false").lower() == "true"
+    if not enable_scheduler:
+        return
+    if _scheduler is not None:
+        return
+    with _scheduler_lock:
+        if _scheduler is not None:
+            return
+        try:
+            from apscheduler.schedulers.background import BackgroundScheduler
+            _scheduler = BackgroundScheduler()
+            _scheduler.add_job(run_daily_risk_detection, 'cron', hour=20, minute=0)
+            _scheduler.start()
+            print("[INFO] APScheduler started for daily risk detection at 8 PM.")
+        except Exception as e:
+            print(f"[ERROR] Failed to start APScheduler: {e}")
+
+def shutdown_scheduler():
+    global _scheduler
+    if _scheduler is not None:
+        with _scheduler_lock:
+            if _scheduler is not None:
+                try:
+                    _scheduler.shutdown()
+                    print("[INFO] APScheduler shut down successfully.")
+                except Exception:
+                    pass
+                _scheduler = None

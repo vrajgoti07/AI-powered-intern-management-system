@@ -5,7 +5,7 @@ WORKDIR /app
 # Set memory-conscious and performance environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONOPTIMIZE=2 \
+    PYTHONOPTIMIZE=1 \
     OMP_NUM_THREADS=1 \
     OPENBLAS_NUM_THREADS=1 \
     MKL_NUM_THREADS=1 \
