@@ -1,3 +1,5 @@
+import { jest, beforeAll, afterAll } from '@jest/globals';
+
 // Bypass rate limiting entirely during tests
 jest.mock('../middleware/rateLimit.middleware', () => {
   const dummyMiddleware = (_req: any, _res: any, next: any) => next();
@@ -12,7 +14,7 @@ jest.mock('../middleware/rateLimit.middleware', () => {
 // Centralized mock implementation for ioredis using plain functions to survive resetMocks
 jest.mock('ioredis', () => {
   return jest.fn().mockImplementation(() => {
-    return {
+    const mockRedis = {
       on: () => {},
       set: async () => 'OK',
       get: async () => null,
@@ -22,7 +24,9 @@ jest.mock('ioredis', () => {
       defineCommand: () => {},
       options: {},
       keys: async () => [],
+      duplicate: () => mockRedis,
     };
+    return mockRedis;
   });
 });
 
@@ -85,13 +89,17 @@ jest.mock('cloudinary', () => ({
 }));
 
 jest.mock('../utils/email', () => ({
+  sendEmail: async () => true,
   sendLoginOtpEmail: async () => true,
   sendWelcomeEmail: async () => true,
+  sendApplicationConfirmationEmail: async () => true,
+  sendMentorAssignmentEmails: async () => true,
+  sendPerformanceScoreEmail: async () => true,
 }));
 
 // Mock config/database module using a Proxy to dynamically intercept leave.findMany calls
 jest.mock('../config/database', () => {
-  const originalModule = jest.requireActual('../config/database');
+  const originalModule = jest.requireActual('../config/database') as any;
   const prismaInstance = originalModule.default;
   
   const prismaProxy = new Proxy(prismaInstance, {

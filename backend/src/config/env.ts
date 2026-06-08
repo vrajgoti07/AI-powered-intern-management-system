@@ -13,6 +13,7 @@ const envSchema = z.object({
   
   // Database
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
+  DIRECT_URL: z.string().optional(), // Neon direct (unpooled) connection for migrations
   
   // Redis
   REDIS_URL: z.string().min(1, 'REDIS_URL is required'),
@@ -86,6 +87,7 @@ export const config = {
   },
   database: {
     url: env.DATABASE_URL,
+    directUrl: env.DIRECT_URL,
   },
   jwt: {
     accessSecret: env.JWT_SECRET,

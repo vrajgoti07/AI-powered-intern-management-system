@@ -3,88 +3,115 @@ import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
+// ═══════════════════════════════════════════════════════════════
+// SAFETY GUARDS — Prevent accidental data destruction in production
+// ═══════════════════════════════════════════════════════════════
+
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const DATABASE_URL = process.env.DATABASE_URL || '';
+const isNeon = DATABASE_URL.includes('neon.tech');
+const FORCE_SEED = process.env.FORCE_SEED === 'true';
+
+if (NODE_ENV === 'production') {
+  console.error('🚫 BLOCKED: Database seeding is not allowed in production!');
+  console.error('   Set NODE_ENV=development or NODE_ENV=test to run seeds.');
+  process.exit(1);
+}
+
+if (isNeon && !FORCE_SEED) {
+  console.error('🚫 BLOCKED: Refusing to seed against a Neon cloud database.');
+  console.error('   Your DATABASE_URL points to neon.tech — this would modify live data.');
+  console.error('   If you REALLY mean to do this, set FORCE_SEED=true');
+  console.error(`   Current DB: ${DATABASE_URL.split('/').pop()?.split('?')[0] || 'unknown'}`);
+  process.exit(1);
+}
+
+// ═══════════════════════════════════════════════════════════════
+
 async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 10);
 }
 
+/**
+ * Upsert a user by email — safe to run repeatedly without data loss.
+ */
+async function upsertUser(data: {
+  email: string;
+  password: string;
+  name: string;
+  role: UserRole;
+  departmentId?: string;
+  mentorDepartmentId?: string;
+}) {
+  return prisma.user.upsert({
+    where: { email: data.email },
+    update: {
+      name: data.name,
+      role: data.role,
+      isActive: true,
+      isEmailVerified: true,
+      ...(data.departmentId && { departmentId: data.departmentId }),
+      ...(data.mentorDepartmentId && { mentorDepartmentId: data.mentorDepartmentId }),
+    },
+    create: {
+      email: data.email,
+      password: data.password,
+      name: data.name,
+      role: data.role,
+      isActive: true,
+      isEmailVerified: true,
+      ...(data.departmentId && { departmentId: data.departmentId }),
+      ...(data.mentorDepartmentId && { mentorDepartmentId: data.mentorDepartmentId }),
+    },
+  });
+}
+
 async function main() {
-  console.log('🌱 Starting database cleanup and seeding...');
+  console.log('🌱 Starting safe (upsert-based) database seeding...');
+  console.log(`   Environment: ${NODE_ENV}`);
+  console.log(`   Neon: ${isNeon}`);
+  console.log(`   Database: ${DATABASE_URL.split('/').pop()?.split('?')[0] || 'unknown'}`);
 
-  // Delete all existing data in correct dependency order
-  console.log('Cleaning up database tables...');
-  await prisma.aIRecommendation.deleteMany({});
-  await prisma.departmentActivity.deleteMany({});
-  await prisma.project.deleteMany({});
-  await prisma.leave.deleteMany({});
-  await prisma.attendance.deleteMany({});
-  await prisma.taskComment.deleteMany({});
-  await prisma.taskFile.deleteMany({});
-  await prisma.feedback.deleteMany({});
-  await prisma.task.deleteMany({});
-  await prisma.notification.deleteMany({});
-  await prisma.message.deleteMany({});
-  await prisma.conversation.deleteMany({});
-  await prisma.onboardingProgress.deleteMany({});
-  await prisma.intern.deleteMany({});
-  await prisma.mentor.deleteMany({});
-  await prisma.user.deleteMany({});
-  await prisma.department.deleteMany({});
-  console.log('✅ All tables cleaned');
-
-  // 1. Create Department Head Users first
+  // 1. Create Department Head Users (upsert by email)
   console.log('Creating Department Head users...');
-  
-  const engHeadUser = await prisma.user.create({
-    data: {
-      email: 'vikram@internmanagement.com',
-      password: await hashPassword('head123'),
-      name: 'Dr. Vikram Seth',
-      role: UserRole.DEPARTMENT_HEAD,
-      isActive: true,
-      isEmailVerified: true,
-    },
+
+  const engHeadUser = await upsertUser({
+    email: 'vikram@internmanagement.com',
+    password: await hashPassword('head123'),
+    name: 'Dr. Vikram Seth',
+    role: UserRole.DEPARTMENT_HEAD,
   });
 
-  const dsnHeadUser = await prisma.user.create({
-    data: {
-      email: 'rohan@internmanagement.com',
-      password: await hashPassword('head123'),
-      name: 'Rohan Bakshi',
-      role: UserRole.DEPARTMENT_HEAD,
-      isActive: true,
-      isEmailVerified: true,
-    },
+  const dsnHeadUser = await upsertUser({
+    email: 'rohan@internmanagement.com',
+    password: await hashPassword('head123'),
+    name: 'Rohan Bakshi',
+    role: UserRole.DEPARTMENT_HEAD,
   });
 
-  const mktHeadUser = await prisma.user.create({
-    data: {
-      email: 'meera@internmanagement.com',
-      password: await hashPassword('head123'),
-      name: 'Meera Oberoi',
-      role: UserRole.DEPARTMENT_HEAD,
-      isActive: true,
-      isEmailVerified: true,
-    },
+  const mktHeadUser = await upsertUser({
+    email: 'meera@internmanagement.com',
+    password: await hashPassword('head123'),
+    name: 'Meera Oberoi',
+    role: UserRole.DEPARTMENT_HEAD,
   });
 
-  const hrHeadUser = await prisma.user.create({
-    data: {
-      email: 'neha@internmanagement.com',
-      password: await hashPassword('head123'),
-      name: 'Neha Kapoor',
-      role: UserRole.DEPARTMENT_HEAD,
-      isActive: true,
-      isEmailVerified: true,
-    },
+  const hrHeadUser = await upsertUser({
+    email: 'neha@internmanagement.com',
+    password: await hashPassword('head123'),
+    name: 'Neha Kapoor',
+    role: UserRole.DEPARTMENT_HEAD,
   });
 
-  console.log('✅ Department Head users created');
+  console.log('✅ Department Head users upserted');
 
-  // 2. Create Departments linked to Head Users
+  // 2. Create Departments (upsert by unique code)
   console.log('Creating departments...');
-  
-  const engDept = await prisma.department.create({
-    data: {
+
+  const engDept = await prisma.department.upsert({
+    where: { code: 'ENG' },
+    update: { name: 'Engineering', headId: engHeadUser.id, colorTheme: 'indigo', isActive: true },
+    create: {
       name: 'Engineering',
       code: 'ENG',
       headId: engHeadUser.id,
@@ -94,8 +121,10 @@ async function main() {
     },
   });
 
-  const dsnDept = await prisma.department.create({
-    data: {
+  const dsnDept = await prisma.department.upsert({
+    where: { code: 'DSN' },
+    update: { name: 'Design', headId: dsnHeadUser.id, colorTheme: 'purple', isActive: true },
+    create: {
       name: 'Design',
       code: 'DSN',
       headId: dsnHeadUser.id,
@@ -105,8 +134,10 @@ async function main() {
     },
   });
 
-  const mktDept = await prisma.department.create({
-    data: {
+  const mktDept = await prisma.department.upsert({
+    where: { code: 'MKT' },
+    update: { name: 'Marketing', headId: mktHeadUser.id, colorTheme: 'pink', isActive: true },
+    create: {
       name: 'Marketing',
       code: 'MKT',
       headId: mktHeadUser.id,
@@ -116,8 +147,10 @@ async function main() {
     },
   });
 
-  const hrDept = await prisma.department.create({
-    data: {
+  const hrDept = await prisma.department.upsert({
+    where: { code: 'HRD' },
+    update: { name: 'HR', headId: hrHeadUser.id, colorTheme: 'emerald', isActive: true },
+    create: {
       name: 'HR',
       code: 'HRD',
       headId: hrHeadUser.id,
@@ -127,8 +160,10 @@ async function main() {
     },
   });
 
-  await prisma.department.create({
-    data: {
+  await prisma.department.upsert({
+    where: { code: 'AIML' },
+    update: { isActive: true },
+    create: {
       name: 'AIML',
       code: 'AIML',
       colorTheme: 'blue',
@@ -137,8 +172,10 @@ async function main() {
     },
   });
 
-  await prisma.department.create({
-    data: {
+  await prisma.department.upsert({
+    where: { code: 'WDEV' },
+    update: { isActive: true },
+    create: {
       name: 'Web Development',
       code: 'WDEV',
       colorTheme: 'sky',
@@ -147,8 +184,10 @@ async function main() {
     },
   });
 
-  await prisma.department.create({
-    data: {
+  await prisma.department.upsert({
+    where: { code: 'DSCI' },
+    update: { isActive: true },
+    create: {
       name: 'Data Science',
       code: 'DSCI',
       colorTheme: 'teal',
@@ -157,8 +196,10 @@ async function main() {
     },
   });
 
-  await prisma.department.create({
-    data: {
+  await prisma.department.upsert({
+    where: { code: 'CYBR' },
+    update: { isActive: true },
+    create: {
       name: 'Cybersecurity',
       code: 'CYBR',
       colorTheme: 'rose',
@@ -167,242 +208,162 @@ async function main() {
     },
   });
 
-  console.log('✅ Departments created');
+  console.log('✅ Departments upserted');
 
-  // 3. Create Projects for Departments
+  // 3. Create Projects (upsert-safe: check if exists first)
   console.log('Creating projects...');
-  await prisma.project.create({
-    data: { title: 'InternFlow Portal Redesign', description: 'Rebuilding the core frontend client system', departmentId: engDept.id },
-  });
-  await prisma.project.create({
-    data: { title: 'AI Copilot Engine v2', description: 'Upgrading the LLM service layer capabilities', departmentId: engDept.id },
-  });
-  await prisma.project.create({
-    data: { title: 'UI Component Library', description: 'Building custom reusable shadcn assets', departmentId: dsnDept.id },
-  });
-  await prisma.project.create({
-    data: { title: 'Q2 Internship Outreach', description: 'Promoting recruitment cycles across campuses', departmentId: mktDept.id },
-  });
-  await prisma.project.create({
-    data: { title: 'Onboarding Automation v1', description: 'Automating marksheets and document verification', departmentId: hrDept.id },
-  });
-  console.log('✅ Projects seeded');
+  const projectSeeds = [
+    { title: 'InternFlow Portal Redesign', description: 'Rebuilding the core frontend client system', departmentId: engDept.id },
+    { title: 'AI Copilot Engine v2', description: 'Upgrading the LLM service layer capabilities', departmentId: engDept.id },
+    { title: 'UI Component Library', description: 'Building custom reusable shadcn assets', departmentId: dsnDept.id },
+    { title: 'Q2 Internship Outreach', description: 'Promoting recruitment cycles across campuses', departmentId: mktDept.id },
+    { title: 'Onboarding Automation v1', description: 'Automating marksheets and document verification', departmentId: hrDept.id },
+  ];
 
-  // 4. Create Department Head Assignment Logs
+  for (const proj of projectSeeds) {
+    const existing = await prisma.project.findFirst({ where: { title: proj.title } });
+    if (!existing) {
+      await prisma.project.create({ data: proj });
+    }
+  }
+  console.log('✅ Projects seeded (skip-if-exists)');
+
+  // 4. Log department head assignment activities (skip-if-exists)
   console.log('Logging head assignments...');
-  await prisma.departmentActivity.create({
-    data: { departmentId: engDept.id, activityType: 'HEAD_ASSIGNED', description: 'Dr. Vikram Seth assigned as Head of Engineering', performedBy: 'System Admin' },
-  });
-  await prisma.departmentActivity.create({
-    data: { departmentId: dsnDept.id, activityType: 'HEAD_ASSIGNED', description: 'Rohan Bakshi assigned as Head of Design', performedBy: 'System Admin' },
-  });
-  await prisma.departmentActivity.create({
-    data: { departmentId: mktDept.id, activityType: 'HEAD_ASSIGNED', description: 'Meera Oberoi assigned as Head of Marketing', performedBy: 'System Admin' },
-  });
-  await prisma.departmentActivity.create({
-    data: { departmentId: hrDept.id, activityType: 'HEAD_ASSIGNED', description: 'Neha Kapoor assigned as Head of HR', performedBy: 'System Admin' },
-  });
-  console.log('✅ Activities logged');
+  const activitySeeds = [
+    { departmentId: engDept.id, activityType: 'HEAD_ASSIGNED', description: 'Dr. Vikram Seth assigned as Head of Engineering', performedBy: 'System Admin' },
+    { departmentId: dsnDept.id, activityType: 'HEAD_ASSIGNED', description: 'Rohan Bakshi assigned as Head of Design', performedBy: 'System Admin' },
+    { departmentId: mktDept.id, activityType: 'HEAD_ASSIGNED', description: 'Meera Oberoi assigned as Head of Marketing', performedBy: 'System Admin' },
+    { departmentId: hrDept.id, activityType: 'HEAD_ASSIGNED', description: 'Neha Kapoor assigned as Head of HR', performedBy: 'System Admin' },
+  ];
 
-  // 5. Create HR User
+  for (const act of activitySeeds) {
+    const existing = await prisma.departmentActivity.findFirst({
+      where: { departmentId: act.departmentId, activityType: act.activityType },
+    });
+    if (!existing) {
+      await prisma.departmentActivity.create({ data: act });
+    }
+  }
+  console.log('✅ Activities logged (skip-if-exists)');
+
+  // 5. Create HR & Admin Users
   console.log('Creating HR users...');
-  
-  // Standard system admin
-  await prisma.user.create({
-    data: {
-      email: 'hr@internmanagement.com',
-      password: await hashPassword('HRPass123!'),
-      name: 'Admin User',
-      role: UserRole.HR,
-      isActive: true,
-      isEmailVerified: true,
-    },
+
+  await upsertUser({
+    email: 'hr@internmanagement.com',
+    password: await hashPassword('HRPass123!'),
+    name: 'Admin User',
+    role: UserRole.HR,
   });
 
-  // Frictionless login admin
-  await prisma.user.create({
-    data: {
-      email: 'hr.internflow@gmail.com',
-      password: await hashPassword('hr@123456789'),
-      name: 'HR Admin',
-      role: UserRole.HR,
-      isActive: true,
-      isEmailVerified: true,
-    },
+  await upsertUser({
+    email: 'hr.internflow@gmail.com',
+    password: await hashPassword('hr@123456789'),
+    name: 'HR Admin',
+    role: UserRole.HR,
   });
 
-  // Super Admin
   console.log('Creating Super Admin...');
-  await prisma.user.create({
-    data: {
-      email: 'superadmin@intern.com',
-      password: await hashPassword('admin123'),
-      name: 'Super Admin',
-      role: UserRole.SUPER_ADMIN,
-      isActive: true,
-      isEmailVerified: true,
-    },
+  await upsertUser({
+    email: 'superadmin@intern.com',
+    password: await hashPassword('admin123'),
+    name: 'Super Admin',
+    role: UserRole.SUPER_ADMIN,
   });
 
-  // 6. Create Mentor User
+  // 6. Create Mentor
   console.log('Creating Mentor...');
-  const mentorUser = await prisma.user.create({
-    data: {
-      email: 'mentor@internmanagement.com',
-      password: await hashPassword('mentor123'),
-      name: 'Default Mentor',
-      role: UserRole.MENTOR,
-      mentorDepartmentId: engDept.id,
-      isActive: true,
-      isEmailVerified: true,
-    },
+  const mentorUser = await upsertUser({
+    email: 'mentor@internmanagement.com',
+    password: await hashPassword('mentor123'),
+    name: 'Default Mentor',
+    role: UserRole.MENTOR,
+    mentorDepartmentId: engDept.id,
   });
 
-  const mentor = await prisma.mentor.create({
-    data: {
-      userId: mentorUser.id,
-      departmentId: engDept.id,
-      expertise: ['React', 'Node.js', 'PostgreSQL'],
-    },
-  });
+  let mentor = await prisma.mentor.findUnique({ where: { userId: mentorUser.id } });
+  if (!mentor) {
+    mentor = await prisma.mentor.create({
+      data: {
+        userId: mentorUser.id,
+        departmentId: engDept.id,
+        expertise: ['React', 'Node.js', 'PostgreSQL'],
+      },
+    });
+  }
 
-  await prisma.departmentActivity.create({
-    data: { departmentId: engDept.id, activityType: 'MENTOR_ASSIGNED', description: 'Default Mentor assigned to Engineering', performedBy: 'HR Admin' },
-  });
-
-  // 7. Create Intern Users & Profiles
+  // 7. Create Intern Users & Profiles (upsert-safe)
   console.log('Creating Interns...');
-  
-  // Intern 1: Default Intern
-  const internUser = await prisma.user.create({
-    data: {
-      email: 'intern@internmanagement.com',
+
+  const internSeeds = [
+    {
+      email: 'intern@internmanagement.com', name: 'Default Intern',
+      score: 85, attendance: 95, onboardingStep: 6, verificationStatus: 'APPROVED',
+      allCompleted: true,
+    },
+    {
+      email: 'vrajg072@gmail.com', name: 'Vraj Goti',
+      score: 90, attendance: 98, onboardingStep: 6, verificationStatus: 'APPROVED',
+      allCompleted: true,
+    },
+    {
+      email: 'vrajgoti07@gmail.com', name: 'Vraj Goti (Alternative)',
+      score: 92, attendance: 99, onboardingStep: 4, verificationStatus: 'UNDER_REVIEW',
+      allCompleted: false,
+    },
+  ];
+
+  for (const seed of internSeeds) {
+    const internUser = await upsertUser({
+      email: seed.email,
       password: await hashPassword('intern123'),
-      name: 'Default Intern',
+      name: seed.name,
       role: UserRole.INTERN,
       departmentId: engDept.id,
-      isActive: true,
-      isEmailVerified: true,
-    },
-  });
+    });
 
-  const defaultIntern = await prisma.intern.create({
-    data: {
-      userId: internUser.id,
-      mentorId: mentor.id,
-      departmentId: engDept.id,
-      college: 'Test University',
-      joinedDate: new Date(),
-      status: 'ACTIVE',
-      score: 85,
-      attendance: 95,
-    },
-  });
+    let internProfile = await prisma.intern.findUnique({ where: { userId: internUser.id } });
+    if (!internProfile) {
+      internProfile = await prisma.intern.create({
+        data: {
+          userId: internUser.id,
+          mentorId: mentor.id,
+          departmentId: engDept.id,
+          college: 'Test University',
+          joinedDate: new Date(),
+          status: 'ACTIVE',
+          score: seed.score,
+          attendance: seed.attendance,
+        },
+      });
+    }
 
-  await prisma.onboardingProgress.create({
-    data: {
-      internId: defaultIntern.id,
-      currentStep: 6,
-      offerAccepted: true,
-      personalInfoCompleted: true,
-      educationCompleted: true,
-      emergencyCompleted: true,
-      documentsCompleted: true,
-      agreementAccepted: true,
-      finalSubmitted: true,
-      verificationStatus: 'APPROVED',
-    },
-  });
+    // Upsert onboarding progress
+    await prisma.onboardingProgress.upsert({
+      where: { internId: internProfile.id },
+      update: {
+        currentStep: seed.onboardingStep,
+        verificationStatus: seed.verificationStatus,
+      },
+      create: {
+        internId: internProfile.id,
+        currentStep: seed.onboardingStep,
+        offerAccepted: true,
+        personalInfoCompleted: true,
+        educationCompleted: true,
+        emergencyCompleted: true,
+        documentsCompleted: seed.allCompleted,
+        agreementAccepted: seed.allCompleted,
+        finalSubmitted: seed.allCompleted,
+        verificationStatus: seed.verificationStatus,
+      },
+    });
+  }
 
-  // Intern 2: vrajg072
-  const userVraj072 = await prisma.user.create({
-    data: {
-      email: 'vrajg072@gmail.com',
-      password: await hashPassword('intern123'),
-      name: 'Vraj Goti',
-      role: UserRole.INTERN,
-      departmentId: engDept.id,
-      isActive: true,
-      isEmailVerified: true,
-    },
-  });
-
-  const internVraj072 = await prisma.intern.create({
-    data: {
-      userId: userVraj072.id,
-      mentorId: mentor.id,
-      departmentId: engDept.id,
-      college: 'Test University',
-      joinedDate: new Date(),
-      status: 'ACTIVE',
-      score: 90,
-      attendance: 98,
-    },
-  });
-
-  await prisma.onboardingProgress.create({
-    data: {
-      internId: internVraj072.id,
-      currentStep: 6,
-      offerAccepted: true,
-      personalInfoCompleted: true,
-      educationCompleted: true,
-      emergencyCompleted: true,
-      documentsCompleted: true,
-      agreementAccepted: true,
-      finalSubmitted: true,
-      verificationStatus: 'APPROVED',
-    },
-  });
-
-  // Intern 3: vrajgoti07
-  const userVrajgoti07 = await prisma.user.create({
-    data: {
-      email: 'vrajgoti07@gmail.com',
-      password: await hashPassword('intern123'),
-      name: 'Vraj Goti (Alternative)',
-      role: UserRole.INTERN,
-      departmentId: engDept.id,
-      isActive: true,
-      isEmailVerified: true,
-    },
-  });
-
-  const internVrajgoti07 = await prisma.intern.create({
-    data: {
-      userId: userVrajgoti07.id,
-      mentorId: mentor.id,
-      departmentId: engDept.id,
-      college: 'Test University',
-      joinedDate: new Date(),
-      status: 'ACTIVE',
-      score: 92,
-      attendance: 99,
-    },
-  });
-
-  await prisma.onboardingProgress.create({
-    data: {
-      internId: internVrajgoti07.id,
-      currentStep: 4,
-      offerAccepted: true,
-      personalInfoCompleted: true,
-      educationCompleted: true,
-      emergencyCompleted: true,
-      documentsCompleted: false,
-      agreementAccepted: false,
-      finalSubmitted: false,
-      verificationStatus: 'UNDER_REVIEW',
-    },
-  });
-
-  await prisma.departmentActivity.create({
-    data: { departmentId: engDept.id, activityType: 'INTERN_TRANSFERRED', description: 'Seeded default interns transferred to Engineering', performedBy: 'HR Admin' },
-  });
-
-  console.log('✅ Default users & onboarding progress successfully seeded');
-  console.log('\n🎉 Clean database seeding completed successfully!');
-  console.log('\n📝 New Clean Credentials:');
+  console.log('✅ Default users & onboarding progress successfully seeded (upsert-safe)');
+  console.log('\n🎉 Database seeding completed — NO existing data was deleted!');
+  console.log('\n📝 Seed Credentials:');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('HR Admin Default Account:');
   console.log('  Email: hr@internmanagement.com');

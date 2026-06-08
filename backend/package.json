@@ -9,10 +9,13 @@
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma generate && prisma migrate deploy",
     "prisma:studio": "prisma studio",
-    "prisma:seed": "ts-node prisma/seed.ts",
+    "prisma:seed": "cross-env NODE_ENV=development ts-node prisma/seed.ts",
     "postinstall": "node ./node_modules/prisma/build/index.js generate",
-    "test": "jest --passWithNoTests"
+    "test": "jest --passWithNoTests",
+    "deploy": "prisma generate && prisma migrate deploy && node dist/server.js",
+    "prebackup": "ts-node scripts/neon-backup.ts"
   },
   "keywords": [
     "intern",

@@ -1,0 +1,110 @@
+name: Daily Neon Database Backup
+
+on:
+  schedule:
+    # Runs at 8:30 PM UTC = 2:00 AM IST (UTC+5:30)
+    - cron: '30 20 * * *'
+  workflow_dispatch:
+    # Allow manual trigger from GitHub Actions UI
+    inputs:
+      reason:
+        description: 'Reason for manual backup'
+        required: false
+        default: 'Manual backup trigger'
+
+env:
+  BACKUP_RETENTION_DAYS: 30
+
+jobs:
+  backup:
+    name: Backup Neon PostgreSQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-15
+
+      - name: Verify connection
+        env:
+          DIRECT_URL: ${{ secrets.NEON_DIRECT_URL }}
+        run: |
+          echo "Testing Neon connection..."
+          psql "$DIRECT_URL" -c "SELECT current_database(), current_user, NOW() as backup_time;" || {
+            echo "❌ Failed to connect to Neon database"
+            exit 1
+          }
+          echo "✅ Connection verified"
+
+      - name: Dump database
+        env:
+          DIRECT_URL: ${{ secrets.NEON_DIRECT_URL }}
+        run: |
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          FILENAME="neon_backup_${TIMESTAMP}.sql"
+          
+          echo "Dumping database to ${FILENAME}..."
+          pg_dump "$DIRECT_URL" \
+            --no-owner \
+            --no-acl \
+            --clean \
+            --if-exists \
+            --verbose \
+            2>&1 | tee pg_dump.log | head -20
+          
+          pg_dump "$DIRECT_URL" \
+            --no-owner \
+            --no-acl \
+            --clean \
+            --if-exists \
+            > "${FILENAME}"
+          
+          echo ""
+          echo "Compressing..."
+          gzip "${FILENAME}"
+          
+          FILESIZE=$(stat --printf="%s" "${FILENAME}.gz")
+          echo "✅ Backup complete: ${FILENAME}.gz (${FILESIZE} bytes)"
+          
+          # Export for next steps
+          echo "BACKUP_FILENAME=${FILENAME}.gz" >> $GITHUB_ENV
+          echo "BACKUP_TIMESTAMP=${TIMESTAMP}" >> $GITHUB_ENV
+
+      - name: Upload backup as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: neon-backup-${{ env.BACKUP_TIMESTAMP }}
+          path: ${{ env.BACKUP_FILENAME }}
+          retention-days: ${{ env.BACKUP_RETENTION_DAYS }}
+
+      # --- Optional S3 Upload ---
+      # Uncomment the following step if you have S3-compatible storage configured.
+      # Required secrets: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, BACKUP_S3_BUCKET
+      #
+      # - name: Upload to S3
+      #   if: ${{ secrets.BACKUP_S3_BUCKET != '' }}
+      #   env:
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
+      #   run: |
+      #     aws s3 cp "${{ env.BACKUP_FILENAME }}" \
+      #       "s3://${{ secrets.BACKUP_S3_BUCKET }}/internflow-backups/${{ env.BACKUP_FILENAME }}"
+      #     echo "✅ Uploaded to S3: s3://${{ secrets.BACKUP_S3_BUCKET }}/internflow-backups/${{ env.BACKUP_FILENAME }}"
+
+      - name: Backup summary
+        run: |
+          echo ""
+          echo "═══════════════════════════════════════════════════"
+          echo "  ✅ Neon Database Backup Complete"
+          echo "═══════════════════════════════════════════════════"
+          echo "  File:      ${{ env.BACKUP_FILENAME }}"
+          echo "  Timestamp: ${{ env.BACKUP_TIMESTAMP }}"
+          echo "  Retention: ${{ env.BACKUP_RETENTION_DAYS }} days"
+          echo "  Trigger:   ${{ github.event_name }}"
+          echo "═══════════════════════════════════════════════════"

@@ -594,9 +594,25 @@ export class FeedbackService {
 
   /**
    * Seed database with rich realistic data
+   * 
+   * SAFETY: This method is blocked in production to prevent data loss.
+   * In development, it clears feedback/action items before re-seeding.
    */
   async seedDemoFeedbackData() {
+    // --- Production Guard ---
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('🚫 seedDemoFeedbackData is blocked in production to prevent data loss.');
+    }
+
+    if (process.env.DATABASE_URL?.includes('neon.tech') && process.env.FORCE_SEED !== 'true') {
+      throw new Error(
+        '🚫 seedDemoFeedbackData is blocked against Neon cloud database. ' +
+        'Set FORCE_SEED=true to override.'
+      );
+    }
+
     logger.info('Seeding realistic demo feedback and action item data...');
+    logger.warn('⚠️  This will clear existing feedback and action items (dev mode only)');
 
     // 1. Get Engineering and Design departments
     const departments = await prisma.department.findMany();
@@ -614,7 +630,7 @@ export class FeedbackService {
       throw new Error('Default mentor not found. Make sure base seed is run.');
     }
 
-    // 3. Clear existing feedbacks/action items to prevent double seeding conflicts
+    // 3. Clear existing feedbacks/action items (ONLY in dev/test)
     await prisma.actionItem.deleteMany({});
     await prisma.feedback.deleteMany({});
 
