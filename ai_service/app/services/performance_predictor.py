@@ -64,22 +64,26 @@ class PerformancePredictor:
     def _generate_feature_importance_plot(self):
         if not self.model:
             return
-        import numpy as np
-        import matplotlib
-        matplotlib.use('Agg')
-        import matplotlib.pyplot as plt
+        try:
+            import numpy as np
+            import matplotlib
+            matplotlib.use('Agg')
+            import matplotlib.pyplot as plt
 
-        plt.figure(figsize=(10, 6))
-        importance = self.model.feature_importances_
-        sorted_idx = np.argsort(importance)
+            plt.figure(figsize=(10, 6))
+            importance = self.model.feature_importances_
+            sorted_idx = np.argsort(importance)
 
-        plt.barh(range(len(sorted_idx)), importance[sorted_idx], align='center')
-        plt.yticks(range(len(sorted_idx)), [FEATURE_NAMES[i] for i in sorted_idx])
-        plt.xlabel('Feature Importance')
-        plt.title('XGBoost Feature Importance')
-        plt.tight_layout()
-        plt.savefig(FEATURE_IMPORTANCE_PATH)
-        plt.close()
+            plt.barh(range(len(sorted_idx)), importance[sorted_idx], align='center')
+            plt.yticks(range(len(sorted_idx)), [FEATURE_NAMES[i] for i in sorted_idx])
+            plt.xlabel('Feature Importance')
+            plt.title('XGBoost Feature Importance')
+            plt.tight_layout()
+            plt.savefig(FEATURE_IMPORTANCE_PATH)
+            plt.close()
+        except ImportError:
+            import logging
+            logging.getLogger(__name__).warning("matplotlib is not installed — skipping feature importance plot generation.")
 
     def predict(self, features: Dict[str, float]) -> Dict[str, Any]:
         """Predicts performance and returns SHAP explanation."""
