@@ -1,5 +1,5 @@
 # ============================================================
-# AI Microservice v2.0 — Dependencies
+# AI Microservice v2.0 - Dependencies
 # All packages pinned for reproducibility
 # ============================================================
 

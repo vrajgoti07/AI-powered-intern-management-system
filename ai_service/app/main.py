@@ -1,5 +1,5 @@
 """
-AI-Powered Intern Management System — FastAPI Microservice Entry Point.
+AI-Powered Intern Management System - FastAPI Microservice Entry Point.
 
 This module bootstraps the entire AI service:
   1. Loads environment configuration
@@ -20,15 +20,15 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-# ── Ensure project root is importable ────────────────────────────────
+# --- Ensure project root is importable --------------------------------
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# ── Load .env before anything else ───────────────────────────────────
+# --- Load .env before anything else -----------------------------------
 load_dotenv()
 
 from app.config.settings import settings
 
-# ── Logging configuration ────────────────────────────────────────────
+# --- Logging configuration --------------------------------------------
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)-7s | %(name)s | %(message)s",
@@ -36,9 +36,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger("ai_service")
 
-# ── Import route modules ────────────────────────────────────────────
+# --- Import route modules ---------------------------------------------
 from app.routes.matching import router as matching_router
-from app.routes.prediction import router as prediction_router
 from app.routes.sentiment import router as sentiment_router
 from app.routes.chatbot import router as chatbot_router
 from app.routes.recommendation import router as recommendation_router
@@ -54,15 +53,15 @@ from app.routes.risk import router as risk_router
 
 
 
-# ── Lifespan: startup + shutdown logic ───────────────────────────────
+# --- Lifespan: startup + shutdown logic -------------------------------
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage application startup and shutdown lifecycle."""
 
-    # ── STARTUP ──────────────────────────────────────────────────────
+    # --- STARTUP ------------------------------------------------------
     logger.info("=" * 60)
-    logger.info("  AI Microservice v2.0 — Starting up")
+    logger.info("  AI Microservice v2.0 - Starting up")
     logger.info("=" * 60)
 
     # 1. Connect to Redis
@@ -75,9 +74,9 @@ async def lifespan(app: FastAPI):
             socket_connect_timeout=3,
         )
         redis_client.ping()
-        logger.info("✅ Redis connected at %s", settings.REDIS_URL)
+        logger.info("Redis connected at %s", settings.REDIS_URL)
     except Exception as exc:
-        logger.warning("⚠️  Redis unavailable (%s) — running without cache", exc)
+        logger.warning("Redis unavailable (%s) - running without cache", exc)
         redis_client = None
 
     app.state.redis = redis_client
@@ -91,22 +90,22 @@ async def lifespan(app: FastAPI):
     ]
     for mf in model_files:
         if os.path.exists(mf):
-            logger.info("  📦 Model found: %s", os.path.basename(mf))
+            logger.info("  Model found: %s", os.path.basename(mf))
         else:
-            logger.warning("  ⚠️  Model missing: %s — run training scripts", mf)
+            logger.warning("  Model missing: %s - run training scripts", mf)
             models_loaded = False
 
     app.state.models_loaded = models_loaded
 
     logger.info("-" * 60)
-    logger.info("  🚀 AI Microservice ready on http://%s:%s", settings.FASTAPI_HOST, settings.FASTAPI_PORT)
+    logger.info("  AI Microservice ready on http://%s:%s", settings.FASTAPI_HOST, settings.FASTAPI_PORT)
     logger.info("-" * 60)
 
 
 
     yield
 
-    # ── SHUTDOWN ─────────────────────────────────────────────────────
+    # --- SHUTDOWN -----------------------------------------------------
     logger.info("Shutting down AI Microservice...")
 
     if app.state.redis is not None:
@@ -118,7 +117,7 @@ async def lifespan(app: FastAPI):
     logger.info("Shutdown complete.")
 
 
-# ── Create FastAPI application ───────────────────────────────────────
+# --- Create FastAPI application ---------------------------------------
 
 app = FastAPI(
     title="AI-Powered Intern Management System Microservice",
@@ -132,7 +131,7 @@ app = FastAPI(
 )
 
 
-# ── CORS Middleware ──────────────────────────────────────────────────
+# --- CORS Middleware --------------------------------------------------
 
 app.add_middleware(
     CORSMiddleware,
@@ -143,7 +142,7 @@ app.add_middleware(
 )
 
 
-# ── Request Logging Middleware ───────────────────────────────────────
+# --- Request Logging Middleware ---------------------------------------
 
 @app.middleware("http")
 async def clean_double_slashes(request: Request, call_next):
@@ -174,10 +173,9 @@ async def log_requests(request: Request, call_next):
     return response
 
 
-# ── Register Routers ────────────────────────────────────────────────
+# --- Register Routers ------------------------------------------------
 
 app.include_router(matching_router, prefix="/api/ai", tags=["Role Matching"])
-app.include_router(prediction_router, prefix="/api/ai", tags=["Performance Prediction"])
 app.include_router(sentiment_router, prefix="/api/ai", tags=["Sentiment Analysis"])
 app.include_router(chatbot_router, prefix="/api/ai", tags=["AI Chatbot"])
 app.include_router(recommendation_router, prefix="/api/ai", tags=["Recommendations"])
@@ -191,12 +189,27 @@ app.include_router(risk_router, prefix="/api/ai", tags=["Risk Detection"])
 
 
 
-# ── Health Check ────────────────────────────────────────────────────
+# --- Health Check ----------------------------------------------------
+
+@app.get(
+    "/",
+    status_code=status.HTTP_200_OK,
+    summary="Root health check for load balancers",
+    tags=["Health"],
+)
+async def root():
+    """Return operational status of the AI microservice for root-level probes."""
+    return {
+        "status": "ok",
+        "service": "AI-Powered Intern Management Microservice v2.0",
+        "message": "AI Microservice is running. Go to /api/ai/health for full health details."
+    }
+
 
 @app.get(
     "/api/ai/health",
     status_code=status.HTTP_200_OK,
-    summary="Health check — verify service, models, and Redis status",
+    summary="Health check - verify service, models, and Redis status",
     tags=["Health"],
 )
 async def health_check(request: Request):
@@ -226,13 +239,13 @@ async def health_check(request: Request):
     }
 
 
-# ── Direct execution ────────────────────────────────────────────────
+# --- Direct execution ------------------------------------------------
 
 if __name__ == "__main__":
     import uvicorn
 
     logger.info(
-        "🚀 Starting AI microservice in %s mode on http://%s:%s",
+        "Starting AI microservice in %s mode on http://%s:%s",
         settings.ENV, settings.FASTAPI_HOST, settings.FASTAPI_PORT,
     )
     uvicorn.run(
