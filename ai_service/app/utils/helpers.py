@@ -48,6 +48,20 @@ def extract_keywords(text: str, top_n: int = 10) -> List[str]:
     returns the *top_n* most common words ordered by frequency.
     """
     try:
+        import nltk
+        try:
+            nltk.data.find("corpora/stopwords.zip")
+        except LookupError:
+            nltk.download("stopwords", quiet=True)
+        try:
+            nltk.data.find("tokenizers/punkt_tab.zip")
+        except LookupError:
+            nltk.download("punkt_tab", quiet=True)
+        try:
+            nltk.data.find("tokenizers/punkt.zip")
+        except LookupError:
+            nltk.download("punkt", quiet=True)
+
         from nltk.corpus import stopwords
         from nltk.tokenize import word_tokenize
 

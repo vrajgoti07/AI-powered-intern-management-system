@@ -127,7 +127,7 @@ class AnalyticsService:
         return result
 
     @staticmethod
-    def _compute_skill_gaps(df: pd.DataFrame) -> List[Dict[str, Any]]:
+    def _compute_skill_gaps(df: Any) -> List[Dict[str, Any]]:
         """Identify performance dimensions where interns underperform."""
         metrics = {
             "attendance_rate": {"threshold": 0.80, "label": "Attendance"},
@@ -154,7 +154,7 @@ class AnalyticsService:
 
     @staticmethod
     def _generate_insights(
-        df: pd.DataFrame,
+        df: Any,
         trend: Dict[str, Any],
         risk: Dict[str, int],
         total: int,

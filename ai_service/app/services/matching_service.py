@@ -26,7 +26,7 @@ class MatchingService:
         self._loaded = False
 
     def _load_models(self) -> None:
-        """Load the sentence-transformer model and department vectors."""
+        """Load the department vectors and initialize the OpenAI client."""
         if self._loaded: return
         vectors_path = os.path.join(settings.VECTOR_DIR, "department_vectors.pkl")
 
@@ -40,17 +40,21 @@ class MatchingService:
             )
         except FileNotFoundError:
             logger.warning(
-                "Department vectors not found at %s — run train_matching.py first",
+                "Department vectors not found at %s — run regenerate_vectors.py first",
                 vectors_path,
             )
             self._dept_data = None
 
-        try:
-            from sentence_transformers import SentenceTransformer
-            self._model = SentenceTransformer("all-MiniLM-L6-v2")
-            logger.info("SentenceTransformer model loaded successfully")
-        except Exception as exc:
-            logger.error("Failed to load SentenceTransformer: %s", exc)
+        if settings.OPENAI_API_KEY:
+            try:
+                from openai import OpenAI
+                self._model = OpenAI(api_key=settings.OPENAI_API_KEY)
+                logger.info("OpenAI client initialized successfully for matching service")
+            except Exception as exc:
+                logger.error("Failed to initialize OpenAI client: %s", exc)
+                self._model = None
+        else:
+            logger.warning("OPENAI_API_KEY not configured — matching service will fallback")
             self._model = None
         self._loaded = True
 
@@ -79,10 +83,18 @@ class MatchingService:
             f"Technologies: {', '.join(technologies)}."
         )
 
-        # Encode the intern profile
-        intern_embedding = self._model.encode([profile_text], convert_to_numpy=True)[0]
+        # Encode the intern profile using OpenAI
+        try:
+            import numpy as np
+            response = self._model.embeddings.create(
+                input=[profile_text],
+                model="text-embedding-3-small"
+            )
+            intern_embedding = np.array(response.data[0].embedding)
+        except Exception as exc:
+            logger.error("OpenAI embedding generation failed: %s", exc)
+            return self._fallback_match(skills)
 
-        import numpy as np
         dept_names: List[str] = self._dept_data["department_names"]
         dept_embeddings: np.ndarray = self._dept_data["embeddings"]
         dept_technologies: Dict[str, List[str]] = self._dept_data.get("technologies", {})
@@ -94,6 +106,14 @@ class MatchingService:
         scores: List[float] = []
 
         for i, dept_emb in enumerate(dept_embeddings):
+            if intern_embedding.shape != dept_emb.shape:
+                logger.error(
+                    "Vector dimension mismatch: intern_embedding=%s, dept_emb=%s. "
+                    "Please run regenerate_vectors.py to update department_vectors.pkl.",
+                    intern_embedding.shape,
+                    dept_emb.shape,
+                )
+                return self._fallback_match(skills)
             sim = cosine_similarity_score(intern_embedding, dept_emb)
             scores.append(sim)
             if sim > best_score:

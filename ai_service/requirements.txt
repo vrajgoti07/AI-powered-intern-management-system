@@ -19,9 +19,7 @@ pandas>=2.1.0
 pytesseract>=0.3.10
 Pillow>=10.0.0
 
-# --- NLP & Transformers ---
-sentence-transformers>=2.2.0
-transformers>=4.35.0
+# --- NLP ---
 nltk>=3.8.0
 
 # --- Caching ---
@@ -32,13 +30,10 @@ aiofiles>=23.0.0
 
 # --- Advanced AI Features ---
 xgboost>=2.0.0
-shap>=0.43.0
 PyMuPDF>=1.23.0
 langchain>=0.3.0
 langchain-community>=0.3.0
 faiss-cpu>=1.7.4
-apscheduler>=3.10.0
-matplotlib>=3.8.0
 python-multipart>=0.0.6
 openai>=1.0.0
 langchain-openai>=0.1.0
@@ -47,6 +42,4 @@ langchain-openai>=0.1.0
 pytest>=7.4.0
 pytest-cov>=4.1.0
 
-# --- PyTorch CPU-only (must be last, uses custom index) ---
---extra-index-url https://download.pytorch.org/whl/cpu
-torch>=2.1.0
+

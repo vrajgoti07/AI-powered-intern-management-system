@@ -1,5 +1,15 @@
 from app.main import app
+from app.config.settings import settings
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    is_dev = settings.ENV == "development"
+    uvicorn.run(
+        "main:app",
+        host=settings.FASTAPI_HOST,
+        port=settings.FASTAPI_PORT,
+        reload=is_dev,
+        workers=1,
+        limit_concurrency=50,
+        backlog=100
+    )

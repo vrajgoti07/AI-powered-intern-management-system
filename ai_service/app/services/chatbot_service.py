@@ -13,8 +13,7 @@ import logging
 import random
 from typing import Dict, Any, List, Optional
 
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
+
 
 from app.utils.helpers import clean_text
 
@@ -453,13 +452,19 @@ class ChatbotService:
     response generation, and Redis session caching."""
 
     def __init__(self) -> None:
-        self._vectorizer: Optional[TfidfVectorizer] = None
-        self._classifier: Optional[LogisticRegression] = None
+        self._vectorizer = None
+        self._classifier = None
         self._intent_names: List[str] = []
-        self._build_classifier()
+        self._trained = False
 
     def _build_classifier(self) -> None:
         """Train the TF-IDF + LogisticRegression intent classifier."""
+        if self._trained:
+            return
+
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        from sklearn.linear_model import LogisticRegression
+
         texts: List[str] = []
         labels: List[int] = []
         self._intent_names = list(INTENT_DATA.keys())
@@ -482,6 +487,7 @@ class ChatbotService:
             C=10.0,
         )
         self._classifier.fit(X, labels)
+        self._trained = True
 
         logger.info(
             "Chatbot classifier trained: %d intents, %d examples",
@@ -509,6 +515,7 @@ class ChatbotService:
         Returns:
             Dict with reply, suggested_prompts, intent, and confidence.
         """
+        self._build_classifier()
         ctx = context or {}
 
         cleaned = clean_text(message)

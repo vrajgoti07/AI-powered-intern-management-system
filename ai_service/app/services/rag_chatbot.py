@@ -17,19 +17,12 @@ class RAGChatbotService:
         from app.config.settings import settings
         
         openai_api_key = settings.OPENAI_API_KEY
-        if openai_api_key:
-            try:
-                from langchain_openai import OpenAIEmbeddings
-                self.embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
-                print("[INFO] Using OpenAIEmbeddings for RAG Chatbot")
-            except Exception as e:
-                print(f"[WARNING] Failed to load OpenAIEmbeddings: {e}. Falling back to HuggingFaceEmbeddings.")
-                from langchain_community.embeddings import HuggingFaceEmbeddings
-                self.embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-        else:
-            from langchain_community.embeddings import HuggingFaceEmbeddings
-            self.embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-            print("[INFO] No OpenAI key configured. Using HuggingFaceEmbeddings")
+        if not openai_api_key:
+            raise ValueError("OPENAI_API_KEY is not configured. RAG Chatbot cannot be initialized.")
+
+        from langchain_openai import OpenAIEmbeddings
+        self.embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
+        print("[INFO] Using OpenAIEmbeddings for RAG Chatbot")
             
         self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
         self._load_vector_store()
@@ -96,29 +89,19 @@ Answer:"""
         from app.config.settings import settings
         openai_api_key = settings.OPENAI_API_KEY
         
-        if openai_api_key:
-            try:
-                from langchain_openai import ChatOpenAI
-                from langchain_core.messages import HumanMessage, SystemMessage
-                # Use OpenAI
-                chat = ChatOpenAI(temperature=0, openai_api_key=openai_api_key, model="gpt-3.5-turbo")
-                messages = [
-                    SystemMessage(content="You are a helpful HR Assistant."),
-                    HumanMessage(content=prompt)
-                ]
-                response = chat.invoke(messages)
-                return response.content
-            except Exception as e:
-                print(f"[WARNING] OpenAI ChatOpenAI generation failed: {e}. Falling back to Ollama.")
-                # Fall through to Ollama fallback
-        # Fallback to local Ollama (requires Ollama running locally with a model like llama3)
-        try:
-            from langchain_community.llms import Ollama
-            llm = Ollama(model="llama3")
-            response = llm.invoke(prompt)
-            return response
-        except Exception as e:
-            return f"Error connecting to LLM (Check if OPENAI_API_KEY is set or Ollama is running): {str(e)}"
+        if not openai_api_key:
+            raise ValueError("OPENAI_API_KEY is not configured. Cannot generate response.")
+
+        from langchain_openai import ChatOpenAI
+        from langchain_core.messages import HumanMessage, SystemMessage
+        
+        chat = ChatOpenAI(temperature=0, openai_api_key=openai_api_key, model="gpt-3.5-turbo")
+        messages = [
+            SystemMessage(content="You are a helpful HR Assistant."),
+            HumanMessage(content=prompt)
+        ]
+        response = chat.invoke(messages)
+        return response.content
 
     def query(self, question: str, user_id: str) -> Dict[str, Any]:
         self._lazy_load()

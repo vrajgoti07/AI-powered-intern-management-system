@@ -50,8 +50,7 @@ from app.routes.performance import router as performance_router
 from app.routes.ranking import router as ranking_router
 from app.routes.risk import router as risk_router
 
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from app.services.risk_detector import run_daily_risk_detection
+
 
 
 
@@ -103,20 +102,13 @@ async def lifespan(app: FastAPI):
     logger.info("  🚀 AI Microservice ready on http://%s:%s", settings.FASTAPI_HOST, settings.FASTAPI_PORT)
     logger.info("-" * 60)
 
-    # Start APScheduler
-    scheduler = AsyncIOScheduler()
-    scheduler.add_job(run_daily_risk_detection, 'cron', hour=20, minute=0)
-    scheduler.start()
-    app.state.scheduler = scheduler
-    logger.info("📅 APScheduler started (Risk Detection scheduled daily at 20:00).")
+
 
     yield
 
     # ── SHUTDOWN ─────────────────────────────────────────────────────
     logger.info("Shutting down AI Microservice...")
-    if hasattr(app.state, 'scheduler'):
-        app.state.scheduler.shutdown()
-        logger.info("APScheduler shut down.")
+
     if app.state.redis is not None:
         try:
             app.state.redis.close()

@@ -28,18 +28,12 @@ class PerformancePredictor:
         if os.path.exists(MODEL_PATH):
             import joblib
             self.model = joblib.load(MODEL_PATH)
-            try:
-                import shap
-                self.explainer = shap.TreeExplainer(self.model)
-            except Exception:
-                self.explainer = None
 
     def train_model(self, X_train, y_train):
         """Trains the model with GridSearch and saves it."""
         import numpy as np
         import pandas as pd
         import xgboost as xgb
-        import shap
         import joblib
         from sklearn.model_selection import GridSearchCV
 
@@ -57,7 +51,6 @@ class PerformancePredictor:
         grid_search.fit(X_train, y_train)
 
         self.model = grid_search.best_estimator_
-        self.explainer = shap.TreeExplainer(self.model)
 
         joblib.dump(self.model, MODEL_PATH)
         self._generate_feature_importance_plot()
@@ -107,21 +100,18 @@ class PerformancePredictor:
         labels = ['at-risk', 'average', 'high-performer']
         prediction_label = labels[pred_class]
 
-        # SHAP explainability
+        # Feature Importance explainability
         top_factors = []
-        if self.explainer is not None:
+        if self.model is not None and hasattr(self.model, "feature_importances_"):
             try:
-                shap_values = self.explainer.shap_values(df)
-                if isinstance(shap_values, list):
-                    class_shap_values = shap_values[pred_class][0]
-                elif hasattr(shap_values, "ndim") and shap_values.ndim == 3:
-                    class_shap_values = shap_values[0, :, pred_class]
-                else:
-                    class_shap_values = shap_values[0]
-                for i, val in enumerate(class_shap_values):
+                importance = self.model.feature_importances_
+                for i, name in enumerate(FEATURE_NAMES):
+                    val = float(importance[i])
+                    feat_val = features.get(name, 0.5)
+                    sign = 1.0 if feat_val >= 0.7 else -1.0
                     top_factors.append({
-                        "factor": FEATURE_NAMES[i],
-                        "impact": float(val)
+                        "factor": name,
+                        "impact": val * sign
                     })
                 top_factors.sort(key=lambda x: abs(x["impact"]), reverse=True)
             except Exception:

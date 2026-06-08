@@ -38,19 +38,20 @@ class SentimentService:
         self._model_loaded = False
 
     def _load_model(self) -> None:
-        """Load the HuggingFace sentiment-analysis pipeline."""
+        """Load NLTK VADER sentiment analyzer."""
         if self._model_loaded: return
         try:
-            from transformers import pipeline as hf_pipeline
-            self._pipeline = hf_pipeline(
-                "sentiment-analysis",
-                model="distilbert-base-uncased-finetuned-sst-2-english",
-                device=-1,  # Force CPU
-            )
-            logger.info("Sentiment pipeline (DistilBERT) loaded successfully")
+            import nltk
+            try:
+                nltk.data.find("sentiment/vader_lexicon.zip")
+            except LookupError:
+                nltk.download("vader_lexicon", quiet=True)
+            from nltk.sentiment.vader import SentimentIntensityAnalyzer
+            self._pipeline = SentimentIntensityAnalyzer()
+            logger.info("NLTK VADER SentimentIntensityAnalyzer loaded successfully")
             self._model_loaded = True
         except Exception as exc:
-            logger.error("Failed to load sentiment pipeline: %s", exc)
+            logger.error("Failed to load NLTK VADER: %s", exc)
             self._pipeline = None
             self._model_loaded = True
 
@@ -65,13 +66,23 @@ class SentimentService:
         if not text:
             return self._empty_result()
 
-        # ── 1. Run transformer pipeline ──────────────────────────────
+        # ── 1. Run VADER sentiment analyzer ──────────────────────────
         self._load_model()
         if self._pipeline is not None:
             try:
-                result = self._pipeline(text[:512])[0]  # Truncate to model max
-                raw_label = result["label"]  # "POSITIVE" or "NEGATIVE"
-                raw_score = float(result["score"])
+                scores = self._pipeline.polarity_scores(text)
+                compound = scores["compound"]
+                
+                # Map compound score to label & confidence (scaling to range [0.6, 1.0] if sentiment is detected)
+                if compound >= 0.05:
+                    raw_label = "POSITIVE"
+                    raw_score = 0.6 + (compound - 0.05) * 0.4 / 0.95
+                elif compound <= -0.05:
+                    raw_label = "NEGATIVE"
+                    raw_score = 0.6 + (abs(compound) - 0.05) * 0.4 / 0.95
+                else:
+                    raw_label = "NEUTRAL"
+                    raw_score = 0.5 + (0.05 - abs(compound)) * 0.5 / 0.05
             except Exception as exc:
                 logger.error("Sentiment inference failed: %s", exc)
                 raw_label, raw_score = self._lexicon_fallback(text)
@@ -96,7 +107,9 @@ class SentimentService:
         keywords = extract_keywords(text, top_n=10)
 
         # ── 3. Detect strong skills and weak areas ───────────────────
-        words_lower = set(text.lower().split())
+        import string
+        cleaned_text_for_indicators = text.translate(str.maketrans("", "", string.punctuation))
+        words_lower = set(cleaned_text_for_indicators.lower().split())
         strong_skills = [w for w in words_lower if w in _STRENGTH_INDICATORS]
         weak_areas = [w for w in words_lower if w in _WEAKNESS_INDICATORS]
 
