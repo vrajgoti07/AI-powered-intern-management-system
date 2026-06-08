@@ -39,17 +39,17 @@ def train() -> None:
     """Validate the sentiment analysis pipeline and save config."""
 
     # ── 1. Load sentiment pipeline ───────────────────────────────────
-    print("🧠 Loading DistilBERT sentiment pipeline...")
+    print("\n[MODEL] Loading DistilBERT sentiment pipeline...")
     print("   Model: distilbert-base-uncased-finetuned-sst-2-english")
     sentiment_pipeline = pipeline(
         "sentiment-analysis",
         model="distilbert-base-uncased-finetuned-sst-2-english",
         device=-1,  # Force CPU
     )
-    print("   ✅ Pipeline loaded successfully!")
+    print("   [SUCCESS] Pipeline loaded successfully!")
 
     # ── 2. Run test predictions ──────────────────────────────────────
-    print("\n📊 Running test predictions on sample feedback:")
+    print("\n[TEST] Running test predictions on sample feedback:")
     print("-" * 70)
 
     results = []
@@ -57,7 +57,7 @@ def train() -> None:
         prediction = sentiment_pipeline(text)[0]
         label = prediction["label"]
         score = prediction["score"]
-        print(f"   [{label:8s}] (conf: {score:.4f}) → {text[:60]}...")
+        print(f"   [{label:8s}] (conf: {score:.4f}) -> {text[:60]}...")
         results.append({"text": text, "label": label, "score": round(score, 4)})
 
     print("-" * 70)
@@ -66,7 +66,7 @@ def train() -> None:
     data_path = os.path.join(settings.DATA_DIR, "feedback_dataset.csv")
     if os.path.exists(data_path):
         df = pd.read_csv(data_path)
-        print(f"\n📂 Validated against feedback_dataset.csv ({len(df)} rows)")
+        print(f"\n[DATA] Validated against feedback_dataset.csv ({len(df)} rows)")
 
         # Quick distribution check
         sample_preds = sentiment_pipeline(df["feedback_text"].head(10).tolist())
@@ -89,8 +89,8 @@ def train() -> None:
     with open(config_path, "w") as f:
         json.dump(config, f, indent=2)
 
-    print(f"\n💾 Config saved to: {config_path}")
-    print("\n🎉 Sentiment pipeline validation complete — ready for inference!")
+    print(f"\n[SAVE] Config saved to: {config_path}")
+    print("\n[SUCCESS] Sentiment pipeline validation complete - ready for inference!")
 
 
 if __name__ == "__main__":

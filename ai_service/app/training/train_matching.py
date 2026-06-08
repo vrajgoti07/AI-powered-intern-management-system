@@ -65,7 +65,7 @@ def train() -> None:
 
     # ── 1. Load dataset ──────────────────────────────────────────────
     data_path = os.path.join(settings.DATA_DIR, "intern_dataset.csv")
-    print(f"📂 Loading dataset from: {data_path}")
+    print(f"[DATA] Loading dataset from: {data_path}")
     df = pd.read_csv(data_path)
     print(f"   Loaded {len(df)} rows")
 
@@ -100,12 +100,12 @@ def train() -> None:
         dept_profiles[dept] = profile
         dept_technologies[dept] = unique_techs
 
-    print("\n📝 Department profiles built:")
+    print("\n[PROFILES] Department profiles built:")
     for dept, profile in dept_profiles.items():
         print(f"   [{dept}] {profile[:80]}...")
 
     # ── 3. Encode with OpenAI text-embedding-3-small ─────────────────
-    print("\n🧠 Initializing OpenAI client for embeddings...")
+    print("\n[OPENAI] Initializing OpenAI client for embeddings...")
     if not settings.OPENAI_API_KEY:
         raise ValueError("OPENAI_API_KEY environment variable is required to generate vectors.")
         
@@ -126,7 +126,7 @@ def train() -> None:
             )
             embeddings_list.append(response.data[0].embedding)
         except Exception as e:
-            print(f"   ⚠️ OpenAI API call failed ({e}). Using random 1536-dimension vectors as placeholder.")
+            print(f"   [WARNING] OpenAI API call failed ({e}). Using random 1536-dimension vectors as placeholder.")
             use_fallback_embeddings = True
             break
 
@@ -150,8 +150,8 @@ def train() -> None:
     save_path = os.path.join(settings.VECTOR_DIR, "department_vectors.pkl")
     joblib.dump(save_data, save_path)
 
-    print(f"\n💾 Saved {len(dept_names)} department embeddings to: {save_path}")
-    print("\n🎉 Role matching training complete!")
+    print(f"\n[SAVE] Saved {len(dept_names)} department embeddings to: {save_path}")
+    print("\n[SUCCESS] Role matching training complete!")
 
 
 if __name__ == "__main__":

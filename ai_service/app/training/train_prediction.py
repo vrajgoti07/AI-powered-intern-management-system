@@ -33,7 +33,7 @@ def train() -> None:
 
     # ── 1. Load dataset ──────────────────────────────────────────────
     data_path = os.path.join(settings.DATA_DIR, "performance_dataset.csv")
-    print(f"📂 Loading dataset from: {data_path}")
+    print(f"[DATA] Loading dataset from: {data_path}")
     df = pd.read_csv(data_path)
     print(f"   Loaded {len(df)} rows, {len(df.columns)} columns")
 
@@ -71,14 +71,14 @@ def train() -> None:
     ])
 
     # ── 5. Train ─────────────────────────────────────────────────────
-    print("\n🏋️ Training RandomForest pipeline...")
+    print("\n[TRAIN] Training RandomForest pipeline...")
     pipeline.fit(X_train, y_train)
 
     # ── 6. Evaluate ──────────────────────────────────────────────────
     y_pred = pipeline.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred)
-    print(f"\n✅ Accuracy: {accuracy:.4f}")
-    print("\n📊 Classification Report:")
+    print(f"\n[ACCURACY] Accuracy: {accuracy:.4f}")
+    print("\n[REPORT] Classification Report:")
     print(classification_report(
         y_test, y_pred,
         target_names=label_encoder.classes_,
@@ -93,9 +93,9 @@ def train() -> None:
     joblib.dump(pipeline, model_path)
     joblib.dump(label_encoder, encoder_path)
 
-    print(f"\n💾 Model saved to: {model_path}")
-    print(f"💾 Label encoder saved to: {encoder_path}")
-    print("\n🎉 Performance prediction training complete!")
+    print(f"\n[SAVE] Model saved to: {model_path}")
+    print(f"[SAVE] Label encoder saved to: {encoder_path}")
+    print("\n[SUCCESS] Performance prediction training complete!")
 
 
 if __name__ == "__main__":
