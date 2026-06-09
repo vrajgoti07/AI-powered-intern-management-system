@@ -532,3 +532,34 @@ export const sendLoginOtpEmail = async (
   }
   return true;
 };
+
+/**
+ * Send Password Reset OTP Email
+ */
+export const sendPasswordResetOtpEmail = async (
+  email: string,
+  name: string,
+  otpCode: string
+): Promise<boolean> => {
+  const html = compileTemplate('notification.html', {
+    'Hi Vraj,': `Hi ${name},`,
+    'You have received a new operational notification regarding your InternFlow workspace status. An administrator has updated the shared cohort resources folder with the Q2 engineering onboarding guidelines.': `We received a password reset request for your InternFlow account. Use the following 6-digit verification code to proceed:\n\n<div style="text-align:center;margin:24px 0;"><span style="display:inline-block;font-size:32px;font-weight:800;letter-spacing:8px;padding:16px 32px;background:#f1f5f9;border:2px solid #e2e8f0;border-radius:12px;color:#0f172a;">${otpCode}</span></div>\n\nThis code is valid for <strong>5 minutes</strong>. If you did not request a password reset, please ignore this email — your account remains secure.`,
+    'Platform / Operational Announcement': 'Password Reset',
+    'HR Operations Team': 'Security Service',
+    'Documentation Update': 'Identity Verification',
+    'https://internflow.com/notifications': `${config.frontend.url}/forgot-password`,
+    'View Workspace Notification': `Code: ${otpCode}`
+  });
+
+  if (!transporter && !resendClient && !BREVO_API_KEY) {
+    logger.info(`[MOCK EMAIL DELIVERY] Password Reset OTP for ${email} (${name}) is: ${otpCode}`);
+    return true;
+  }
+
+  const success = await sendEmail(email, 'Password Reset Verification Code - InternFlow', html);
+  if (!success) {
+    logger.warn('SMTP Delivery failed, logging fallback OTP for development/debug access.');
+    logger.info(`[FALLBACK EMAIL DELIVERY] Password Reset OTP for ${email} (${name}) is: ${otpCode}`);
+  }
+  return true;
+};

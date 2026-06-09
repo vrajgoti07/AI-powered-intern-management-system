@@ -377,6 +377,28 @@ router.post(
 );
 
 /**
+ * @route   POST /api/auth/forgot-password-send-otp
+ * @desc    Send OTP for password reset
+ * @access  Public
+ */
+router.post(
+  '/forgot-password-send-otp',
+  passwordResetLimiter,
+  authController.forgotPasswordSendOtp
+);
+
+/**
+ * @route   POST /api/auth/forgot-password-verify-otp
+ * @desc    Verify OTP for password reset
+ * @access  Public
+ */
+router.post(
+  '/forgot-password-verify-otp',
+  passwordResetLimiter,
+  authController.forgotPasswordVerifyOtp
+);
+
+/**
  * @route   POST /api/auth/reset-password
  * @desc    Reset password
  * @access  Public
