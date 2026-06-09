@@ -8,6 +8,7 @@ jest.mock('../middleware/rateLimit.middleware', () => {
     authLimiter: dummyMiddleware,
     passwordResetLimiter: dummyMiddleware,
     aiLimiter: dummyMiddleware,
+    publicProfileLimiter: dummyMiddleware,
   };
 });
 
