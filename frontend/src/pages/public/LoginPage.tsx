@@ -47,7 +47,7 @@ export const LoginPage: React.FC = () => {
 
   // OTP Stage States
   const [isOtpStage, setIsOtpStage] = useState(false);
-  const [otpCode, setOtpCode] = useState('');
+  const [otpInputs, setOtpInputs] = useState<string[]>(['', '', '', '', '', '']);
   const [expiryTime, setExpiryTime] = useState(300); // 5 mins
   const [resendCooldown, setResendCooldown] = useState(0); // 30s cooldown
 
@@ -72,6 +72,46 @@ export const LoginPage: React.FC = () => {
     }
     return () => clearInterval(timer);
   }, [resendCooldown]);
+
+  // OTP Box inputs change
+  const handleOtpChange = (value: string, index: number) => {
+    if (value && !/^\d$/.test(value)) return;
+
+    const newInputs = [...otpInputs];
+    newInputs[index] = value;
+    setOtpInputs(newInputs);
+
+    // Auto focus next
+    if (value && index < 5) {
+      const nextInput = document.getElementById(`otp-input-${index + 1}`);
+      nextInput?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === 'Backspace') {
+      if (!otpInputs[index] && index > 0) {
+        const prevInput = document.getElementById(`otp-input-${index - 1}`);
+        prevInput?.focus();
+      }
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (!pastedData) return;
+
+    const newInputs = [...otpInputs];
+    for (let i = 0; i < 6; i++) {
+      newInputs[i] = pastedData[i] || '';
+    }
+    setOtpInputs(newInputs);
+
+    const focusIndex = Math.min(pastedData.length, 5);
+    const nextInput = document.getElementById(`otp-input-${focusIndex}`);
+    nextInput?.focus();
+  };
 
   /**
    * Navigate user to the correct dashboard after successful authentication.
@@ -111,8 +151,12 @@ export const LoginPage: React.FC = () => {
           // OTP dispatched — show verification stage
           toast.success("A login verification code has been sent to your email.");
           setIsOtpStage(true);
+          setOtpInputs(['', '', '', '', '', '']);
           setExpiryTime(300);
           setResendCooldown(30);
+          setTimeout(() => {
+            document.getElementById('otp-input-0')?.focus();
+          }, 100);
         }
       }
     } catch {
@@ -127,6 +171,7 @@ export const LoginPage: React.FC = () => {
    */
   const handleOtpVerifySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const otpCode = otpInputs.join('');
     if (otpCode.length !== 6) {
       toast.error('Please enter the complete 6-digit passcode.');
       return;
@@ -168,9 +213,12 @@ export const LoginPage: React.FC = () => {
         redirectAfterLogin();
       } else {
         toast.success("A fresh verification code has been sent!");
-        setOtpCode('');
+        setOtpInputs(['', '', '', '', '', '']);
         setExpiryTime(300);
         setResendCooldown(30);
+        setTimeout(() => {
+          document.getElementById('otp-input-0')?.focus();
+        }, 100);
       }
     }
   };
@@ -274,15 +322,21 @@ export const LoginPage: React.FC = () => {
                 {/* OTP verification form */}
                 <form onSubmit={handleOtpVerifySubmit} className="space-y-6 text-left animate-fade-in">
                   <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Secure Passcode</label>
-                    <input
-                      type="text"
-                      value={otpCode}
-                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                      placeholder="000 000"
-                      className="w-full text-center text-4xl font-black tracking-[0.4em] pl-[0.4em] py-5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-[#2563eb] placeholder:text-slate-200 text-base"
-                      required
-                    />
+                    <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Secure Passcode</label>
+                    <div className="flex gap-2 justify-between" onPaste={handlePaste}>
+                      {otpInputs.map((val, idx) => (
+                        <input
+                          key={idx}
+                          id={`otp-input-${idx}`}
+                          type="text"
+                          maxLength={1}
+                          value={val}
+                          onChange={(e) => handleOtpChange(e.target.value, idx)}
+                          onKeyDown={(e) => handleOtpKeyDown(e, idx)}
+                          className="w-12 h-12 text-center text-lg font-bold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 focus:bg-white transition-all text-slate-800"
+                        />
+                      ))}
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between text-xs font-bold pt-1">

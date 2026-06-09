@@ -512,7 +512,7 @@ export const sendLoginOtpEmail = async (
 ): Promise<boolean> => {
   const html = compileTemplate('notification.html', {
     'Hi Vraj,': `Hi ${name},`,
-    'You have received a new operational notification regarding your InternFlow workspace status. An administrator has updated the shared cohort resources folder with the Q2 engineering onboarding guidelines.': `A login request was initiated for your InternFlow workspace. Please use the following 6-digit secure authentication passcode to complete access verification: ${otpCode}`,
+    'You have received a new operational notification regarding your InternFlow workspace status. An administrator has updated the shared cohort resources folder with the Q2 engineering onboarding guidelines.': `A login request was initiated for your InternFlow workspace. Use the following 6-digit secure authentication passcode to complete access verification:\n\n<div style="text-align:center;margin:24px 0;"><span style="display:inline-block;font-size:32px;font-weight:800;letter-spacing:8px;padding:16px 32px;background:#f1f5f9;border:2px solid #e2e8f0;border-radius:12px;color:#0f172a;">${otpCode}</span></div>\n\nThis code is valid for <strong>5 minutes</strong>. If you did not request this code, you can safely ignore this email.`,
     'Platform / Operational Announcement': 'Identity Verification',
     'HR Operations Team': 'Authentication Service',
     'Documentation Update': `IP: ${ipAddress} · Time: ${timestamp}`,
