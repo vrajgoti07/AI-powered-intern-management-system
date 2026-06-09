@@ -386,33 +386,237 @@ export class AIService {
   }
 
   /**
-   * 7. RAG Chatbot: Query (Part 4)
+   * 7. Intent-Based Chatbot with RAG Fallback (Part 4)
+   * 
+   * Strategy:
+   *   1. Try the intent-based ChatbotService first (/api/ai/chatbot)
+   *      which has built-in FAQ data for attendance, tasks, scores, etc.
+   *   2. If the intent classifier has low confidence, optionally try RAG.
+   *   3. Fall back to local heuristics if the AI service is offline.
    */
   async chatbot(payload: ChatbotPayload) {
     try {
-      // Direct it to the new RAG /query endpoint
-      const response = await axios.post(`${this.serviceUrl}/api/ai/chatbot/query`, {
-        question: payload.message,
-        userId: payload.sessionId || "default"
+      // Primary: Intent-based chatbot with context-aware responses
+      const response = await axios.post(`${this.serviceUrl}/api/ai/chatbot`, {
+        message: payload.message,
+        history: (payload.history || []).map(h => ({ role: h.role, content: h.content })),
+        context: payload.context || {},
       });
 
       const responseJson = response.data;
-      return {
-        reply: responseJson.answer,
-        suggestedPrompts: [],
-        intent: 'rag_query',
-        confidence: 0.9,
-        sources: responseJson.sources
-      };
+
+      // If the intent-based chatbot had decent confidence, use it
+      const confidence = responseJson.confidence ?? 0.9;
+      const reply = responseJson.response || responseJson.reply || '';
+      const suggestedPrompts = responseJson.suggested_actions || responseJson.suggestedPrompts || [];
+      const intent = responseJson.matched_faq || responseJson.intent || 'general';
+
+      // If confidence is reasonable (>= 0.25), return the intent-based response
+      if (confidence >= 0.25 && reply) {
+        return {
+          reply,
+          suggestedPrompts,
+          intent,
+          confidence,
+          sources: [],
+        };
+      }
+
+      // Low confidence — try RAG as a secondary source
+      return await this._tryRAGFallback(payload, reply, suggestedPrompts);
     } catch (error) {
-      logger.warn('AI Microservice offline. Triggering fallback FAQ Dialog replies...');
+      // AI microservice is offline — try RAG directly, then local fallback
+      logger.warn('Intent-based chatbot unreachable, trying RAG fallback...');
+      try {
+        return await this._tryRAGFallback(payload);
+      } catch (ragError) {
+        logger.warn('RAG also failed. Using local fallback.');
+        return this._localChatbotFallback(payload);
+      }
+    }
+  }
+
+  /**
+   * Attempt RAG query as a secondary chatbot source.
+   */
+  private async _tryRAGFallback(
+    payload: ChatbotPayload,
+    fallbackReply?: string,
+    fallbackPrompts?: string[]
+  ) {
+    try {
+      const ragResponse = await axios.post(`${this.serviceUrl}/api/ai/chatbot/query`, {
+        question: payload.message,
+        userId: payload.sessionId || 'default',
+      });
+
+      const ragJson = ragResponse.data;
+      const ragAnswer = ragJson.answer || '';
+      const ragSources = ragJson.sources || [];
+
+      // If RAG found something meaningful (not the "empty knowledge base" message)
+      if (
+        ragAnswer &&
+        !ragAnswer.toLowerCase().includes('knowledge base is empty') &&
+        !ragAnswer.toLowerCase().includes('upload hr documents')
+      ) {
+        return {
+          reply: ragAnswer,
+          suggestedPrompts: fallbackPrompts || [],
+          intent: 'rag_query',
+          confidence: 0.85,
+          sources: ragSources,
+        };
+      }
+    } catch {
+      // RAG is unavailable — that's okay
+    }
+
+    // Return the intent-based reply if we had one, otherwise use local fallback
+    if (fallbackReply) {
       return {
-        reply: `[Fallback Mode] Hello! The AI microservice is currently offline, so my smart capabilities are limited. Let me know if you would like me to assist with anything else!`,
-        suggestedPrompts: ['Try re-connecting AI microservice', 'View active tasks'],
-        intent: 'fallback',
-        confidence: 0.5
+        reply: fallbackReply,
+        suggestedPrompts: fallbackPrompts || [],
+        intent: 'general',
+        confidence: 0.5,
+        sources: [],
       };
     }
+
+    return this._localChatbotFallback(payload);
+  }
+
+  /**
+   * Local Node.js fallback when both AI microservice endpoints are unreachable.
+   */
+  private _localChatbotFallback(payload: ChatbotPayload) {
+    const msg = payload.message.toLowerCase().trim();
+    const ctx = payload.context || {};
+    const userName = ctx.user_name ? `, ${ctx.user_name}` : '';
+
+    // Simple keyword matching for common intents
+    if (/\b(attendance|attend|present|absent)\b/.test(msg)) {
+      const att = ctx.attendance;
+      if (att !== undefined && att !== null) {
+        const attVal = parseFloat(att);
+        let feedback = '';
+        if (attVal >= 90) feedback = 'Excellent! Keep it up! 🌟';
+        else if (attVal >= 75) feedback = 'Good job! Stay consistent.';
+        else if (attVal >= 50) feedback = '⚠️ Needs improvement. Aim for 75%+.';
+        else feedback = '🚨 Critically low. Please attend regularly.';
+        return {
+          reply: `Your current attendance rate is **${attVal}%**. ${feedback}`,
+          suggestedPrompts: ['What is my score?', 'Show my tasks', 'Certificate criteria'],
+          intent: 'my_attendance',
+          confidence: 0.8,
+        };
+      }
+      return {
+        reply: 'You can check your attendance on the **Attendance** page. Check in daily to maintain your record.',
+        suggestedPrompts: ['How do I check in?', 'What is my score?'],
+        intent: 'attendance',
+        confidence: 0.7,
+      };
+    }
+
+    if (/\b(score|grade|performance|rating|performing)\b/.test(msg)) {
+      const score = ctx.score;
+      if (score !== undefined && score !== null) {
+        const scVal = parseFloat(score);
+        let feedback = '';
+        if (scVal >= 90) feedback = 'Outstanding performance! 🏆';
+        else if (scVal >= 75) feedback = 'Great work! Keep pushing!';
+        else if (scVal >= 60) feedback = 'Decent. Focus on completing tasks on time.';
+        else feedback = '⚠️ Needs improvement. Talk to your mentor.';
+        return {
+          reply: `Your current performance score is **${scVal}/100**. ${feedback}`,
+          suggestedPrompts: ['What is my attendance?', 'Show my tasks', 'Certificate criteria'],
+          intent: 'my_score',
+          confidence: 0.8,
+        };
+      }
+      return {
+        reply: 'Check your **Dashboard** for the latest performance metrics.',
+        suggestedPrompts: ['What is my attendance?', 'Show my tasks'],
+        intent: 'my_score',
+        confidence: 0.7,
+      };
+    }
+
+    if (/\b(task|deadline|pending|assignment|submit|due)\b/.test(msg)) {
+      const tasks = ctx.tasks;
+      if (tasks && Array.isArray(tasks) && tasks.length > 0) {
+        const pending = tasks.filter((t: any) => ['Todo', 'In Progress', 'TODO', 'IN_PROGRESS'].includes(t.status));
+        if (pending.length > 0) {
+          const taskLines = pending.slice(0, 5).map((t: any, i: number) =>
+            `**${i + 1}.** ${t.title} — Due: ${t.dueDate || 'No deadline'} (${t.status})`
+          ).join('\n');
+          return {
+            reply: `You have **${pending.length}** pending task(s):\n\n${taskLines}`,
+            suggestedPrompts: ['What is my score?', 'How to submit a task?', 'Certificate criteria'],
+            intent: 'my_tasks',
+            confidence: 0.8,
+          };
+        }
+        return {
+          reply: '🎉 Great news! You have no pending tasks right now.',
+          suggestedPrompts: ['What is my score?', 'What is my attendance?'],
+          intent: 'my_tasks',
+          confidence: 0.8,
+        };
+      }
+      return {
+        reply: 'Visit the **Tasks** page to see your assigned work and deadlines.',
+        suggestedPrompts: ['What is my score?', 'What is my attendance?'],
+        intent: 'my_tasks',
+        confidence: 0.7,
+      };
+    }
+
+    if (/\b(certificate|completion|eligible|qualify)\b/.test(msg)) {
+      return {
+        reply: 'To earn your internship certificate, you need: **1)** Attendance above 75%, **2)** Complete 80%+ of tasks, **3)** Performance score of 60+/100.',
+        suggestedPrompts: ['What is my attendance?', 'What is my score?', 'Show my tasks'],
+        intent: 'certificate',
+        confidence: 0.8,
+      };
+    }
+
+    if (/\b(mentor|supervisor|guide)\b/.test(msg)) {
+      const mentorName = ctx.mentor_name || 'your assigned mentor';
+      return {
+        reply: `Your assigned mentor is **${mentorName}**. Reach out through the Chat feature for guidance.`,
+        suggestedPrompts: ['Show my tasks', 'What is my score?', 'Certificate criteria'],
+        intent: 'mentor_info',
+        confidence: 0.8,
+      };
+    }
+
+    if (/\b(hello|hi|hey|good morning|good afternoon|good evening|help)\b/.test(msg)) {
+      return {
+        reply: `Hello${userName}! I'm your AI assistant for the Intern Management System. I can help with attendance, tasks, scores, certificates, and more. What would you like to know?`,
+        suggestedPrompts: ['What is my attendance?', 'Show my score', 'Pending tasks', 'Certificate criteria'],
+        intent: 'general',
+        confidence: 0.9,
+      };
+    }
+
+    if (/\b(thank|thanks|bye|goodbye|exit|stop)\b/.test(msg)) {
+      return {
+        reply: `You're welcome${userName}! Feel free to come back anytime. Have a great day! 😊`,
+        suggestedPrompts: ['What is my attendance?', 'Show my tasks', 'What is my score?'],
+        intent: 'goodbyes',
+        confidence: 0.9,
+      };
+    }
+
+    // Default fallback
+    return {
+      reply: `Hello${userName}! I can help you with attendance, tasks, performance scores, certificates, and more. Try asking something specific!`,
+      suggestedPrompts: ['What is my attendance?', 'Show my score', 'Pending tasks', 'Certificate criteria'],
+      intent: 'general',
+      confidence: 0.5,
+    };
   }
 
   /**

@@ -20,6 +20,7 @@ export const AIChatbot: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [micActive, setMicActive] = useState(false);
   const [selectedSource, setSelectedSource] = useState<ChatSource | null>(null);
+  const [dynamicSuggestions, setDynamicSuggestions] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null);
@@ -129,6 +130,12 @@ export const AIChatbot: React.FC = () => {
       const botResponse = response.data?.data?.reply || response.data?.data?.response || 'I could not process that request.';
       const sources = response.data?.data?.sources || [];
 
+      // Update suggested prompts dynamically from AI response
+      const dynamicPrompts = response.data?.data?.suggestedPrompts;
+      if (dynamicPrompts && Array.isArray(dynamicPrompts) && dynamicPrompts.length > 0) {
+        setDynamicSuggestions(dynamicPrompts);
+      }
+
       dispatch({
         type: 'SEND_CHAT_MESSAGE',
         payload: { sender: 'bot', text: botResponse, sources }
@@ -176,12 +183,14 @@ export const AIChatbot: React.FC = () => {
     }
   };
 
-  const suggestedPrompts = [
+  const defaultPrompts = [
     "When is my next task due?",
     "What is my attendance ratio?",
     "Show my current performance grade",
     "Internship certificate criteria"
   ];
+
+  const suggestedPrompts = dynamicSuggestions.length > 0 ? dynamicSuggestions : defaultPrompts;
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">

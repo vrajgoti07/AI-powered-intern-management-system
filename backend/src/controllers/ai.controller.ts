@@ -407,7 +407,7 @@ export class AIController {
         logger.warn('Context enrichment failed (non-critical):', enrichErr);
       }
 
-      const result = await aiService.chatbot({
+      const result: any = await aiService.chatbot({
         message,
         history,
         context: enrichedContext,

@@ -65,13 +65,22 @@ async def sentiment_analysis(payload: SentimentAnalysisRequest):
 
 @router.post(
     "/chatbot", 
-    response_model=ChatbotResponse, 
     status_code=status.HTTP_200_OK,
     summary="Get semantic FAQ answers and context-aware recommendations"
 )
 async def chatbot(payload: ChatbotRequest):
     try:
-        return chatbot_service.get_response(payload)
+        result = chatbot_service.get_reply(
+            message=payload.message,
+            history=[{"role": m.role, "content": m.content} for m in payload.history],
+            context=payload.context or {},
+        )
+        return {
+            "response": result.get("reply", ""),
+            "suggested_actions": result.get("suggested_prompts", []),
+            "matched_faq": result.get("intent"),
+            "confidence": result.get("confidence", 0.0),
+        }
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
