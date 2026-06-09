@@ -165,3 +165,17 @@ export const aiLimiter = rateLimit({
   },
   validate: { keyGeneratorIpFallback: false },
 });
+
+// ──────────────────────────────────────
+// 5. Public Profile Rate Limiter
+//    100 requests per minute per IP
+// ──────────────────────────────────────
+export const publicProfileLimiter = rateLimit({
+  windowMs: 60 * 1000,                          // 1 minute
+  max: 100,
+  message: rateLimitResponse('Too many profile requests. Please try again shortly.'),
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  store: getRedisStore(),
+});
+

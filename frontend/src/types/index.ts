@@ -261,3 +261,41 @@ export interface MentorAIAnalysis {
   recommendations: string[];
   analyzedAt: string;
 }
+
+// ─── Public Profile Types ──────────────────────────────────────────
+
+export interface PublicProfileData {
+  name: string;
+  avatarUrl: string | null;
+  departmentName: string;
+  status: string;
+  username: string;
+  customBio: string | null;
+  skills: string[] | null;
+  tasksCompleted: number | null;
+  totalTasks: number | null;
+  feedbackScore: number | null;
+  feedbackCount: number | null;
+  performanceGrade: string | null;
+  attendance: number | null;
+  mentorName: string | null;
+  college: string | null;
+  joinedDate: string | null;
+}
+
+export interface PublicProfileSettings {
+  id: string;
+  userId: string;
+  isPublic: boolean;
+  showSkills: boolean;
+  showTasks: boolean;
+  showFeedbackScore: boolean;
+  showPerformanceGrade: boolean;
+  showAttendance: boolean;
+  showMentorName: boolean;
+  showCollege: boolean;
+  customBio: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+

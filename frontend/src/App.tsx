@@ -21,6 +21,7 @@ const PrivacyPage = React.lazy(() => import('./pages/public/PrivacyPage').then(m
 const TermsPage = React.lazy(() => import('./pages/public/TermsPage').then(m => ({ default: m.TermsPage })));
 const CookieSettingsPage = React.lazy(() => import('./pages/public/CookieSettingsPage').then(m => ({ default: m.CookieSettingsPage })));
 const SecurityPage = React.lazy(() => import('./pages/public/SecurityPage').then(m => ({ default: m.SecurityPage })));
+const PublicProfile = React.lazy(() => import('./pages/public/PublicProfile').then(m => ({ default: m.PublicProfile })));
 
 // HR Admin Pages
 const HRDashboard = React.lazy(() => import('./pages/hr/HRDashboard').then(m => ({ default: m.HRDashboard })));
@@ -50,6 +51,7 @@ const Settings = React.lazy(() => import('./pages/shared/Settings').then(m => ({
 const AIChatbot = React.lazy(() => import('./pages/intern/AIChatbot').then(m => ({ default: m.AIChatbot })));
 const OnboardingWorkflow = React.lazy(() => import('./pages/intern/onboarding/OnboardingWorkflow').then(m => ({ default: m.OnboardingWorkflow })));
 const PortfolioDashboard = React.lazy(() => import('./pages/intern/PortfolioDashboard').then(m => ({ default: m.PortfolioDashboard })));
+const ProfilePrivacySettings = React.lazy(() => import('./pages/intern/ProfilePrivacySettings').then(m => ({ default: m.ProfilePrivacySettings })));
 
 // Shared Pages across portals
 const AIMatching = React.lazy(() => import('./pages/ai-matching/AIMatching').then(m => ({ default: m.AIMatching })));
@@ -166,6 +168,7 @@ const App: React.FC = () => {
                 <Route path="/terms" element={<TermsPage />} />
                 <Route path="/cookies" element={<CookieSettingsPage />} />
                 <Route path="/security" element={<SecurityPage />} />
+                <Route path="/profile/:username" element={<PublicProfile />} />
 
                 {/* HR Admin Secured Route Portal */}
                 <Route
@@ -374,6 +377,14 @@ const App: React.FC = () => {
                   element={
                     <ProtectedRoute allowedRole="intern" requireActiveIntern>
                       <PortfolioDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/intern/privacy-settings"
+                  element={
+                    <ProtectedRoute allowedRole="intern" requireActiveIntern>
+                      <ProfilePrivacySettings />
                     </ProtectedRoute>
                   }
                 />

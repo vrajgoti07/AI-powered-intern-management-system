@@ -7,6 +7,7 @@ import {
   updateProfileSchema,
   changePasswordSchema,
 } from '../validations/profile.validation';
+import { updatePublicSettingsSchema } from '../validations/publicProfile.validation';
 
 const router = Router();
 
@@ -63,4 +64,32 @@ router.put(
   profileController.changePassword
 );
 
+// ─── Public Profile Settings ───────────────────────────────────────
+
+/**
+ * @route   GET /api/profile/public-settings
+ * @desc    Get own public profile privacy settings
+ * @access  All authenticated users
+ */
+router.get('/public-settings', profileController.getPublicSettings);
+
+/**
+ * @route   PUT /api/profile/public-settings
+ * @desc    Update public profile privacy settings
+ * @access  All authenticated users
+ */
+router.put(
+  '/public-settings',
+  validate(updatePublicSettingsSchema),
+  profileController.updatePublicSettings
+);
+
+/**
+ * @route   GET /api/profile/my-public-url
+ * @desc    Get own public profile URL (generates username if needed)
+ * @access  All authenticated users
+ */
+router.get('/my-public-url', profileController.getMyPublicUrl);
+
 export default router;
+

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as profileService from '../services/profile.service';
+import * as publicProfileService from '../services/publicProfile.service';
 import { successResponse } from '../utils/response';
 import prisma from '../config/database';
 
@@ -112,6 +113,62 @@ export const removeAvatar = async (
       avatarUrl: null,
     });
     successResponse(res, 'Avatar photo removed successfully', profile);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ─── Public Profile Settings ───────────────────────────────────────
+
+/**
+ * GET /api/v1/profile/public-settings
+ * Get the authenticated user's public profile privacy settings.
+ */
+export const getPublicSettings = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const settings = await publicProfileService.getPublicSettings(req.user!.id);
+    successResponse(res, 'Public profile settings retrieved', settings);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * PUT /api/v1/profile/public-settings
+ * Update the authenticated user's public profile privacy settings.
+ */
+export const updatePublicSettings = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const settings = await publicProfileService.updatePublicSettings(
+      req.user!.id,
+      req.body
+    );
+    successResponse(res, 'Public profile settings updated', settings);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/v1/profile/my-public-url
+ * Get the authenticated user's public profile URL (generates username if needed).
+ */
+export const getMyPublicUrl = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const url = await publicProfileService.getMyPublicUrl(req.user!.id);
+    successResponse(res, 'Public profile URL generated', { url });
   } catch (error) {
     next(error);
   }
