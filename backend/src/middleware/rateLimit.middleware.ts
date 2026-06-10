@@ -1,41 +1,8 @@
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
-import { RedisStore } from 'rate-limit-redis';
-import redisClient from '../config/redis';
 import { config } from '../config/env';
 import { Request, Response, NextFunction } from 'express';
 import { logger } from '../utils/logger';
-
-/**
- * Build a RedisStore whose sendCommand silently falls back to
- * in-memory behaviour (by returning undefined) whenever Redis is
- * unavailable or over-quota.  No per-request log spam.
- */
-const buildRedisStore = (): RedisStore => {
-  return new RedisStore({
-    sendCommand: async (...args: any[]): Promise<any> => {
-      // Skip Redis entirely if the connection is not established
-      if (redisClient.status !== 'ready') {
-        return undefined;
-      }
-      try {
-        if (Array.isArray(args[0])) {
-          const [cmd, ...rest] = args[0] as [string, ...any[]];
-          return await redisClient.call(cmd, ...rest);
-        }
-        const [cmd, ...rest] = args as [string, ...any[]];
-        return await redisClient.call(cmd, ...rest);
-      } catch {
-        // Swallow errors (quota exceeded, network blip, etc.) — use in-memory counter
-        return undefined;
-      }
-    },
-    prefix: 'rl:',
-  });
-};
-
-// Create a single shared store instance — all limiters reuse it
-// so we only have one connection and no duplicate setup logs.
-const redisStore = buildRedisStore();
+import redisClient from '../config/redis';
 
 /**
  * Standard 429 response body factory.
@@ -50,20 +17,22 @@ const rateLimitResponse = (message: string) => ({
 // ──────────────────────────────────────
 // 1. Global API Rate Limiter
 //    100 requests per 15 minutes per IP
+//    Uses in-memory store — reliable on single Render instance.
+//    Redis store was causing crashes (EVALSHA init errors, quota exceeded).
 // ──────────────────────────────────────
 export const apiLimiter = rateLimit({
-  windowMs: config.rateLimit.windowMs,         // default 15 min
-  max: config.rateLimit.maxRequests,            // default 100
+  windowMs: config.rateLimit.windowMs,
+  max: config.rateLimit.maxRequests,
   message: rateLimitResponse('Too many requests from this IP. Please try again later.'),
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  store: redisStore,
   skip: (req) => req.path === '/' || req.path === '/health',
 });
 
 // ──────────────────────────────────────
 // 2. Auth Routes Rate Limiter
 //    Max 5 failed attempts per 5 minutes per (email + role)
+//    Always uses in-memory store.
 // ──────────────────────────────────────
 const memoryStore = new Map<string, { attempts: number; expiry: number }>();
 
@@ -84,7 +53,6 @@ export const authLimiter = async (req: Request, res: Response, next: NextFunctio
         const redisAttempts = await redisClient.get(key);
         attempts = redisAttempts ? parseInt(redisAttempts, 10) : 0;
       } catch {
-        // Redis error — fall back to memory
         const record = memoryStore.get(key);
         if (record && Date.now() < record.expiry) attempts = record.attempts;
       }
@@ -127,7 +95,6 @@ export const authLimiter = async (req: Request, res: Response, next: NextFunctio
               if (currentAttempts === 1) await redisClient.expire(key, 300);
               logger.warn(`LOGIN FAILED for ${role}:${email}. Attempt ${currentAttempts}`);
             } catch {
-              // Redis write failed — use memory
               const record = memoryStore.get(key) || { attempts: 0, expiry: Date.now() + 300_000 };
               record.attempts += 1;
               memoryStore.set(key, record);
@@ -162,7 +129,6 @@ export const passwordResetLimiter = rateLimit({
   message: rateLimitResponse('Too many password reset attempts. Please try again after 1 hour.'),
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  store: redisStore,
 });
 
 // ──────────────────────────────────────
@@ -175,7 +141,6 @@ export const aiLimiter = rateLimit({
   message: rateLimitResponse('AI request limit reached. Please wait a moment before trying again.'),
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  store: redisStore,
   keyGenerator: (req: Request) => {
     return (req as any).user?.id || ipKeyGenerator(req.ip ?? '127.0.0.1');
   },
@@ -192,5 +157,4 @@ export const publicProfileLimiter = rateLimit({
   message: rateLimitResponse('Too many profile requests. Please try again shortly.'),
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  store: redisStore,
 });
