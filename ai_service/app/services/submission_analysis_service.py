@@ -15,11 +15,11 @@ os.makedirs(INDEX_DIR, exist_ok=True)
 
 # List of typical AI phrases to count in heuristics
 AI_PHRASES = [
-2:     "delve", "moreover", "testament", "crucial", "tapestry", "in conclusion",
-3:     "furthermore", "demystify", "beacon", "treasure trove", "it is worth noting",
-4:     "unveils", "multifaceted", "paramount", "underscores", "by analyzing",
-5:     "elevate", "comprehensively", "revolutionize"
-6: ]
+    "delve", "moreover", "testament", "crucial", "tapestry", "in conclusion",
+    "furthermore", "demystify", "beacon", "treasure trove", "it is worth noting",
+    "unveils", "multifaceted", "paramount", "underscores", "by analyzing",
+    "elevate", "comprehensively", "revolutionize"
+]
 
 class SubmissionAnalysisService:
     def __init__(self) -> None:
