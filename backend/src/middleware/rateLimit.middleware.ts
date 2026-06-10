@@ -12,15 +12,24 @@ const getRedisStore = (): RedisStore | undefined => {
   try {
     return new RedisStore({
       // @ts-expect-error - rate-limit-redis expects node-redis sendCommand but call() works exactly the same for ioredis
-      sendCommand: (...args: any[]) => {
-        if (Array.isArray(args[0])) {
-          const command = args[0][0] as string;
-          const restArgs = args[0].slice(1);
-          return redisClient.call(command, ...restArgs);
+      sendCommand: async (...args: any[]) => {
+        try {
+          if (redisClient.status !== 'ready') {
+            throw new Error('Redis not ready');
+          }
+          if (Array.isArray(args[0])) {
+            const command = args[0][0] as string;
+            const restArgs = args[0].slice(1);
+            return await redisClient.call(command, ...restArgs);
+          }
+          const command = args[0] as string;
+          const restArgs = args.slice(1);
+          return await redisClient.call(command, ...restArgs);
+        } catch (err: any) {
+          // Gracefully handle Upstash limit exceeded and any other Redis errors
+          logger.warn(`Redis rate-limit command failed (passing through): ${err.message}`);
+          return undefined;
         }
-        const command = args[0] as string;
-        const restArgs = args.slice(1);
-        return redisClient.call(command, ...restArgs);
       },
       prefix: 'rl:',
     });

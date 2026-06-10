@@ -35,6 +35,16 @@ const createApp = (): Application => {
   // ── 4. Serve static uploads ──
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
+  // ── 4.5. Health endpoint (BEFORE rate limiter to avoid Redis quota usage) ──
+  app.get('/', (_req, res) => {
+    res.json({
+      success: true,
+      message: 'AI-Powered Intern Management System API',
+      version: config.server.apiVersion,
+      documentation: `/api/${config.server.apiVersion}/health`,
+    });
+  });
+
   // ── 5. Global Rate Limiting ──
   app.use(apiLimiter);
 
@@ -68,16 +78,6 @@ const createApp = (): Application => {
     res.status(401).send('Authentication required.');
   }, serverAdapter.getRouter());
 
-
-  // ── 7. Root health endpoint ──
-  app.get('/', (_req, res) => {
-    res.json({
-      success: true,
-      message: 'AI-Powered Intern Management System API',
-      version: config.server.apiVersion,
-      documentation: `/api/${config.server.apiVersion}/health`,
-    });
-  });
 
   // ── 8. 404 handler (AFTER all routes) ──
   app.use(notFoundHandler);
