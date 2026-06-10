@@ -107,7 +107,8 @@ const startServer = async () => {
 
     process.on('unhandledRejection', (reason, promise) => {
       logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
-      gracefulShutdown('UNHANDLED_REJECTION');
+      // Do NOT shutdown — Redis connection failures are expected in
+      // environments without Redis and are handled gracefully by fallbacks.
     });
   } catch (error) {
     logger.error('Failed to start server:', error);

@@ -4,7 +4,7 @@ import { createAdapter } from '@socket.io/redis-adapter';
 import { verifyAccessToken } from '../utils/jwt';
 import { logger } from '../utils/logger';
 import { UserRole } from '@prisma/client';
-import redis from '../config/redis';
+import redis, { safeDuplicate } from '../config/redis';
 import { config } from '../config/env';
 import prisma from '../config/database';
 
@@ -37,9 +37,18 @@ export const initSocket = (httpServer: HttpServer): SocketIOServer => {
     pingTimeout: 60000,
   });
 
-  // Use Redis Adapter for multi-instance scaling
-  const subClient = redis.duplicate();
-  io.adapter(createAdapter(redis, subClient));
+  // Use Redis Adapter for multi-instance scaling (graceful fallback if Redis is offline)
+  try {
+    if (redis.status === 'ready' || redis.status === 'connecting') {
+      const subClient = safeDuplicate('socket-sub');
+      io.adapter(createAdapter(redis, subClient));
+      logger.info('Socket.IO Redis adapter initialized');
+    } else {
+      logger.warn('Redis not available — Socket.IO running in single-instance mode (no Redis adapter)');
+    }
+  } catch (err) {
+    logger.warn('Failed to attach Redis adapter to Socket.IO — running in single-instance mode:', err);
+  }
 
   // JWT authentication handshake middleware
   io.use(async (socket: AuthenticatedSocket, next) => {

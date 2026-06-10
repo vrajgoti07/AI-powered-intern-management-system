@@ -15,7 +15,7 @@ jest.mock('../middleware/rateLimit.middleware', () => {
 // Centralized mock implementation for ioredis using plain functions to survive resetMocks
 jest.mock('ioredis', () => {
   return jest.fn().mockImplementation(() => {
-    const mockRedis = {
+    const mockRedis: Record<string, any> = {
       on: () => {},
       set: async () => 'OK',
       get: async () => null,
@@ -25,7 +25,12 @@ jest.mock('ioredis', () => {
       defineCommand: () => {},
       options: {},
       keys: async () => [],
-      duplicate: () => mockRedis,
+      connect: async () => {},
+      status: 'ready',
+      sadd: async () => 1,
+      srem: async () => 1,
+      sismember: async () => 0,
+      duplicate: () => ({ ...mockRedis, on: () => {}, connect: async () => {}, status: 'ready' }),
     };
     return mockRedis;
   });

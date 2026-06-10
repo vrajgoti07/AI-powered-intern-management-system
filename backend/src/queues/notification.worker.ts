@@ -1,5 +1,5 @@
 import { Worker, Job } from 'bullmq';
-import redis from '../config/redis';
+import { safeDuplicate } from '../config/redis';
 import { NOTIFICATION_QUEUE_NAME } from './notification.queue';
 import prisma from '../config/database';
 import { sendEmail, sendWelcomeEmail, sendApplicationConfirmationEmail, sendMentorAssignmentEmails, sendPerformanceScoreEmail } from '../utils/email';
@@ -150,7 +150,7 @@ export const notificationWorker = new Worker(
     }
   },
   {
-    connection: redis.duplicate() as any,
+    connection: safeDuplicate('notification-worker') as any,
   }
 );
 

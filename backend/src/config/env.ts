@@ -16,7 +16,7 @@ const envSchema = z.object({
   DIRECT_URL: z.string().optional(), // Neon direct (unpooled) connection for migrations
   
   // Redis
-  REDIS_URL: z.string().min(1, 'REDIS_URL is required'),
+  REDIS_URL: z.string().optional(),
   REDIS_HOST: z.string().default('127.0.0.1'),
   REDIS_PORT: z.string().default('6379'),
   REDIS_PASSWORD: z.string().optional(),
