@@ -6,38 +6,36 @@ import { Request, Response, NextFunction } from 'express';
 import { logger } from '../utils/logger';
 
 /**
- * Get the Redis store using the existing ioredis client.
+ * Build a RedisStore whose sendCommand silently falls back to
+ * in-memory behaviour (by returning undefined) whenever Redis is
+ * unavailable or over-quota.  No per-request log spam.
  */
-const getRedisStore = (): RedisStore | undefined => {
-  try {
-    return new RedisStore({
-      // @ts-expect-error - rate-limit-redis expects node-redis sendCommand but call() works exactly the same for ioredis
-      sendCommand: async (...args: any[]) => {
-        try {
-          if (redisClient.status !== 'ready') {
-            throw new Error('Redis not ready');
-          }
-          if (Array.isArray(args[0])) {
-            const command = args[0][0] as string;
-            const restArgs = args[0].slice(1);
-            return await redisClient.call(command, ...restArgs);
-          }
-          const command = args[0] as string;
-          const restArgs = args.slice(1);
-          return await redisClient.call(command, ...restArgs);
-        } catch (err: any) {
-          // Gracefully handle Upstash limit exceeded and any other Redis errors
-          logger.warn(`Redis rate-limit command failed (passing through): ${err.message}`);
-          return undefined;
+const buildRedisStore = (): RedisStore => {
+  return new RedisStore({
+    sendCommand: async (...args: any[]): Promise<any> => {
+      // Skip Redis entirely if the connection is not established
+      if (redisClient.status !== 'ready') {
+        return undefined;
+      }
+      try {
+        if (Array.isArray(args[0])) {
+          const [cmd, ...rest] = args[0] as [string, ...any[]];
+          return await redisClient.call(cmd, ...rest);
         }
-      },
-      prefix: 'rl:',
-    });
-  } catch {
-    logger.warn('Failed to create Redis rate-limit store, using in-memory fallback.');
-    return undefined;
-  }
+        const [cmd, ...rest] = args as [string, ...any[]];
+        return await redisClient.call(cmd, ...rest);
+      } catch {
+        // Swallow errors (quota exceeded, network blip, etc.) — use in-memory counter
+        return undefined;
+      }
+    },
+    prefix: 'rl:',
+  });
 };
+
+// Create a single shared store instance — all limiters reuse it
+// so we only have one connection and no duplicate setup logs.
+const redisStore = buildRedisStore();
 
 /**
  * Standard 429 response body factory.
@@ -57,9 +55,10 @@ export const apiLimiter = rateLimit({
   windowMs: config.rateLimit.windowMs,         // default 15 min
   max: config.rateLimit.maxRequests,            // default 100
   message: rateLimitResponse('Too many requests from this IP. Please try again later.'),
-  standardHeaders: 'draft-7',                  // RateLimit-* headers (IETF draft)
+  standardHeaders: 'draft-7',
   legacyHeaders: false,
-  store: getRedisStore(),
+  store: redisStore,
+  skip: (req) => req.path === '/' || req.path === '/health',
 });
 
 // ──────────────────────────────────────
@@ -72,20 +71,23 @@ export const authLimiter = async (req: Request, res: Response, next: NextFunctio
   const email = req.body?.email;
   const role = req.body?.role || 'unknown';
 
-  // If no email is provided, we can't track it, pass through.
-  if (!email) {
-    return next();
-  }
+  if (!email) return next();
 
   const key = `login_attempts:${role}:${email}`;
-  const isRedisAvailable = redisClient && redisClient.status === 'ready';
+  const isRedisReady = redisClient.status === 'ready';
 
   try {
     let attempts = 0;
 
-    if (isRedisAvailable) {
-      const redisAttempts = await redisClient.get(key);
-      attempts = redisAttempts ? parseInt(redisAttempts, 10) : 0;
+    if (isRedisReady) {
+      try {
+        const redisAttempts = await redisClient.get(key);
+        attempts = redisAttempts ? parseInt(redisAttempts, 10) : 0;
+      } catch {
+        // Redis error — fall back to memory
+        const record = memoryStore.get(key);
+        if (record && Date.now() < record.expiry) attempts = record.attempts;
+      }
     } else {
       const record = memoryStore.get(key);
       if (record && Date.now() < record.expiry) {
@@ -112,21 +114,27 @@ export const authLimiter = async (req: Request, res: Response, next: NextFunctio
 
       try {
         if (isSuccess) {
-          if (isRedisAvailable) {
-            await redisClient.del(key);
+          if (isRedisReady) {
+            await redisClient.del(key).catch(() => {});
           } else {
             memoryStore.delete(key);
           }
           logger.info(`LOGIN SUCCESS for ${role}:${email}`);
         } else if (isFailure) {
-          if (isRedisAvailable) {
-            const currentAttempts = await redisClient.incr(key);
-            if (currentAttempts === 1) {
-              await redisClient.expire(key, 300); // 300 seconds TTL
+          if (isRedisReady) {
+            try {
+              const currentAttempts = await redisClient.incr(key);
+              if (currentAttempts === 1) await redisClient.expire(key, 300);
+              logger.warn(`LOGIN FAILED for ${role}:${email}. Attempt ${currentAttempts}`);
+            } catch {
+              // Redis write failed — use memory
+              const record = memoryStore.get(key) || { attempts: 0, expiry: Date.now() + 300_000 };
+              record.attempts += 1;
+              memoryStore.set(key, record);
+              logger.warn(`LOGIN FAILED for ${role}:${email}. Attempt ${record.attempts}`);
             }
-            logger.warn(`LOGIN FAILED for ${role}:${email}. Attempt ${currentAttempts}`);
           } else {
-            const record = memoryStore.get(key) || { attempts: 0, expiry: Date.now() + 300 * 1000 };
+            const record = memoryStore.get(key) || { attempts: 0, expiry: Date.now() + 300_000 };
             record.attempts += 1;
             memoryStore.set(key, record);
             logger.warn(`LOGIN FAILED for ${role}:${email}. Attempt ${record.attempts}`);
@@ -154,7 +162,7 @@ export const passwordResetLimiter = rateLimit({
   message: rateLimitResponse('Too many password reset attempts. Please try again after 1 hour.'),
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  store: getRedisStore(),
+  store: redisStore,
 });
 
 // ──────────────────────────────────────
@@ -162,14 +170,13 @@ export const passwordResetLimiter = rateLimit({
 //    20 requests per minute per user
 // ──────────────────────────────────────
 export const aiLimiter = rateLimit({
-  windowMs: 60 * 1000,                          // 1 minute
+  windowMs: 60 * 1000,
   max: 20,
   message: rateLimitResponse('AI request limit reached. Please wait a moment before trying again.'),
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  store: getRedisStore(),
+  store: redisStore,
   keyGenerator: (req: Request) => {
-    // Key by authenticated userId when available, else fall back to IP (IPv6-safe)
     return (req as any).user?.id || ipKeyGenerator(req.ip ?? '127.0.0.1');
   },
   validate: { keyGeneratorIpFallback: false },
@@ -180,11 +187,10 @@ export const aiLimiter = rateLimit({
 //    100 requests per minute per IP
 // ──────────────────────────────────────
 export const publicProfileLimiter = rateLimit({
-  windowMs: 60 * 1000,                          // 1 minute
+  windowMs: 60 * 1000,
   max: 100,
   message: rateLimitResponse('Too many profile requests. Please try again shortly.'),
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  store: getRedisStore(),
+  store: redisStore,
 });
-
