@@ -12,6 +12,7 @@ const ApplyPage = React.lazy(() => import('./pages/public/ApplyPage').then(m => 
 const ForgotPasswordPage = React.lazy(() => import('./pages/public/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
 const ResetPasswordPage = React.lazy(() => import('./pages/public/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
 const RegisterPage = React.lazy(() => import('./pages/public/RegisterPage').then(m => ({ default: m.RegisterPage })));
+const RegisterOrganization = React.lazy(() => import('./pages/public/RegisterOrganization'));
 const RoadmapPage = React.lazy(() => import('./pages/public/RoadmapPage').then(m => ({ default: m.RoadmapPage })));
 const AboutPage = React.lazy(() => import('./pages/public/AboutPage').then(m => ({ default: m.AboutPage })));
 const CareersPage = React.lazy(() => import('./pages/public/CareersPage').then(m => ({ default: m.CareersPage })));
@@ -36,13 +37,18 @@ const OnboardingVerification = React.lazy(() => import('./pages/hr/OnboardingVer
 const MentorDetailsPage = React.lazy(() => import('./pages/hr/mentor-details/MentorDetailsPage').then(m => ({ default: m.MentorDetailsPage })));
 const AIRecommendations = React.lazy(() => import('./pages/hr/AIRecommendations').then(m => ({ default: m.AIRecommendations })));
 const RiskDetection = React.lazy(() => import('./pages/hr/RiskDetection').then(m => ({ default: m.RiskDetection })));
+const InterviewAnalytics = React.lazy(() => import('./pages/hr/InterviewAnalytics').then(m => ({ default: m.InterviewAnalytics })));
 const AuditLogs = React.lazy(() => import('./pages/admin/AuditLogs').then(m => ({ default: m.AuditLogs })));
+const CohortAnalytics = React.lazy(() => import('./pages/hr/CohortAnalytics').then(m => ({ default: m.CohortAnalytics })));
+const ReportBuilder = React.lazy(() => import('./pages/hr/ReportBuilder').then(m => ({ default: m.ReportBuilder })));
+const ErasureRequests = React.lazy(() => import('./pages/hr/ErasureRequests').then(m => ({ default: m.ErasureRequests })));
 
 // Mentor Pages
 const MentorDashboard = React.lazy(() => import('./pages/mentor/MentorDashboard').then(m => ({ default: m.MentorDashboard })));
 const TaskManagement = React.lazy(() => import('./pages/mentor/TaskManagement').then(m => ({ default: m.TaskManagement })));
 const InternPerformance = React.lazy(() => import('./pages/mentor/InternPerformance').then(m => ({ default: m.InternPerformance })));
 const SubmissionReview = React.lazy(() => import('./pages/mentor/SubmissionReview').then(m => ({ default: m.SubmissionReview })));
+const StandupFeed = React.lazy(() => import('./pages/mentor/StandupFeed').then(m => ({ default: m.StandupFeed })));
 
 // Intern Pages
 const InternDashboard = React.lazy(() => import('./pages/intern/InternDashboard').then(m => ({ default: m.InternDashboard })));
@@ -52,6 +58,10 @@ const AIChatbot = React.lazy(() => import('./pages/intern/AIChatbot').then(m => 
 const OnboardingWorkflow = React.lazy(() => import('./pages/intern/onboarding/OnboardingWorkflow').then(m => ({ default: m.OnboardingWorkflow })));
 const PortfolioDashboard = React.lazy(() => import('./pages/intern/PortfolioDashboard').then(m => ({ default: m.PortfolioDashboard })));
 const ProfilePrivacySettings = React.lazy(() => import('./pages/intern/ProfilePrivacySettings').then(m => ({ default: m.ProfilePrivacySettings })));
+const Achievements = React.lazy(() => import('./pages/intern/Achievements').then(m => ({ default: m.Achievements })));
+const Goals = React.lazy(() => import('./pages/intern/Goals').then(m => ({ default: m.Goals })));
+const MockInterview = React.lazy(() => import('./pages/intern/MockInterview').then(m => ({ default: m.MockInterview })));
+const SkillGap = React.lazy(() => import('./pages/intern/SkillGap').then(m => ({ default: m.SkillGap })));
 
 // Shared Pages across portals
 const AIMatching = React.lazy(() => import('./pages/ai-matching/AIMatching').then(m => ({ default: m.AIMatching })));
@@ -69,6 +79,8 @@ const AIResumeParser = React.lazy(() => import('./pages/ai-resume-parser/AIResum
 const SuperAdmin = React.lazy(() => import('./pages/admin/SuperAdmin').then(m => ({ default: m.SuperAdmin })));
 
 import { PageLoader } from './components/PageLoader';
+import { OfflineBanner } from './components/common/OfflineBanner';
+import { DigestModal } from './components/shared/DigestModal';
 
 import { useAuth } from './hooks/useAuth';
 import { useInternByUser } from './hooks/queries';
@@ -150,6 +162,8 @@ const App: React.FC = () => {
                 duration: 3000,
               }}
             />
+            <OfflineBanner />
+            <DigestModal />
             <React.Suspense fallback={<PageLoader />}>
               <Routes>
                 {/* Public Access */}
@@ -159,6 +173,7 @@ const App: React.FC = () => {
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/register" element={<RegisterPage />} />
+                <Route path="/register-organization" element={<RegisterOrganization />} />
                 <Route path="/roadmap" element={<RoadmapPage />} />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/careers" element={<CareersPage />} />
@@ -244,6 +259,14 @@ const App: React.FC = () => {
                   }
                 />
                 <Route
+                  path="/hr/interview-analytics"
+                  element={
+                    <ProtectedRoute allowedRoles={['hr', 'mentor']}>
+                      <InterviewAnalytics />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/hr/reports"
                   element={
                     <ProtectedRoute allowedRole="hr">
@@ -264,6 +287,30 @@ const App: React.FC = () => {
                   element={
                     <ProtectedRoute allowedRole="hr">
                       <Settings />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/hr/cohort-analytics"
+                  element={
+                    <ProtectedRoute allowedRole="hr">
+                      <CohortAnalytics />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/hr/report-builder"
+                  element={
+                    <ProtectedRoute allowedRole="hr">
+                      <ReportBuilder />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/hr/erasure-requests"
+                  element={
+                    <ProtectedRoute allowedRole="hr">
+                      <ErasureRequests />
                     </ProtectedRoute>
                   }
                 />
@@ -324,6 +371,14 @@ const App: React.FC = () => {
                   element={
                     <ProtectedRoute allowedRole="mentor">
                       <Settings />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/mentor/standups"
+                  element={
+                    <ProtectedRoute allowedRoles={['mentor', 'hr']}>
+                      <StandupFeed />
                     </ProtectedRoute>
                   }
                 />
@@ -393,6 +448,38 @@ const App: React.FC = () => {
                   element={
                     <ProtectedRoute allowedRole="intern" requireActiveIntern>
                       <AIChatbot />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/intern/achievements"
+                  element={
+                    <ProtectedRoute allowedRole="intern" requireActiveIntern>
+                      <Achievements />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/intern/goals"
+                  element={
+                    <ProtectedRoute allowedRole="intern" requireActiveIntern>
+                      <Goals />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/intern/mock-interview"
+                  element={
+                    <ProtectedRoute allowedRole="intern" requireActiveIntern>
+                      <MockInterview />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/intern/skill-gap"
+                  element={
+                    <ProtectedRoute allowedRole="intern" requireActiveIntern>
+                      <SkillGap />
                     </ProtectedRoute>
                   }
                 />

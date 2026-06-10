@@ -18,6 +18,10 @@ import { ChatSource } from '../../../context/AppContext';
 import { useInternByUser, useTasks, useInterns } from '../../../hooks/queries';
 import api from '../../../services/api';
 import { useSocket } from '../../../hooks/useSocket';
+import { useVideoCallStore } from '../../../store/useVideoCallStore';
+import { VideoCallButton } from '../../../components/chat/VideoCallButton';
+import { IncomingCallModal } from '../../../components/chat/IncomingCallModal';
+import { VideoCallPanel } from '../../../components/chat/VideoCallPanel';
 
 const EMOJIS = [
   { char: '😀', name: 'grinning face', cat: 'smileys' },
@@ -506,13 +510,54 @@ export const CommunicationSystem: React.FC = () => {
       }
     };
 
+    // Video Call Handlers
+    const handleCallIncoming = (data: any) => {
+      console.log('[Socket] Received call:incoming:', data);
+      if (data.initiatedBy?.id === user?.id) return;
+      useVideoCallStore.getState().receiveIncomingCall({
+        conversationId: data.conversationId,
+        roomName: data.roomName,
+        initiatedBy: data.initiatedBy,
+      });
+    };
+
+    const handleCallAccepted = (data: any) => {
+      console.log('[Socket] Received call:accepted:', data);
+    };
+
+    const handleCallDeclined = (data: any) => {
+      console.log('[Socket] Received call:declined:', data);
+      const state = useVideoCallStore.getState();
+      if (state.activeCall && state.activeCall.roomName === data.roomName) {
+        state.handleRemoteDecline();
+        toast.error('The call was declined.');
+      }
+    };
+
+    const handleCallEnded = (data: any) => {
+      console.log('[Socket] Received call:ended:', data);
+      const state = useVideoCallStore.getState();
+      if (state.activeCall && state.activeCall.roomName === data.roomName) {
+        state.handleRemoteEnd();
+        toast('Video call has ended.');
+      }
+    };
+
     socket.on('receive-message', handleReceiveMessage);
     socket.on('user-typing', handleUserTyping);
+    socket.on('call:incoming', handleCallIncoming);
+    socket.on('call:accepted', handleCallAccepted);
+    socket.on('call:declined', handleCallDeclined);
+    socket.on('call:ended', handleCallEnded);
 
     return () => {
       socket.emit('leave-room', { roomId: activeConversationId, name: user?.name });
       socket.off('receive-message', handleReceiveMessage);
       socket.off('user-typing', handleUserTyping);
+      socket.off('call:incoming', handleCallIncoming);
+      socket.off('call:accepted', handleCallAccepted);
+      socket.off('call:declined', handleCallDeclined);
+      socket.off('call:ended', handleCallEnded);
     };
   }, [socket, activeConversationId, chatChannel, user]);
 
@@ -1306,6 +1351,13 @@ export const CommunicationSystem: React.FC = () => {
     toast.success("Post removed successfully!");
   };
 
+  // Reset video call store on unmount
+  useEffect(() => {
+    return () => {
+      useVideoCallStore.getState().resetStore();
+    };
+  }, []);
+
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
       <Sidebar collapsed={sidebarCollapsed} onClose={() => setSidebarCollapsed(true)} />
@@ -1463,7 +1515,11 @@ export const CommunicationSystem: React.FC = () => {
                           <ArrowLeft className="w-4 h-4" /> Back
                         </button>
                         <span className="font-extrabold text-slate-800 text-xs flex items-center gap-1"><Hash className="w-4 h-4 text-[#2563eb]" /> {chatChannel.slice(1)}</span>
-                        <span className="text-[9px] text-emerald-600 font-extrabold bg-emerald-50 border border-emerald-100 px-2.5 py-0.5 rounded-full">Active Stream</span>
+                        
+                        <div className="flex items-center gap-3">
+                          <VideoCallButton conversationId={activeConversationId || ''} />
+                          <span className="text-[9px] text-emerald-600 font-extrabold bg-emerald-50 border border-emerald-100 px-2.5 py-0.5 rounded-full">Active Stream</span>
+                        </div>
                       </div>
 
                       {/* Messages Body */}
@@ -2837,6 +2893,8 @@ export const CommunicationSystem: React.FC = () => {
           </div>
         </div>
       )}
+      <IncomingCallModal />
+      <VideoCallPanel />
     </div>
   );
 };

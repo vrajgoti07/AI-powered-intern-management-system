@@ -54,9 +54,22 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 
   const result = await authService.loginUser(email, password);
 
-  await logAction(result.user.id, 'LOGIN', 'User', result.user.id, { method: 'DIRECT' }, req);
+  if ('requiresTOTP' in result) {
+    res.status(202).json({
+      success: true,
+      message: 'Two-factor authentication required',
+      data: {
+        requiresTOTP: true,
+        pendingToken: result.pendingToken,
+      },
+    });
+    return;
+  }
 
-  successResponse(res, 'Login successful', result);
+  const authResult = result as any; // Cast to bypass compiler union check after narrowing
+  await logAction(authResult.user.id, 'LOGIN', 'User', authResult.user.id, { method: 'DIRECT' }, req);
+
+  successResponse(res, 'Login successful', authResult);
 });
 
 /**
@@ -513,6 +526,21 @@ export const verifyOtp = asyncHandler(async (req: Request, res: Response) => {
     where: { id: latestOtp.id },
     data: { verified: true }
   });
+
+  // Intercept if TOTP is enabled
+  if (user.totpEnabled) {
+    const { generatePending2faToken } = await import('../utils/jwt');
+    const pendingToken = generatePending2faToken(user.id);
+    res.status(202).json({
+      success: true,
+      message: 'Two-factor authentication required',
+      data: {
+        requiresTOTP: true,
+        pendingToken,
+      },
+    });
+    return;
+  }
 
   // 5. Establish Trusted Device Session System (Expires in 3 hours)
   const sessionToken = crypto.randomBytes(32).toString('hex');

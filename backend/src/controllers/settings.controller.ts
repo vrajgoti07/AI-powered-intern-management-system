@@ -172,7 +172,7 @@ export const getNotifications = async (req: Request, res: Response, next: NextFu
 export const updateNotifications = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const userId = req.user!.id;
-    const { emailNotifications, attendanceAlerts, leaveAlerts, taskAlerts, announcementAlerts } = req.body;
+    const { emailNotifications, attendanceAlerts, leaveAlerts, taskAlerts, announcementAlerts, weeklyDigest } = req.body;
 
     const prefs = await prisma.notificationPreference.upsert({
       where: { userId },
@@ -181,7 +181,8 @@ export const updateNotifications = async (req: Request, res: Response, next: Nex
         attendanceAlerts: attendanceAlerts !== undefined ? !!attendanceAlerts : undefined,
         leaveAlerts: leaveAlerts !== undefined ? !!leaveAlerts : undefined,
         taskAlerts: taskAlerts !== undefined ? !!taskAlerts : undefined,
-        announcementAlerts: announcementAlerts !== undefined ? !!announcementAlerts : undefined
+        announcementAlerts: announcementAlerts !== undefined ? !!announcementAlerts : undefined,
+        weeklyDigest: weeklyDigest !== undefined ? !!weeklyDigest : undefined
       },
       create: {
         userId,
@@ -189,7 +190,8 @@ export const updateNotifications = async (req: Request, res: Response, next: Nex
         attendanceAlerts: attendanceAlerts !== undefined ? !!attendanceAlerts : true,
         leaveAlerts: leaveAlerts !== undefined ? !!leaveAlerts : true,
         taskAlerts: taskAlerts !== undefined ? !!taskAlerts : true,
-        announcementAlerts: announcementAlerts !== undefined ? !!announcementAlerts : true
+        announcementAlerts: announcementAlerts !== undefined ? !!announcementAlerts : true,
+        weeklyDigest: weeklyDigest !== undefined ? !!weeklyDigest : true
       }
     });
 

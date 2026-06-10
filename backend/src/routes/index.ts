@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import authRoutes from './auth.routes';
+import totpRoutes from './totp.routes';
 import internRoutes from './intern.routes';
 import mentorRoutes from './mentor.routes';
 import departmentRoutes from './department.routes';
@@ -10,6 +11,8 @@ import attendanceNewRoutes from './attendance.new.routes';
 import leaveRequestRoutes from './leaveRequest.routes';
 import chatRoutes from './chat.routes';
 import notificationRoutes from './notification.routes';
+import pushSubscriptionRoutes from './pushSubscription.routes';
+import gamificationRoutes from './gamification.routes';
 import aiRoutes from './ai.routes';
 import analyticsRoutes from './analytics.routes';
 import reportRoutes from './report.routes';
@@ -27,6 +30,17 @@ import emailRoutes from './email.routes';
 import documentRoutes from './document.routes';
 import placementRoutes from './placement.routes';
 import publicProfileRoutes from './publicProfile.routes';
+import organizationRoutes from './organization.routes';
+import standupRoutes from './standup.routes';
+import weeklyDigestRoutes from './weeklyDigest.routes';
+import goalRoutes from './goal.routes';
+import mockInterviewRoutes from './mockInterview.routes';
+import videoCallRoutes from './videoCall.routes';
+import gdprRoutes from './gdpr.routes';
+import reportBuilderRoutes from './reportBuilder.routes';
+import cohortAnalyticsRoutes from './cohortAnalytics.routes';
+import skillGapRoutes from './skillGap.routes';
+import mentorEffectivenessRoutes from './mentorEffectiveness.routes';
 import { authenticate } from '../middleware/auth.middleware';
 import { authorize } from '../middleware/role.middleware';
 import prisma from '../config/database';
@@ -69,6 +83,7 @@ router.post('/contact', async (req, res) => {
 });
 
 router.use('/auth', authRoutes);
+router.use('/auth/2fa', totpRoutes);
 router.use('/interns', internRoutes);
 router.use('/mentors', mentorRoutes);
 router.use('/departments', departmentRoutes);
@@ -80,6 +95,8 @@ router.use('/attendance', attendanceNewRoutes);
 router.use('/leave', leaveRequestRoutes);
 router.use('/messages', chatRoutes);
 router.use('/notifications', notificationRoutes);
+router.use('/notifications/push', pushSubscriptionRoutes);
+router.use('/gamification', gamificationRoutes);
 router.use('/ai', aiRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/reports', reportRoutes);
@@ -96,6 +113,18 @@ router.use('/emails', emailRoutes);
 router.use('/documents', documentRoutes);
 router.use('/placements', placementRoutes);
 router.use('/public', publicProfileRoutes);
+router.use('/organizations', organizationRoutes);
+router.use('/standups', standupRoutes);
+router.use('/digests', weeklyDigestRoutes);
+router.use('/goals', goalRoutes);
+router.use('/mock-interviews', mockInterviewRoutes);
+router.use('/calls', videoCallRoutes);
+router.use('/gdpr', gdprRoutes);
+router.use('/report-builder', reportBuilderRoutes);
+router.use('/analytics/cohorts', cohortAnalyticsRoutes);
+router.use('/skill-gap', skillGapRoutes);
+router.use('/mentor-effectiveness', mentorEffectivenessRoutes);
+
 
 /**
  * GET /api/intern/dashboard-stats

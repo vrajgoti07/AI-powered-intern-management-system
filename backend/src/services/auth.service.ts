@@ -92,7 +92,7 @@ export const registerUser = async (
 export const loginUser = async (
   email: string,
   password: string
-): Promise<AuthResponse> => {
+): Promise<AuthResponse | { requiresTOTP: true; pendingToken: string }> => {
   // Find user
   const user = await prisma.user.findUnique({
     where: { email },
@@ -139,6 +139,16 @@ export const loginUser = async (
 
   if (!isPasswordValid) {
     throw new AppError('Invalid email or password', 401);
+  }
+
+  // Intercept if TOTP is enabled
+  if (user.totpEnabled) {
+    const { generatePending2faToken } = await import('../utils/jwt');
+    const pendingToken = generatePending2faToken(user.id);
+    return {
+      requiresTOTP: true,
+      pendingToken,
+    };
   }
 
   // Generate tokens

@@ -12,8 +12,9 @@ interface AuthContextType {
 
   // Dynamic secure multi-step email OTP functions with smart session bypass
   sendLoginOtp: (email: string, pass: string) => Promise<{ success: boolean; directLogin?: boolean }>;
-  verifyLoginOtp: (email: string, pass: string, otpCode: string) => Promise<boolean>;
+  verifyLoginOtp: (email: string, pass: string, otpCode: string) => Promise<boolean | { requiresTOTP: true; pendingToken: string }>;
   logoutAll: () => Promise<boolean>;
+  verify2FA: (pendingToken: string, code: string) => Promise<boolean>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -196,10 +197,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const verifyLoginOtp = async (email: string, pass: string, otpCode: string): Promise<boolean> => {
+  const verifyLoginOtp = async (email: string, pass: string, otpCode: string): Promise<boolean | { requiresTOTP: true; pendingToken: string }> => {
     try {
       const deviceFingerprint = getDeviceFingerprint();
       const res = await api.post('/auth/verify-otp', { email, password: pass, otpCode, deviceFingerprint });
+      
+      if (res.status === 202 && res.data?.data?.requiresTOTP) {
+        return {
+          requiresTOTP: true,
+          pendingToken: res.data.data.pendingToken,
+        };
+      }
+
       if (res.data.success && res.data.data) {
         const { user: loggedInUser, accessToken, refreshToken } = res.data.data;
 
@@ -226,6 +235,40 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (err: any) {
       console.error('OTP verification failed:', err);
       const errMsg = err.response?.data?.message || err.message || 'Invalid verification passcode.';
+      toast.error(errMsg);
+      return false;
+    }
+  };
+
+  const verify2FA = async (pendingToken: string, code: string): Promise<boolean> => {
+    try {
+      const res = await api.post('/auth/2fa/verify', { pendingToken, code });
+      if (res.data.success && res.data.data) {
+        const { user: loggedInUser, accessToken, refreshToken } = res.data.data;
+
+        localStorage.setItem('internflow_access_token', accessToken);
+        localStorage.setItem('internflow_refresh_token', refreshToken);
+
+        const mappedUser: User = {
+          ...loggedInUser,
+          role: loggedInUser.role.toLowerCase() === 'department_head' ? 'mentor' : loggedInUser.role.toLowerCase(),
+          originalRole: loggedInUser.role,
+          headedDepartment: loggedInUser.headedDepartment
+        };
+
+        setUser(mappedUser);
+        localStorage.setItem('internflow_user', JSON.stringify(mappedUser));
+
+        // Reset activity tracking
+        lastActivityRef.current = Date.now();
+        lastRefreshRef.current = Date.now();
+
+        return true;
+      }
+      return false;
+    } catch (err: any) {
+      console.error('2FA verification failed:', err);
+      const errMsg = err.response?.data?.message || err.message || 'Invalid 2FA passcode.';
       toast.error(errMsg);
       return false;
     }
@@ -284,7 +327,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user, isLoading, sendLoginOtp, verifyLoginOtp, logoutAll }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user, isLoading, sendLoginOtp, verifyLoginOtp, logoutAll, verify2FA }}>
       {children}
     </AuthContext.Provider>
   );

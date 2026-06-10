@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
 import { softDeleteExtension } from '../middleware/softDeleteMiddleware';
+import { tenantExtension } from '../middleware/tenantExtension';
 
 // Base Prisma Client instance with logging
 const basePrisma = new PrismaClient({
@@ -9,8 +10,8 @@ const basePrisma = new PrismaClient({
     : ['error'],
 });
 
-// Extended Prisma Client with soft delete features
-const prisma = basePrisma.$extends(softDeleteExtension);
+// Extended Prisma Client with soft delete and multi-tenant isolation features
+const prisma = basePrisma.$extends(softDeleteExtension).$extends(tenantExtension);
 
 /**
  * Connect to PostgreSQL database with Neon branch verification

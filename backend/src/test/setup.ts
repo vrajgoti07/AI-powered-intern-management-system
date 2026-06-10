@@ -60,6 +60,17 @@ jest.mock('@bull-board/api', () => ({
   createBullBoard: () => {},
 }));
 
+jest.mock('archiver', () => {
+  return jest.fn().mockImplementation(() => {
+    return {
+      pipe: jest.fn(),
+      append: jest.fn(),
+      finalize: jest.fn(),
+      on: jest.fn(),
+    };
+  });
+});
+
 jest.mock('@bull-board/api/bullMQAdapter', () => ({
   BullMQAdapter: jest.fn().mockImplementation((queue) => {
     return {
@@ -106,34 +117,42 @@ jest.mock('../utils/email', () => ({
 // Mock config/database module using a Proxy to dynamically intercept leave.findMany calls
 jest.mock('../config/database', () => {
   const originalModule = jest.requireActual('../config/database') as any;
-  const prismaInstance = originalModule.default;
-  
-  const prismaProxy = new Proxy(prismaInstance, {
-    get(target, prop, receiver) {
-      if (prop === 'leave') {
-        const originalLeave = target.leave;
-        return new Proxy(originalLeave, {
-          get(leaveTarget, leaveProp) {
-            if (leaveProp === 'findMany') {
-              return async (args: any) => {
-                if (args && args.where && 'userId' in args.where) {
-                  return [];
-                }
-                return leaveTarget.findMany(args);
-              };
+  let prismaProxy: any = null;
+
+  const getProxy = () => {
+    if (prismaProxy) return prismaProxy;
+    const prismaInstance = originalModule.default || originalModule;
+    prismaProxy = new Proxy(prismaInstance, {
+      get(target, prop) {
+        if (prop === 'leave') {
+          const originalLeave = target.leave;
+          if (!originalLeave) return undefined;
+          return new Proxy(originalLeave, {
+            get(leaveTarget, leaveProp) {
+              if (leaveProp === 'findMany') {
+                return async (args: any) => {
+                  if (args && args.where && 'userId' in args.where) {
+                    return [];
+                  }
+                  return leaveTarget.findMany(args);
+                };
+              }
+              return Reflect.get(leaveTarget, leaveProp);
             }
-            return Reflect.get(leaveTarget, leaveProp);
-          }
-        });
+          });
+        }
+        return target[prop as keyof typeof target];
       }
-      return Reflect.get(target, prop, receiver);
-    }
-  });
-  
+    });
+    return prismaProxy;
+  };
+
   return {
     __esModule: true,
     ...originalModule,
-    default: prismaProxy,
+    get default() {
+      return getProxy();
+    }
   };
 });
 

@@ -563,3 +563,27 @@ export const sendPasswordResetOtpEmail = async (
   }
   return true;
 };
+
+/**
+ * Send Weekly Performance Digest Email
+ */
+export const sendWeeklyDigestEmail = async (
+  email: string,
+  name: string,
+  digestType: string,
+  weekRange: string,
+  metricsHtml: string,
+  aiInsight: string
+): Promise<boolean> => {
+  const html = compileTemplate('weekly-digest.html', {
+    '{{DIGEST_TYPE}}': digestType,
+    '{{WEEK_RANGE}}': weekRange,
+    '{{USER_NAME}}': name,
+    '{{METRICS_HTML}}': metricsHtml,
+    '{{AI_INSIGHT}}': aiInsight,
+    '{{DASHBOARD_URL}}': `${config.frontend.url}/login`,
+    '{{SETTINGS_URL}}': `${config.frontend.url}/shared/settings`
+  });
+
+  return await sendEmail(email, `📊 Weekly AI Performance Digest - ${weekRange}`, html);
+};

@@ -193,3 +193,111 @@ export const useMarkNotificationRead = () => {
     },
   });
 };
+
+// --- GAMIFICATION ---
+export const useGamificationStats = () => {
+  return useQuery({
+    queryKey: ['gamification', 'stats'],
+    queryFn: async () => {
+      const { data } = await api.get('/gamification/stats');
+      return data.data;
+    },
+  });
+};
+
+export const useGamificationLeaderboard = () => {
+  return useQuery({
+    queryKey: ['gamification', 'leaderboard'],
+    queryFn: async () => {
+      const { data } = await api.get('/gamification/leaderboard');
+      return data.data;
+    },
+  });
+};
+
+export const useAllBadges = () => {
+  return useQuery({
+    queryKey: ['gamification', 'badges'],
+    queryFn: async () => {
+      const { data } = await api.get('/gamification/badges');
+      return data.data;
+    },
+  });
+};
+
+// --- DAILY STANDUPS ---
+export const useTodayStandup = () => {
+  return useQuery({
+    queryKey: ['standups', 'today'],
+    queryFn: async () => {
+      const { data } = await api.get('/standups/today');
+      return data.data;
+    },
+  });
+};
+
+export const useSubmitStandup = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { yesterday: string; today: string; blockers?: string; mood: string }) => {
+      const response = await api.post('/standups/submit', data);
+      return response.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['standups', 'today'] });
+      queryClient.invalidateQueries({ queryKey: ['gamification', 'stats'] });
+    },
+  });
+};
+
+export const useStandupHistory = (page = 1, limit = 10) => {
+  return useQuery({
+    queryKey: ['standups', 'history', page, limit],
+    queryFn: async () => {
+      const { data } = await api.get('/standups/my-history', { params: { page, limit } });
+      return data.data;
+    },
+  });
+};
+
+export const useTeamStandups = (dateString?: string) => {
+  return useQuery({
+    queryKey: ['standups', 'team', dateString],
+    queryFn: async () => {
+      const { data } = await api.get('/standups/team', { params: { date: dateString } });
+      return data.data;
+    },
+  });
+};
+
+export const useStandupSettings = () => {
+  return useQuery({
+    queryKey: ['standups', 'settings'],
+    queryFn: async () => {
+      const { data } = await api.get('/standups/settings');
+      return data.data;
+    },
+  });
+};
+
+export const useUpdateStandupSettings = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: {
+      isEnabled?: boolean;
+      promptTime?: string;
+      cutoffTime?: string;
+      timezone?: string;
+      missedAlertThreshold?: number;
+      weekendsEnabled?: boolean;
+    }) => {
+      const response = await api.put('/standups/settings', data);
+      return response.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['standups', 'settings'] });
+    },
+  });
+};
+
+

@@ -32,6 +32,8 @@ async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 10);
 }
 
+let seedOrgId: string | undefined;
+
 /**
  * Upsert a user by email — safe to run repeatedly without data loss.
  */
@@ -52,6 +54,7 @@ async function upsertUser(data: {
       isEmailVerified: true,
       ...(data.departmentId && { departmentId: data.departmentId }),
       ...(data.mentorDepartmentId && { mentorDepartmentId: data.mentorDepartmentId }),
+      ...(seedOrgId && { organizationId: seedOrgId }),
     },
     create: {
       email: data.email,
@@ -62,6 +65,7 @@ async function upsertUser(data: {
       isEmailVerified: true,
       ...(data.departmentId && { departmentId: data.departmentId }),
       ...(data.mentorDepartmentId && { mentorDepartmentId: data.mentorDepartmentId }),
+      ...(seedOrgId && { organizationId: seedOrgId }),
     },
   });
 }
@@ -71,6 +75,28 @@ async function main() {
   console.log(`   Environment: ${NODE_ENV}`);
   console.log(`   Neon: ${isNeon}`);
   console.log(`   Database: ${DATABASE_URL.split('/').pop()?.split('?')[0] || 'unknown'}`);
+
+  // 0. Create Default Organization (Multi-Tenant Foundation)
+  console.log('Creating default organization...');
+  const defaultOrg = await prisma.organization.upsert({
+    where: { slug: process.env.DEFAULT_ORG_SLUG || 'default' },
+    update: {
+      name: process.env.DEFAULT_ORG_NAME || 'InternFlow',
+      isActive: true,
+    },
+    create: {
+      name: process.env.DEFAULT_ORG_NAME || 'InternFlow',
+      slug: process.env.DEFAULT_ORG_SLUG || 'default',
+      primaryColor: '#6366F1',
+      plan: 'ENTERPRISE',
+      maxInterns: 999,
+      maxMentors: 99,
+      isActive: true,
+    },
+  });
+  console.log(`✅ Default organization upserted: ${defaultOrg.name} (${defaultOrg.slug})`);
+
+  seedOrgId = defaultOrg.id;
 
   // 1. Create Department Head Users (upsert by email)
   console.log('Creating Department Head users...');
@@ -381,6 +407,115 @@ async function main() {
   console.log('  Email: vrajgoti07@gmail.com');
   console.log('  Password: intern123');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+  // 8. Create Badges (Gamification)
+  console.log('Seeding 12 Badge Templates...');
+  const badgesData = [
+    {
+      name: 'Task Rookie',
+      description: 'Awarded for completing your first project task deliverable.',
+      iconEmoji: '🚀',
+      category: 'TASKS',
+      requirement: { type: 'task_count', threshold: 1 }
+    },
+    {
+      name: 'Task Titan',
+      description: 'Awarded for successfully completing 10 project task deliverables.',
+      iconEmoji: '🏆',
+      category: 'TASKS',
+      requirement: { type: 'task_count', threshold: 10 }
+    },
+    {
+      name: 'Speed Runner',
+      description: 'Awarded for completing a task in less than 12 hours from assignment.',
+      iconEmoji: '⚡',
+      category: 'TASKS',
+      requirement: { type: 'speed_completion', maxHours: 12 }
+    },
+    {
+      name: 'Perfectionist',
+      description: 'Awarded for receiving a perfect 10/10 rating score on any task review.',
+      iconEmoji: '💯',
+      category: 'TASKS',
+      requirement: { type: 'perfect_task_score', score: 10 }
+    },
+    {
+      name: 'Early Bird',
+      description: 'Awarded for checking in before 9:00 AM on a workday.',
+      iconEmoji: '🌅',
+      category: 'ATTENDANCE',
+      requirement: { type: 'early_checkin', beforeTime: '09:00' }
+    },
+    {
+      name: 'Attendance Streak',
+      description: 'Awarded for maintaining a 5-day consecutive attendance streak.',
+      iconEmoji: '🔥',
+      category: 'ATTENDANCE',
+      requirement: { type: 'attendance_streak', threshold: 5 }
+    },
+    {
+      name: 'Dedication',
+      description: 'Awarded for maintaining a 20-day consecutive attendance streak.',
+      iconEmoji: '🌟',
+      category: 'ATTENDANCE',
+      requirement: { type: 'attendance_streak', threshold: 20 }
+    },
+    {
+      name: 'Standup Star',
+      description: 'Awarded for submitting 5 daily standup reports.',
+      iconEmoji: '📝',
+      category: 'COMMUNITY',
+      requirement: { type: 'standup_count', threshold: 5 }
+    },
+    {
+      name: 'Chatterbox',
+      description: 'Awarded for active collaboration with 50 chat messages sent.',
+      iconEmoji: '💬',
+      category: 'COMMUNITY',
+      requirement: { type: 'chat_messages_count', threshold: 50 }
+    },
+    {
+      name: 'Feedback Champion',
+      description: 'Awarded for receiving a positive mentor feedback rating score >= 8.',
+      iconEmoji: '⭐',
+      category: 'COMMUNITY',
+      requirement: { type: 'feedback_score', minScore: 8 }
+    },
+    {
+      name: 'Onboarded',
+      description: 'Awarded for completing all onboarding profile registrations and files.',
+      iconEmoji: '🎓',
+      category: 'MILESTONES',
+      requirement: { type: 'onboarding_approved' }
+    },
+    {
+      name: 'High Achiever',
+      description: 'Awarded for reaching level 5 with over 2000 total XP earned.',
+      iconEmoji: '👑',
+      category: 'MILESTONES',
+      requirement: { type: 'level_reached', level: 5 }
+    }
+  ];
+
+  for (const badge of badgesData) {
+    await prisma.badge.upsert({
+      where: { name: badge.name },
+      update: {
+        description: badge.description,
+        iconEmoji: badge.iconEmoji,
+        category: badge.category,
+        requirement: badge.requirement as any
+      },
+      create: {
+        name: badge.name,
+        description: badge.description,
+        iconEmoji: badge.iconEmoji,
+        category: badge.category,
+        requirement: badge.requirement as any
+      }
+    });
+  }
+  console.log('✅ 12 Badges templates upserted successfully!');
 }
 
 main()

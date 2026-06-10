@@ -120,6 +120,20 @@ export class FeedbackService {
       },
     });
 
+    // Award XP to the intern for received evaluation
+    try {
+      const { awardXP } = await import('./gamification.service');
+      await awardXP(
+        intern.id,
+        30, // XP_RULES.FEEDBACK_RECEIVED
+        'FEEDBACK',
+        `Received performance evaluation feedback from Mentor ${mentor.user.name}`,
+        feedback.id
+      );
+    } catch (pushErr) {
+      logger.error('Failed to award feedback XP:', pushErr);
+    }
+
     // 3. Extract and create Action Items based on AI suggestions
     const suggestions = improvementSuggestions.length > 0 
       ? improvementSuggestions 

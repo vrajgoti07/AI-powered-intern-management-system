@@ -56,4 +56,34 @@ export const handleChatSocket = (io: SocketIOServer, socket: Socket) => {
       isTyping,
     });
   });
+
+  // Jitsi Video Call event signaling (using room prefix)
+  socket.on('call:initiate', (data: { roomId: string; roomName: string; initiatedBy: any }) => {
+    socket.to(`room:${data.roomId}`).emit('call:incoming', {
+      conversationId: data.roomId,
+      roomName: data.roomName,
+      initiatedBy: data.initiatedBy,
+    });
+  });
+
+  socket.on('call:accept', (data: { roomId: string; roomName: string }) => {
+    socket.to(`room:${data.roomId}`).emit('call:accepted', {
+      conversationId: data.roomId,
+      roomName: data.roomName,
+    });
+  });
+
+  socket.on('call:decline', (data: { roomId: string; roomName: string }) => {
+    socket.to(`room:${data.roomId}`).emit('call:declined', {
+      conversationId: data.roomId,
+      roomName: data.roomName,
+    });
+  });
+
+  socket.on('call:end', (data: { roomId: string; roomName: string }) => {
+    socket.to(`room:${data.roomId}`).emit('call:ended', {
+      conversationId: data.roomId,
+      roomName: data.roomName,
+    });
+  });
 };

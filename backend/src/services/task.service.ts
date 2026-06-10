@@ -204,6 +204,11 @@ export class TaskService {
    * Update task
    */
   async updateTask(taskId: string, data: UpdateTaskData) {
+    const currentTask = await prisma.task.findUnique({
+      where: { id: taskId },
+      select: { status: true, internId: true, title: true }
+    });
+
     const task = await prisma.task.update({
       where: { id: taskId },
       data,
@@ -232,6 +237,32 @@ export class TaskService {
         },
       },
     });
+
+    if (data.status === TaskStatus.COMPLETED && currentTask && currentTask.status !== TaskStatus.COMPLETED) {
+      try {
+        const { awardXP } = await import('./gamification.service');
+        await awardXP(
+          currentTask.internId,
+          100, // XP_RULES.TASK_COMPLETED
+          'TASK',
+          `Completed project task: ${currentTask.title}`,
+          taskId
+        );
+
+        // Check for perfect score indicator (e.g. if the mentor writes "10/10" in the submission notes/comments)
+        if (task.submissionNotes && task.submissionNotes.includes('10/10')) {
+          await awardXP(
+            currentTask.internId,
+            50, // XP_RULES.PERFECT_TASK_SCORE
+            'TASK',
+            `Received a perfect 10/10 score on task: ${currentTask.title}`,
+            taskId
+          );
+        }
+      } catch (err) {
+        console.error('Failed to award task completion XP:', err);
+      }
+    }
 
     return task;
   }

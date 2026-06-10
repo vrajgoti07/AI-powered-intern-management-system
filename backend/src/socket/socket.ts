@@ -185,6 +185,41 @@ export const initSocket = (httpServer: HttpServer): SocketIOServer => {
       logger.info(`Socket ${socket.id} left mentor details room: ${mentorId}`);
     });
 
+    // Jitsi Video Call event signaling
+    socket.on('call:initiate', ({ conversationId, roomName, initiatedBy }) => {
+      if (!conversationId || !roomName) return;
+      socket.to(`conversation:${conversationId}`).emit('call:incoming', {
+        conversationId,
+        roomName,
+        initiatedBy,
+      });
+      logger.info(`Socket ${socket.id} initiated call in conversation: ${conversationId}`);
+    });
+
+    socket.on('call:accept', ({ conversationId, roomName }) => {
+      if (!conversationId || !roomName) return;
+      socket.to(`conversation:${conversationId}`).emit('call:accepted', {
+        conversationId,
+        roomName,
+      });
+    });
+
+    socket.on('call:decline', ({ conversationId, roomName }) => {
+      if (!conversationId || !roomName) return;
+      socket.to(`conversation:${conversationId}`).emit('call:declined', {
+        conversationId,
+        roomName,
+      });
+    });
+
+    socket.on('call:end', ({ conversationId, roomName }) => {
+      if (!conversationId || !roomName) return;
+      socket.to(`conversation:${conversationId}`).emit('call:ended', {
+        conversationId,
+        roomName,
+      });
+    });
+
     // 6. Handle Disconnection
     socket.on('disconnect', async () => {
       logger.info(`Socket disconnected: ${socket.id} (User: ${userId})`);

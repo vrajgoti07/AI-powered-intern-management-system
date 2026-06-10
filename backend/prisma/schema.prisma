@@ -8,6 +8,79 @@ datasource db {
   directUrl = env("DIRECT_URL")      // Direct connection for Prisma migrations
 }
 
+// ── Multi-Tenant Organization ──────────────────────────────────
+
+enum OrganizationPlan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+model Organization {
+  id           String           @id @default(uuid())
+  name         String
+  slug         String           @unique
+  logoUrl      String?
+  primaryColor String           @default("#6366F1")
+  domain       String?          @unique
+  plan         OrganizationPlan @default(FREE)
+  maxInterns   Int              @default(10)
+  maxMentors   Int              @default(3)
+  isActive     Boolean          @default(true)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  deletedAt    DateTime?
+
+  // Relations to all tenant-scoped models
+  users                  User[]
+  departments            Department[]
+  interns                Intern[]
+  mentors                Mentor[]
+  tasks                  Task[]
+  feedbacks              Feedback[]
+  announcements          Announcement[]
+  attendances            Attendance[]
+  leaves                 Leave[]
+  leaveRequests          LeaveRequest[]
+  holidays               Holiday[]
+  attendanceSettings     AttendanceSettings[]
+  conversations          Conversation[]
+  messages               Message[]
+  notifications          Notification[]
+  jobPostings            JobPosting[]
+  candidates             Candidate[]
+  interviews             Interview[]
+  chatRooms              ChatRoom[]
+  projects               Project[]
+  auditLogs              AuditLog[]
+  aiRecommendations      AIRecommendation[]
+  emailLogs              EmailLog[]
+  internDocuments        InternDocument[]
+  placements             Placement[]
+  pushSubscriptions      PushSubscription[]
+  internPoints           InternPoints[]
+  xpTransactions         XPTransaction[]
+  internBadges           InternBadge[]
+  dailyStandups          DailyStandup[]
+  standupSettings        StandupSettings?
+  goals                  Goal[]
+  mockInterviews         MockInterview[]
+  videoCalls             VideoCall[]
+  submissionVectors      SubmissionVector[]
+  skillGapAnalyses      SkillGapAnalysis[]
+  internshipBatches     InternshipBatch[]
+  savedReports          SavedReport[]
+  mentorEffectivenessHistories MentorEffectivenessHistory[]
+  dataExportRequests    DataExportRequest[]
+  erasureRequests       ErasureRequest[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@map("organizations")
+}
+
+// ── User & Auth ────────────────────────────────────────────────
+
 model User {
   id                       String                  @id @default(uuid())
   email                    String                  @unique
@@ -21,11 +94,16 @@ model User {
   resetPasswordToken       String?                 @unique
   resetPasswordTokenExpiry DateTime?
   refreshToken             String?
+  totpSecret               String?
+  totpEnabled              Boolean                 @default(false)
+  totpVerifiedAt           DateTime?
+  totpBackupCodes          String[]                @default([])
   createdAt                DateTime                @default(now())
   updatedAt                DateTime                @updatedAt
   lastLogin                DateTime?
   departmentId             String?
   mentorDepartmentId       String?
+  organizationId           String?
   headedDepartment         Department?             @relation("DepartmentHead")
   intern                   Intern?
   leaveRequests            LeaveRequest[]          @relation("UserLeaveRequests")
@@ -38,17 +116,21 @@ model User {
   publicProfileSettings    PublicProfileSettings?
   trustedSessions          TrustedSession[]
   userSessions             UserSession[]
+  pushSubscriptions        PushSubscription[]
   department               Department?             @relation("DepartmentInterns", fields: [departmentId], references: [id])
   mentorDepartment         Department?             @relation("DepartmentMentors", fields: [mentorDepartmentId], references: [id])
+  organization             Organization?           @relation(fields: [organizationId], references: [id])
   conversations            Conversation[]          @relation("ConversationParticipants")
   readMessages             Message[]               @relation("MessageReadBy")
   chatRooms                ChatRoom[]              @relation("ChatRoomMembers")
   parsedResumes            ParsedResume[]
+  initiatedCalls           VideoCall[]             @relation("InitiatedCalls")
   deletedAt                DateTime?
 
   @@index([email])
   @@index([role])
   @@index([username])
+  @@index([organizationId])
   @@map("users")
 }
 
@@ -79,10 +161,12 @@ model Department {
   colorTheme     String?              @map("color")
   isActive       Boolean              @default(true)
   headId         String?              @unique
+  organizationId String?
   createdAt      DateTime             @default(now())
   updatedAt      DateTime             @updatedAt
   activities     DepartmentActivity[]
   head           User?                @relation("DepartmentHead", fields: [headId], references: [id])
+  organization   Organization?        @relation(fields: [organizationId], references: [id])
   profileInterns Intern[]             @relation("ProfileInterns")
   jobPostings    JobPosting[]
   profileMentors Mentor[]             @relation("ProfileMentors")
@@ -92,6 +176,7 @@ model Department {
   departmentMentors DepartmentMentor[]
   deletedAt      DateTime?
 
+  @@index([organizationId])
   @@map("departments")
 }
 
@@ -106,6 +191,7 @@ model Intern {
   cgpa                Float?
   departmentId        String
   mentorId            String?
+  organizationId      String?
   status              InternStatus        @default(PENDING)
   score               Float               @default(0)
   attendance          Float               @default(0)
@@ -146,17 +232,31 @@ model Intern {
   department          Department          @relation("ProfileInterns", fields: [departmentId], references: [id])
   mentor              Mentor?             @relation(fields: [mentorId], references: [id])
   user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization        Organization?       @relation(fields: [organizationId], references: [id])
   leaves              Leave[]
   onboardingProgress  OnboardingProgress?
   tasks               Task[]
   internProjects      InternProject[]
   documents           InternDocument[]
+  points              InternPoints?
+  badges              InternBadge[]
+  xpTransactions      XPTransaction[]
+  dailyStandups       DailyStandup[]
+  goals               Goal[]
+  mockInterviews      MockInterview[]
+  cohort              String?
+  batchStartDate      DateTime?
+  batchEndDate        DateTime?
+  batchId             String?
+  batch               InternshipBatch?    @relation(fields: [batchId], references: [id])
+  skillGapAnalysis    SkillGapAnalysis?
   deletedAt           DateTime?
 
   @@index([userId])
   @@index([departmentId])
   @@index([mentorId])
   @@index([status])
+  @@index([organizationId])
   @@map("interns")
 }
 
@@ -183,6 +283,7 @@ model Mentor {
   id             String            @id @default(uuid())
   userId         String            @unique
   departmentId   String
+  organizationId String?
   rating         Float             @default(0)
   expertise      String[]          @default([])
   bio            String?
@@ -202,11 +303,14 @@ model Mentor {
   documents      MentorDocument[]
   department     Department        @relation("ProfileMentors", fields: [departmentId], references: [id])
   user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization?     @relation(fields: [organizationId], references: [id])
   tasks          Task[]
   departmentMentors DepartmentMentor[]
+  effectivenessHistories MentorEffectivenessHistory[]
 
   @@index([userId])
   @@index([departmentId])
+  @@index([organizationId])
   @@map("mentors")
 }
 
@@ -221,6 +325,12 @@ model MentorAnalytics {
   leaveApprovalsHandled Int      @default(0)
   aiMentorScore         Float?
   performanceTrend      Json?
+  effectivenessScore    Float?
+  effectivenessGrade    EffectivenessGrade?
+  internImprovementRate Float?
+  taskSuccessRate       Float?
+  atRiskRecoveryRate    Float?
+  lastCalculatedAt      DateTime?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
   mentor                Mentor   @relation(fields: [mentorId], references: [id], onDelete: Cascade)
@@ -258,149 +368,177 @@ model MentorActivity {
 }
 
 model Task {
-  id              String       @id @default(uuid())
+  id              String        @id @default(uuid())
   title           String
   description     String
   internId        String
   mentorId        String
-  priority        TaskPriority @default(MEDIUM)
-  status          TaskStatus   @default(TODO)
+  organizationId  String?
+  goalId          String?
+  isGoalTask      Boolean       @default(false)
+  priority        TaskPriority  @default(MEDIUM)
+  status          TaskStatus    @default(TODO)
   dueDate         DateTime
   submissionUrl   String?
   submittedAt     DateTime?
   submissionNotes String?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  intern          Intern       @relation(fields: [internId], references: [id], onDelete: Cascade)
-  mentor          Mentor       @relation(fields: [mentorId], references: [id])
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  intern          Intern        @relation(fields: [internId], references: [id], onDelete: Cascade)
+  mentor          Mentor        @relation(fields: [mentorId], references: [id])
+  organization    Organization? @relation(fields: [organizationId], references: [id])
+  goal            Goal?         @relation(fields: [goalId], references: [id], onDelete: SetNull)
   deletedAt       DateTime?
 
   @@index([internId])
   @@index([mentorId])
   @@index([status])
   @@index([dueDate])
+  @@index([organizationId])
+  @@index([goalId])
   @@map("tasks")
 }
 
 model Feedback {
-  id        String   @id @default(uuid())
-  internId  String
-  mentorId  String
-  rating    Int
-  comment   String
-  category  String?
-  sentiment String?
+  id             String        @id @default(uuid())
+  internId       String
+  mentorId       String
+  organizationId String?
+  rating         Int
+  comment        String
+  category       String?
+  sentiment      String?
   sentimentScore Float?
   confidenceScore Float?
-  keywords  String[] @default([])
+  keywords       String[]      @default([])
   executiveInsight String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  intern    Intern   @relation(fields: [internId], references: [id], onDelete: Cascade)
-  mentor    Mentor   @relation(fields: [mentorId], references: [id])
-  actionItems ActionItem[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  intern         Intern        @relation(fields: [internId], references: [id], onDelete: Cascade)
+  mentor         Mentor        @relation(fields: [mentorId], references: [id])
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  actionItems    ActionItem[]
 
   @@index([internId])
   @@index([mentorId])
+  @@index([organizationId])
   @@map("feedbacks")
 }
 
 model Announcement {
-  id        String               @id @default(uuid())
-  title     String
-  content   String
-  priority  AnnouncementPriority @default(MEDIUM)
-  audience  String
-  author    String
-  createdAt DateTime             @default(now())
-  updatedAt DateTime             @updatedAt
+  id             String               @id @default(uuid())
+  title          String
+  content        String
+  priority       AnnouncementPriority @default(MEDIUM)
+  audience       String
+  author         String
+  organizationId String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  organization   Organization?        @relation(fields: [organizationId], references: [id])
 
   @@index([audience])
   @@index([createdAt])
+  @@index([organizationId])
   @@map("announcements")
 }
 
 model Attendance {
-  id           String    @id @default(uuid())
-  internId     String
-  date         DateTime  @db.Date
-  checkIn      DateTime?
-  checkOut     DateTime?
-  status       String    @default("ABSENT")
-  workingHours Float?
-  lateMinutes  Int?
-  markedBy     String?
-  deviceInfo   String?
-  ipAddress    String?
-  notes        String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  intern       Intern    @relation(fields: [internId], references: [id], onDelete: Cascade)
+  id             String        @id @default(uuid())
+  internId       String
+  organizationId String?
+  date           DateTime      @db.Date
+  checkIn        DateTime?
+  checkOut       DateTime?
+  status         String        @default("ABSENT")
+  workingHours   Float?
+  lateMinutes    Int?
+  markedBy       String?
+  deviceInfo     String?
+  ipAddress      String?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  intern         Intern        @relation(fields: [internId], references: [id], onDelete: Cascade)
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
   @@unique([internId, date])
   @@index([internId])
   @@index([date])
+  @@index([organizationId])
   @@map("attendances")
 }
 
 model Leave {
-  id              String      @id @default(uuid())
+  id              String        @id @default(uuid())
   internId        String
+  organizationId  String?
   type            LeaveType
-  startDate       DateTime    @db.Date
-  endDate         DateTime    @db.Date
+  startDate       DateTime      @db.Date
+  endDate         DateTime      @db.Date
   reason          String
-  status          LeaveStatus @default(PENDING)
+  status          LeaveStatus   @default(PENDING)
   approvedBy      String?
   approvedAt      DateTime?
   rejectionReason String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  intern          Intern      @relation(fields: [internId], references: [id], onDelete: Cascade)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  intern          Intern        @relation(fields: [internId], references: [id], onDelete: Cascade)
+  organization    Organization? @relation(fields: [organizationId], references: [id])
 
   @@index([internId])
   @@index([status])
   @@index([startDate])
+  @@index([organizationId])
   @@map("leaves")
 }
 
 model LeaveRequest {
-  id        String   @id @default(uuid())
-  userId    String
-  mentorId  String?
-  hrId      String?
-  leaveType String
-  reason    String
-  startDate DateTime @db.Date
-  endDate   DateTime @db.Date
-  status    String   @default("Pending Mentor")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation("UserLeaveRequests", fields: [userId], references: [id], onDelete: Cascade)
+  id             String        @id @default(uuid())
+  userId         String
+  mentorId       String?
+  hrId           String?
+  organizationId String?
+  leaveType      String
+  reason         String
+  startDate      DateTime      @db.Date
+  endDate        DateTime      @db.Date
+  status         String        @default("Pending Mentor")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  user           User          @relation("UserLeaveRequests", fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
   @@index([userId])
   @@index([status])
+  @@index([organizationId])
   @@map("leave_requests")
 }
 
 model Holiday {
-  id    String   @id @default(uuid())
-  title String
-  date  DateTime @unique @db.Date
-  type  String   @default("NATIONAL")
+  id             String        @id @default(uuid())
+  title          String
+  date           DateTime      @unique @db.Date
+  type           String        @default("NATIONAL")
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
+  @@index([organizationId])
   @@map("holidays")
 }
 
 model AttendanceSettings {
-  id                  String   @id @default(uuid())
-  internshipStartDate DateTime @db.Date
-  internshipEndDate   DateTime @db.Date
-  lateThreshold       String   @default("09:15")
-  attendanceCloseTime String   @default("18:00")
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id                  String        @id @default(uuid())
+  organizationId      String?
+  internshipStartDate DateTime      @db.Date
+  internshipEndDate   DateTime      @db.Date
+  lateThreshold       String        @default("09:15")
+  attendanceCloseTime String        @default("18:00")
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  organization        Organization? @relation(fields: [organizationId], references: [id])
 
+  @@index([organizationId])
   @@map("attendance_settings")
 }
 
@@ -418,88 +556,109 @@ model TaskComment {
 }
 
 model TaskFile {
-  id         String   @id @default(uuid())
-  taskId     String
-  fileName   String
-  fileUrl    String
-  fileType   String
-  fileSize   Int
-  uploadedBy String
-  createdAt  DateTime @default(now())
+  id                     String      @id @default(uuid())
+  taskId                 String
+  fileName               String
+  fileUrl                String
+  fileType               String
+  fileSize               Int
+  uploadedBy             String
+  createdAt              DateTime    @default(now())
+  extractedText          String?     @db.Text
+  similarityScore        Float?
+  mostSimilarTaskId      String?
+  aiGeneratedProbability Float?
+  trustScore             Int?
+  trustLevel             TrustLevel?
+  analysisCompletedAt    DateTime?
 
   @@index([taskId])
   @@map("task_files")
 }
 
 model Conversation {
-  id           String    @id @default(uuid())
-  name         String?
-  isGroup      Boolean   @default(false)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  messages     Message[]
-  participants User[]    @relation("ConversationParticipants")
+  id             String        @id @default(uuid())
+  name           String?
+  isGroup        Boolean       @default(false)
+  organizationId String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  messages       Message[]
+  participants   User[]        @relation("ConversationParticipants")
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  videoCalls     VideoCall[]
 
+  @@index([organizationId])
   @@map("conversations")
 }
 
 model Message {
-  id             String       @id @default(uuid())
+  id             String        @id @default(uuid())
   conversationId String
   senderId       String
+  organizationId String?
   content        String
   fileUrl        String?
   fileName       String?
   fileType       String?
   fileSize       Int?
   metadata       Json?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender         User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
-  readBy         User[]       @relation("MessageReadBy")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User          @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  readBy         User[]        @relation("MessageReadBy")
 
   @@index([conversationId])
   @@index([senderId])
+  @@index([organizationId])
   @@map("messages")
 }
 
 model Notification {
-  id        String   @id @default(uuid())
-  userId    String
-  title     String
-  message   String
-  type      String
-  isRead    Boolean  @default(false)
-  data      Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String        @id @default(uuid())
+  userId         String
+  organizationId String?
+  title          String
+  message        String
+  type           String
+  isRead         Boolean       @default(false)
+  data           Json?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
   @@index([userId])
   @@index([isRead])
   @@index([createdAt])
+  @@index([organizationId])
   @@map("notifications")
 }
 
 model JobPosting {
-  id           String      @id @default(uuid())
-  title        String
-  description  String
-  departmentId String
-  isActive     Boolean     @default(true)
-  requirements String[]
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  candidates   Candidate[]
-  department   Department  @relation(fields: [departmentId], references: [id])
+  id             String        @id @default(uuid())
+  title          String
+  description    String
+  departmentId   String
+  organizationId String?
+  isActive       Boolean       @default(true)
+  requirements   String[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  candidates     Candidate[]
+  department     Department    @relation(fields: [departmentId], references: [id])
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
+  @@index([organizationId])
   @@map("job_postings")
 }
 
 model Candidate {
   id               String            @id @default(uuid())
   jobPostingId     String
+  organizationId   String?
   firstName        String
   lastName         String
   email            String            @unique
@@ -513,23 +672,28 @@ model Candidate {
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   jobPosting       JobPosting        @relation(fields: [jobPostingId], references: [id])
+  organization     Organization?     @relation(fields: [organizationId], references: [id])
   interviews       Interview[]
 
+  @@index([organizationId])
   @@map("candidates")
 }
 
 model Interview {
-  id            String    @id @default(uuid())
-  candidateId   String
-  interviewerId String
-  scheduledAt   DateTime
-  meetingLink   String?
-  feedback      String?
-  score         Int?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  candidate     Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  id             String        @id @default(uuid())
+  candidateId    String
+  organizationId String?
+  interviewerId  String
+  scheduledAt    DateTime
+  meetingLink    String?
+  feedback       String?
+  score          Int?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  candidate      Candidate     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
+  @@index([organizationId])
   @@map("interviews")
 }
 
@@ -585,6 +749,7 @@ model NotificationPreference {
   leaveAlerts        Boolean @default(true)
   taskAlerts         Boolean @default(true)
   announcementAlerts Boolean @default(true)
+  weeklyDigest       Boolean @default(true)
   user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notification_preferences")
@@ -610,18 +775,21 @@ model TrustedSession {
 }
 
 model Project {
-  id           String          @id @default(uuid())
-  title        String
-  description  String?
-  status       String          @default("ACTIVE")
-  departmentId String
-  startDate    DateTime?       @db.Date
-  endDate      DateTime?       @db.Date
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-  department   Department      @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  interns      InternProject[]
+  id             String          @id @default(uuid())
+  title          String
+  description    String?
+  status         String          @default("ACTIVE")
+  departmentId   String
+  organizationId String?
+  startDate      DateTime?       @db.Date
+  endDate        DateTime?       @db.Date
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  department     Department      @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  organization   Organization?   @relation(fields: [organizationId], references: [id])
+  interns        InternProject[]
 
+  @@index([organizationId])
   @@map("projects")
 }
 
@@ -698,11 +866,14 @@ enum ApplicationStatus {
 }
 
 model ChatRoom {
-  id        String   @id @default(uuid())
-  name      String?
-  createdAt DateTime @default(now())
-  members   User[]   @relation("ChatRoomMembers")
+  id             String        @id @default(uuid())
+  name           String?
+  organizationId String?
+  createdAt      DateTime      @default(now())
+  members        User[]        @relation("ChatRoomMembers")
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
+  @@index([organizationId])
   @@map("chat_rooms")
 }
 
@@ -717,29 +888,35 @@ model ChatMessage {
 }
 
 model AuditLog {
-  id        String   @id @default(uuid())
-  userId    String?
-  action    String
-  entity    String
-  entityId  String
-  metadata  Json?
-  ipAddress String?
-  createdAt DateTime @default(now())
+  id             String        @id @default(uuid())
+  userId         String?
+  organizationId String?
+  action         String
+  entity         String
+  entityId       String
+  metadata       Json?
+  ipAddress      String?
+  createdAt      DateTime      @default(now())
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
+  @@index([organizationId])
   @@map("audit_logs")
 }
 
 model AIRecommendation {
-  id         String   @id @default(uuid())
-  internId   String
-  mentorId   String
-  matchScore Float
-  confidence String
-  reasons    Json
-  status     String   @default("pending")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id             String        @id @default(uuid())
+  internId       String
+  mentorId       String
+  organizationId String?
+  matchScore     Float
+  confidence     String
+  reasons        Json
+  status         String        @default("pending")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
+  @@index([organizationId])
   @@map("ai_recommendations")
 }
 
@@ -773,35 +950,41 @@ model InternProject {
 }
 
 model EmailLog {
-  id           String   @id @default(uuid())
-  to           String
-  subject      String
-  status       String   @default("PENDING") // PENDING, SENT, FAILED
-  error        String?
-  attempts     Int      @default(0)
-  templateName String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             String        @id @default(uuid())
+  to             String
+  subject        String
+  organizationId String?
+  status         String        @default("PENDING") // PENDING, SENT, FAILED
+  error          String?
+  attempts       Int           @default(0)
+  templateName   String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
   @@index([status])
   @@index([to])
+  @@index([organizationId])
   @@map("email_logs")
 }
 
 model InternDocument {
-  id         String   @id @default(uuid())
-  internId   String
-  type       String   // 'CERTIFICATE', 'OFFER_LETTER', 'PERFORMANCE_REPORT'
-  name       String   // e.g., "Certificate of Completion", "Monthly Report - May 2026"
-  url        String   // Cloudinary URL
-  publicId   String   // Cloudinary public ID
-  metadata   Json?    // Optional metadata (e.g., month/year for reports)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  intern     Intern   @relation(fields: [internId], references: [id], onDelete: Cascade)
+  id             String        @id @default(uuid())
+  internId       String
+  organizationId String?
+  type           String   // 'CERTIFICATE', 'OFFER_LETTER', 'PERFORMANCE_REPORT'
+  name           String   // e.g., "Certificate of Completion", "Monthly Report - May 2026"
+  url            String   // Cloudinary URL
+  publicId       String   // Cloudinary public ID
+  metadata       Json?    // Optional metadata (e.g., month/year for reports)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  intern         Intern        @relation(fields: [internId], references: [id], onDelete: Cascade)
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
   @@index([internId])
   @@index([type])
+  @@index([organizationId])
   @@map("intern_documents")
 }
 
@@ -827,22 +1010,25 @@ model ParsedResume {
 }
 
 model Placement {
-  id              String   @id @default(uuid())
-  internId        String   @map("intern_id")
-  internName      String   @map("intern_name")
-  mentorId        String   @map("mentor_id")
-  mentorName      String   @map("mentor_name")
+  id              String        @id @default(uuid())
+  internId        String        @map("intern_id")
+  internName      String        @map("intern_name")
+  mentorId        String        @map("mentor_id")
+  mentorName      String        @map("mentor_name")
+  organizationId  String?       @map("organization_id")
   department      String
-  matchScore      Float    @map("match_score")
-  confidenceLevel String   @map("confidence_level")
-  appliedBy       String   @map("applied_by")
-  appliedAt       DateTime @default(now()) @map("applied_at")
-  status          String   @default("Pending") // Pending | Confirmed | Revoked
-  undoDeadline    DateTime @map("undo_deadline")
-  emailSent       Boolean  @default(false) @map("email_sent")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  matchScore      Float         @map("match_score")
+  confidenceLevel String        @map("confidence_level")
+  appliedBy       String        @map("applied_by")
+  appliedAt       DateTime      @default(now()) @map("applied_at")
+  status          String        @default("Pending") // Pending | Confirmed | Revoked
+  undoDeadline    DateTime      @map("undo_deadline")
+  emailSent       Boolean       @default(false) @map("email_sent")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  organization    Organization? @relation(fields: [organizationId], references: [id])
 
+  @@index([organizationId])
   @@map("placements")
 }
 
@@ -874,3 +1060,427 @@ model ActionItem {
   @@index([mentorId])
   @@map("action_items")
 }
+
+model PushSubscription {
+  id             String        @id @default(uuid())
+  userId         String
+  organizationId String?
+  endpoint       String        @unique
+  p256dhKey      String
+  authKey        String
+  deviceName     String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([userId])
+  @@index([organizationId])
+  @@map("push_subscriptions")
+}
+
+model InternPoints {
+  id             String        @id @default(uuid())
+  internId       String        @unique
+  organizationId String?
+  totalXP        Int           @default(0)
+  currentWeekXP  Int           @default(0)
+  currentStreak  Int           @default(0)
+  longestStreak  Int           @default(0)
+  level          Int           @default(1)
+  weeklyRank     Int?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  intern         Intern        @relation(fields: [internId], references: [id], onDelete: Cascade)
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+  @@map("intern_points")
+}
+
+model XPTransaction {
+  id             String        @id @default(uuid())
+  internId       String
+  organizationId String?
+  points         Int
+  reason         String
+  sourceType     String        // "TASK" | "ATTENDANCE" | "FEEDBACK" | "STANDUP" | "ONBOARDING" | "BONUS" | "PENALTY"
+  sourceId       String?
+  createdAt      DateTime      @default(now())
+  intern         Intern        @relation(fields: [internId], references: [id], onDelete: Cascade)
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([internId])
+  @@index([organizationId])
+  @@map("xp_transactions")
+}
+
+model Badge {
+  id          String        @id @default(uuid())
+  name        String        @unique
+  description String
+  iconEmoji   String
+  category    String        // "TASKS" | "ATTENDANCE" | "COMMUNITY" | "MILESTONES"
+  requirement Json          // Requirements config e.g. { "type": "task_count", "threshold": 10 }
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  interns     InternBadge[]
+
+  @@map("badges")
+}
+
+model InternBadge {
+  id             String        @id @default(uuid())
+  internId       String
+  badgeId        String
+  organizationId String?
+  earnedAt       DateTime      @default(now())
+  intern         Intern        @relation(fields: [internId], references: [id], onDelete: Cascade)
+  badge          Badge         @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@unique([internId, badgeId])
+  @@index([internId])
+  @@index([organizationId])
+  @@map("intern_badges")
+}
+
+model DailyStandup {
+  id             String        @id @default(uuid())
+  internId       String
+  organizationId String?
+  date           DateTime      @db.Date
+  yesterday      String        @db.Text
+  today          String        @db.Text
+  blockers       String?       @db.Text
+  mood           String        // "GREAT" | "GOOD" | "OKAY" | "STRUGGLING"
+  submittedAt    DateTime?
+  isLate         Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  intern         Intern        @relation(fields: [internId], references: [id], onDelete: Cascade)
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@unique([internId, date])
+  @@index([internId])
+  @@index([organizationId])
+  @@index([date])
+  @@map("daily_standups")
+}
+
+model StandupSettings {
+  id                   String        @id @default(uuid())
+  organizationId       String        @unique
+  isEnabled            Boolean       @default(true)
+  promptTime           String        @default("09:00") // HH:MM
+  cutoffTime           String        @default("11:30") // HH:MM
+  timezone             String        @default("UTC")
+  missedAlertThreshold Int           @default(3)
+  weekendsEnabled      Boolean       @default(false)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  organization         Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("standup_settings")
+}
+
+// ── Goals ──────────────────────────────────────────────────────
+
+enum GoalStatus {
+  IN_PROGRESS
+  ACHIEVED
+  PARTIALLY_ACHIEVED
+  NOT_ACHIEVED
+}
+
+model Goal {
+  id               String        @id @default(uuid())
+  internId         String
+  organizationId   String?
+  title            String        @db.VarChar(500)
+  description      String?       @db.Text
+  weekStartDate    DateTime      @db.Date
+  weekEndDate      DateTime      @db.Date
+  status           GoalStatus    @default(IN_PROGRESS)
+  aiEvaluation     String?       @db.Text
+  completionRate   Float?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  intern           Intern        @relation(fields: [internId], references: [id], onDelete: Cascade)
+  organization     Organization? @relation(fields: [organizationId], references: [id])
+  tasks            Task[]
+
+  @@index([internId])
+  @@index([organizationId])
+  @@index([weekStartDate])
+  @@index([status])
+  @@map("goals")
+}
+
+// ── Mock Interviews ──────────────────────────────────────────────
+
+enum InterviewStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+enum ReadinessLevel {
+  READY
+  NEARLY_READY
+  NEEDS_PRACTICE
+}
+
+enum QuestionType {
+  TECHNICAL
+  BEHAVIORAL
+  SITUATIONAL
+}
+
+model MockInterview {
+  id              String                  @id @default(uuid())
+  internId        String
+  organizationId  String?
+  jobRole         String
+  status          InterviewStatus         @default(IN_PROGRESS)
+  overallScore    Float?
+  readinessLevel  ReadinessLevel?
+  aiSummary       String?                 @db.Text
+  completedAt     DateTime?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  intern          Intern                  @relation(fields: [internId], references: [id], onDelete: Cascade)
+  organization    Organization?           @relation(fields: [organizationId], references: [id])
+  questions       MockInterviewQuestion[]
+
+  @@index([internId])
+  @@index([organizationId])
+  @@index([status])
+  @@map("mock_interviews")
+}
+
+model MockInterviewQuestion {
+  id             String        @id @default(uuid())
+  interviewId    String
+  questionNumber Int
+  questionText   String        @db.Text
+  questionType   QuestionType
+  internAnswer   String?       @db.Text
+  aiFeedback     String?       @db.Text
+  score          Int?          // 0 to 20
+  answeredAt     DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  interview      MockInterview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@index([interviewId])
+  @@map("mock_interview_questions")
+}
+
+enum VideoCallStatus {
+  ACTIVE
+  ENDED
+  MISSED
+}
+
+model VideoCall {
+  id              String          @id @default(uuid())
+  organizationId  String?
+  roomName        String          @unique
+  initiatedById   String
+  conversationId  String?
+  participants    String[]        @default([])
+  startedAt       DateTime        @default(now())
+  endedAt         DateTime?
+  durationSeconds Int?
+  status          VideoCallStatus @default(ACTIVE)
+  createdAt       DateTime        @default(now())
+
+  // Relations
+  initiatedBy     User            @relation("InitiatedCalls", fields: [initiatedById], references: [id])
+  organization    Organization?   @relation(fields: [organizationId], references: [id])
+  conversation    Conversation?   @relation(fields: [conversationId], references: [id])
+
+  @@map("video_calls")
+}
+
+// ── Plagiarism & AI Detection (Feature #7) ─────────────────────────
+
+enum TrustLevel {
+  TRUSTED
+  SUSPICIOUS
+  FLAGGED
+}
+
+model SubmissionVector {
+  id             String        @id @default(uuid())
+  taskFileId     String        @unique
+  taskId         String
+  organizationId String?
+  vector         Json          // High-dimensional vector float array
+  createdAt      DateTime      @default(now())
+
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@map("submission_vectors")
+}
+
+// ── Skill Gap Analysis (Feature #8) ───────────────────────────────
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+model DepartmentSkillRequirement {
+  id             String        @id @default(uuid())
+  departmentId   String
+  skillName      String
+  requiredLevel  SkillLevel    @default(BEGINNER)
+  category       String        // "Technical" | "Soft Skills" | "Tools"
+  isRequired     Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@map("department_skill_requirements")
+}
+
+model SkillGapAnalysis {
+  id             String        @id @default(uuid())
+  internId       String        @unique
+  organizationId String?
+  matchPercentage Float
+  analysisData   Json          // radar chart data
+  recommendations Json         // recommended learning resource links list
+  generatedAt    DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  intern         Intern        @relation(fields: [internId], references: [id], onDelete: Cascade)
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@map("skill_gap_analyses")
+}
+
+// ── Cohort Comparison (Feature #9) ──────────────────────────────────
+
+model InternshipBatch {
+  id             String        @id @default(uuid())
+  organizationId String?
+  name           String
+  startDate      DateTime
+  endDate        DateTime
+  description    String?       @db.Text
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  interns        Intern[]
+
+  @@map("internship_batches")
+}
+
+// ── Custom Report Builder (Feature #10) ───────────────────────────
+
+model SavedReport {
+  id               String        @id @default(uuid())
+  organizationId   String?
+  createdBy        String
+  name             String
+  description      String?       @db.Text
+  selectedColumns  Json          // string array of selected columns
+  filters          Json          // filter criteria
+  sortBy           String?
+  sortOrder        String        @default("DESC") // "ASC" | "DESC"
+  lastGeneratedAt  DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  organization     Organization? @relation(fields: [organizationId], references: [id])
+
+  @@map("saved_reports")
+}
+
+// ── Mentor Effectiveness Score (Feature #11) ──────────────────────
+
+enum EffectivenessGrade {
+  EXCELLENT
+  GOOD
+  AVERAGE
+  NEEDS_IMPROVEMENT
+}
+
+model MentorEffectivenessHistory {
+  id             String        @id @default(uuid())
+  mentorId       String
+  organizationId String?
+  score          Float
+  grade          EffectivenessGrade
+  calculatedAt   DateTime      @default(now())
+  snapshot       Json          // full snapshot details
+
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  mentor         Mentor        @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+
+  @@map("mentor_effectiveness_histories")
+}
+
+// ── GDPR Data Export & Erasure (Feature #17) ─────────────────────
+
+enum ExportRequestStatus {
+  PENDING
+  PROCESSING
+  READY
+  DOWNLOADED
+  EXPIRED
+}
+
+enum GDPRRequestType {
+  EXPORT
+  ERASURE
+}
+
+enum ErasureRequestStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  COMPLETED
+  REJECTED
+}
+
+model DataExportRequest {
+  id             String              @id @default(uuid())
+  userId         String
+  organizationId String?
+  status         ExportRequestStatus @default(PENDING)
+  requestType    GDPRRequestType     @default(EXPORT)
+  fileUrl        String?
+  expiresAt      DateTime?
+  processedAt    DateTime?
+  downloadedAt   DateTime?
+  createdAt      DateTime            @default(now())
+
+  organization   Organization?       @relation(fields: [organizationId], references: [id])
+
+  @@map("data_export_requests")
+}
+
+model ErasureRequest {
+  id             String               @id @default(uuid())
+  userId         String
+  organizationId String?
+  status         ErasureRequestStatus @default(PENDING)
+  reason         String?              @db.Text
+  confirmedAt    DateTime?
+  processedAt    DateTime?
+  processedBy    String?
+  createdAt      DateTime             @default(now())
+
+  organization   Organization?        @relation(fields: [organizationId], references: [id])
+
+  @@map("erasure_requests")
+}
+

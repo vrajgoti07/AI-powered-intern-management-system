@@ -27,7 +27,7 @@ const getDashboardPath = (role: string): string => {
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, sendLoginOtp, verifyLoginOtp, isAuthenticated } = useAuth();
+  const { user, sendLoginOtp, verifyLoginOtp, verify2FA, isAuthenticated } = useAuth();
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -50,6 +50,11 @@ export const LoginPage: React.FC = () => {
   const [otpInputs, setOtpInputs] = useState<string[]>(['', '', '', '', '', '']);
   const [expiryTime, setExpiryTime] = useState(300); // 5 mins
   const [resendCooldown, setResendCooldown] = useState(0); // 30s cooldown
+
+  // TOTP 2FA Stage States
+  const [isTotpStage, setIsTotpStage] = useState(false);
+  const [pending2faToken, setPending2faToken] = useState('');
+  const [totpInputs, setTotpInputs] = useState<string[]>(['', '', '', '', '', '']);
 
   // OTP expiry countdown
   useEffect(() => {
@@ -186,7 +191,83 @@ export const LoginPage: React.FC = () => {
     const loadingToast = toast.loading("Verifying passcode...");
 
     try {
-      const success = await verifyLoginOtp(email, password, otpCode);
+      const res = await verifyLoginOtp(email, password, otpCode);
+      toast.dismiss(loadingToast);
+
+      if (res) {
+        if (typeof res === 'object' && 'requiresTOTP' in res) {
+          // Transition to 2FA stage
+          toast.success("Passcode verified. Two-Factor Authentication required.");
+          setPending2faToken(res.pendingToken);
+          setIsTotpStage(true);
+          setTotpInputs(['', '', '', '', '', '']);
+          setTimeout(() => {
+            document.getElementById('totp-input-0')?.focus();
+          }, 100);
+        } else {
+          redirectAfterLogin();
+        }
+      }
+    } catch {
+      toast.dismiss(loadingToast);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // TOTP inputs change
+  const handleTotpChange = (value: string, index: number) => {
+    if (value && !/^\d$/.test(value)) return;
+
+    const newInputs = [...totpInputs];
+    newInputs[index] = value;
+    setTotpInputs(newInputs);
+
+    // Auto focus next
+    if (value && index < 5) {
+      const nextInput = document.getElementById(`totp-input-${index + 1}`);
+      nextInput?.focus();
+    }
+  };
+
+  const handleTotpKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === 'Backspace') {
+      if (!totpInputs[index] && index > 0) {
+        const prevInput = document.getElementById(`totp-input-${index - 1}`);
+        prevInput?.focus();
+      }
+    }
+  };
+
+  const handleTotpPaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (!pastedData) return;
+
+    const newInputs = [...totpInputs];
+    for (let i = 0; i < 6; i++) {
+      newInputs[i] = pastedData[i] || '';
+    }
+    setTotpInputs(newInputs);
+
+    const focusIndex = Math.min(pastedData.length, 5);
+    const nextInput = document.getElementById(`totp-input-${focusIndex}`);
+    nextInput?.focus();
+  };
+
+  const handleTotpVerifySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = totpInputs.join('');
+    if (code.length !== 6) {
+      toast.error('Please enter the complete 6-digit Authenticator code.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    const loadingToast = toast.loading("Verifying 2FA code...");
+
+    try {
+      const success = await verify2FA(pending2faToken, code);
       toast.dismiss(loadingToast);
 
       if (success) {
@@ -250,7 +331,7 @@ export const LoginPage: React.FC = () => {
         <div className="flex-1 flex flex-col justify-center px-5 sm:px-8 md:px-16 lg:px-24 xl:px-32 py-10 items-center">
           <div className="w-full max-w-md space-y-8">
 
-            {!isOtpStage ? (
+            {!isOtpStage && !isTotpStage ? (
               <>
                 <div className="space-y-2.5">
                   <h2 className="text-3xl font-black text-slate-900 tracking-tight leading-tight">Welcome Back</h2>
@@ -310,6 +391,58 @@ export const LoginPage: React.FC = () => {
                   </button>
                 </form>
               </>
+            ) : isTotpStage ? (
+              <>
+                <div className="space-y-2.5">
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tight leading-tight">Two-Factor Authentication</h2>
+                  <p className="text-sm font-semibold text-slate-400 leading-relaxed">
+                    Please open your Authenticator app and enter the 6-digit verification code.
+                  </p>
+                </div>
+
+                {/* TOTP 2FA verification form */}
+                <form onSubmit={handleTotpVerifySubmit} className="space-y-6 text-left animate-fade-in">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Authenticator Code</label>
+                    <div className="flex gap-2 justify-between" onPaste={handleTotpPaste}>
+                      {totpInputs.map((val, idx) => (
+                        <input
+                          key={idx}
+                          id={`totp-input-${idx}`}
+                          type="text"
+                          maxLength={1}
+                          inputMode="numeric"
+                          value={val}
+                          onChange={(e) => handleTotpChange(e.target.value, idx)}
+                          onKeyDown={(e) => handleTotpKeyDown(e, idx)}
+                          className="w-12 h-12 text-center text-lg font-bold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 focus:bg-white transition-all text-slate-800 text-base"
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3.5 pt-2">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full px-6 py-4 text-sm font-black uppercase tracking-wider text-white bg-[#2563eb] hover:bg-blue-700 rounded-xl transition-all shadow-lg shadow-blue-200/50 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed min-h-[44px]"
+                    >
+                      {isSubmitting ? 'Verifying...' : 'Verify Code & Enter'}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsTotpStage(false);
+                        setIsOtpStage(false);
+                      }}
+                      className="w-full py-3 text-xs font-extrabold text-slate-400 hover:text-slate-600 transition-colors cursor-pointer text-center min-h-[44px]"
+                    >
+                      Back to login
+                    </button>
+                  </div>
+                </form>
+              </>
             ) : (
               <>
                 <div className="space-y-2.5">
@@ -330,10 +463,11 @@ export const LoginPage: React.FC = () => {
                           id={`otp-input-${idx}`}
                           type="text"
                           maxLength={1}
+                          inputMode="numeric"
                           value={val}
                           onChange={(e) => handleOtpChange(e.target.value, idx)}
                           onKeyDown={(e) => handleOtpKeyDown(e, idx)}
-                          className="w-12 h-12 text-center text-lg font-bold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 focus:bg-white transition-all text-slate-800"
+                          className="w-12 h-12 text-center text-lg font-bold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 focus:bg-white transition-all text-slate-800 text-base"
                         />
                       ))}
                     </div>

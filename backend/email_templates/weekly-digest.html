@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    @media (max-width: 600px) {
+      .container { width: 100% !important; padding: 16px !important; }
+      .stat-table { width: 100% !important; }
+      .cta-button { width: 100% !important; display: block !important; text-align: center !important; }
+      .two-col { display: block !important; width: 100% !important; }
+    }
+  </style>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #334155; background-color: #f8fafc; margin: 0; padding: 0; -webkit-font-smoothing: antialiased;">
+  <div style="background-color: #f8fafc; padding: 40px 20px;">
+    <div class="container" style="max-width: 580px; margin: 0 auto; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03); background-color: #ffffff; border: 1px solid #e2e8f0;">
+      <div style="height: 6px; background: #4f46e5;"></div>
+      
+      <!-- Header -->
+      <div style="padding: 35px 40px 25px 40px; border-bottom: 1px solid #f1f5f9;">
+        <div style="float: right; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 6px;">{{DIGEST_TYPE}}</div>
+        <div style="font-size: 20px; font-weight: 800; color: #0f172a; letter-spacing: -0.03em;">InternFlow<span style="color: #4f46e5; font-size: 24px; line-height: 0; margin-left: 2px;">•</span></div>
+        <div style="clear: both;"></div>
+      </div>
+      
+      <!-- Content -->
+      <div style="padding: 40px 40px;">
+        <h2 style="font-size: 22px; font-weight: 800; color: #0f172a; margin-top: 0; margin-bottom: 8px; letter-spacing: -0.02em;">Weekly Performance Digest</h2>
+        <p style="margin: 0 0 24px 0; color: #64748b; font-size: 14px; font-weight: 500;">{{WEEK_RANGE}}</p>
+        
+        <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">
+          Hi <strong>{{USER_NAME}}</strong>, here is your personalized weekly summary and growth analysis for your internship cohort workspace:
+        </p>
+
+        <!-- Stats Section -->
+        <h3 style="font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #4f46e5; margin: 0 0 12px 0;">Weekly Metrics Overview</h3>
+        <div style="background-color: #f8fafc; border-radius: 12px; padding: 16px; margin-bottom: 24px; border: 1px solid #f1f5f9;">
+          {{METRICS_HTML}}
+        </div>
+
+        <!-- AI Insight Box -->
+        <h3 style="font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #4f46e5; margin: 0 0 12px 0;">AI Insights & Actionable Feedback</h3>
+        <div style="border-left: 3px solid #6366f1; padding: 16px; background-color: #f5f3ff; border-radius: 0 12px 12px 0; margin-bottom: 24px;">
+          <p style="margin: 0; color: #4f46e5; font-size: 14px; font-style: italic; line-height: 1.6; font-weight: 500;">
+            {{AI_INSIGHT}}
+          </p>
+        </div>
+
+        <!-- CTA Button -->
+        <div style="text-align: center; margin: 32px 0 12px 0;">
+          <a class="cta-button" href="{{DASHBOARD_URL}}" style="display: inline-block; padding: 14px 32px; background-color: #4f46e5; color: #ffffff !important; text-decoration: none !important; border-radius: 12px; font-weight: 700; text-align: center; font-size: 14px; letter-spacing: -0.01em; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);">
+            Access Dashboard Portal
+          </a>
+        </div>
+      </div>
+      
+      <!-- Footer -->
+      <div style="text-align: center; padding: 30px 40px; background-color: #f8fafc; color: #94a3b8; font-size: 12px; border-top: 1px solid #f1f5f9;">
+        <p style="margin: 0 0 8px 0; font-size: 12px; color: #94a3b8; font-weight: 500;">
+          This email was compiled dynamically using live workspace telemetry.
+        </p>
+        <p style="margin: 0; font-size: 11px; color: #94a3b8; font-weight: 400;">
+          To stop receiving these weekly emails, you can update your notification preferences inside your workspace <a href="{{SETTINGS_URL}}" style="color: #4f46e5; text-decoration: underline;">Settings</a>.
+        </p>
+        <div style="height: 1px; background-color: #e2e8f0; margin: 20px 0;"></div>
+        <p style="margin: 0; font-size: 11px; color: #cbd5e1; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+          © 2026 InternFlow Inc. · One Hacker Way · Palo Alto, CA
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

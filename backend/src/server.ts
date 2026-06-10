@@ -19,6 +19,7 @@ import { initSocket } from './socket/socket';
 import { initSimpleSocket } from './socket/index';
 import './queues/notification.worker';
 import './queues/workers/email.worker';
+import './queues/workers/submission.worker';
 import { startScheduledJobs } from './jobs/scheduledJobs';
 import { emailService } from './services/email.service';
 

@@ -736,6 +736,50 @@ export class AIService {
       return results;
     }
   }
+
+  /**
+   * General text completion generator (GPT-4o-mini).
+   * Attempts OpenAI direct API if key is set, otherwise calls Python AI service, otherwise throws to allow node-level fallbacks.
+   */
+  async generateText(systemPrompt: string, userPrompt: string): Promise<string> {
+    const openaiKey = process.env.OPENAI_API_KEY;
+    if (openaiKey) {
+      try {
+        const response = await axios.post(
+          'https://api.openai.com/v1/chat/completions',
+          {
+            model: 'gpt-4o-mini',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ]
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${openaiKey}`,
+              'content-type': 'application/json'
+            },
+            timeout: 20000
+          }
+        );
+        return response.data.choices[0]?.message?.content || '';
+      } catch (error: any) {
+        logger.error(`OpenAI Direct API call failed in generateText: ${error.message}`);
+        throw error;
+      }
+    } else {
+      try {
+        const response = await axios.post(`${this.serviceUrl}/api/ai/generate`, {
+          system_prompt: systemPrompt,
+          user_prompt: userPrompt
+        }, { timeout: 20000 });
+        return response.data.text || response.data.content || '';
+      } catch (error: any) {
+        logger.error(`Python AI Service generate text failed in generateText: ${error.message}`);
+        throw error;
+      }
+    }
+  }
 }
 
 export default new AIService();

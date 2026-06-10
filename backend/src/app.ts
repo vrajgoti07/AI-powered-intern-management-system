@@ -5,6 +5,7 @@ import { config } from './config/env';
 import { apiLimiter } from './middleware/rateLimit.middleware';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 import { applySecurityMiddleware } from './middleware/security.middleware';
+import { tenantMiddleware } from './middleware/tenant.middleware';
 import routes from './routes';
 import './config/redis';
 import path from 'path';
@@ -31,6 +32,9 @@ const createApp = (): Application => {
 
   // ── 3. Cookie Parser ──
   app.use(cookieParser());
+
+  // ── 3.5. Tenant Resolution (Multi-Org) ──
+  app.use(tenantMiddleware);
 
   // ── 4. Serve static uploads ──
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));

@@ -6,6 +6,7 @@ import { sendEmail, sendWelcomeEmail, sendApplicationConfirmationEmail, sendMent
 import { logger } from '../utils/logger';
 import { getSocketIO } from '../socket/socket';
 import { getSimpleSocketIO } from '../socket/index';
+import { sendPushToUser } from '../services/pushNotification.service';
 
 // Initialize the worker to process notification jobs
 export const notificationWorker = new Worker(
@@ -44,7 +45,19 @@ export const notificationWorker = new Worker(
             logger.info(`Dispatched simple socket notification to all connected clients`);
           }
 
-          // 3. Trigger SMTP Email in the background if requested
+          // 3. Dispatch web push notification if subscription exists
+          try {
+            await sendPushToUser(userId, {
+              title,
+              body: message,
+              data: data || {},
+            });
+            logger.info(`Dispatched background web push notification to user ${userId}`);
+          } catch (pushErr) {
+            logger.error(`Failed to send web push notification in worker to user ${userId}:`, pushErr);
+          }
+
+          // 4. Trigger SMTP Email in the background if requested
           if (triggerEmail) {
             const user = await prisma.user.findUnique({
               where: { id: userId },
@@ -57,7 +70,7 @@ export const notificationWorker = new Worker(
                   <h2 style="color: #4f46e5; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">${title}</h2>
                   <p style="font-size: 16px; line-height: 1.5; color: #334155;">${message}</p>
                   <div style="margin-top: 20px; padding: 15px; background-color: #f8fafc; border-radius: 6px; font-size: 12px; color: #64748b;">
-                    This is an automated notification from the Intern Management System.
+                     This is an automated notification from the Intern Management System.
                   </div>
                 </div>
               `;
@@ -107,6 +120,22 @@ export const notificationWorker = new Worker(
               simpleIo.emit('new-notification', notif);
             });
             logger.info(`Dispatched bulk simple socket notifications to all connected clients`);
+          }
+
+          // 3. Dispatch web push notifications to all users
+          try {
+            await Promise.all(
+              userIds.map((userId: string) =>
+                sendPushToUser(userId, {
+                  title,
+                  body: message,
+                  data: data || {},
+                })
+              )
+            );
+            logger.info(`Dispatched background bulk web push notifications to ${userIds.length} users`);
+          } catch (pushErr) {
+            logger.error('Failed to send bulk web push notifications in worker:', pushErr);
           }
           break;
         }

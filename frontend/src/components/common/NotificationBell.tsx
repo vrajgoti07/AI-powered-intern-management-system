@@ -6,6 +6,7 @@ import { Pagination } from '../Pagination';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotificationStore, Notification } from '../../store/useNotificationStore';
 import { useInternByUser } from '../../hooks/queries';
+import { useDigestStore } from '../../store/useDigestStore';
 
 export const NotificationBell: React.FC = () => {
   const [showNotifications, setShowNotifications] = useState(false);
@@ -74,6 +75,10 @@ export const NotificationBell: React.FC = () => {
       if (role === 'hr' || role === 'admin' || role === 'super_admin') {
         navigate('/hr/interns');
       }
+    } else if (type === 'DIGEST') {
+      if (n.data) {
+        useDigestStore.getState().openDigest(n.data as any);
+      }
     }
   };
 
@@ -101,6 +106,9 @@ export const NotificationBell: React.FC = () => {
     if (type === 'APPLICATION') {
       return 'New Application';
     }
+    if (type === 'DIGEST') {
+      return 'Weekly Digest';
+    }
     return n.type || 'System';
   };
 
@@ -113,6 +121,9 @@ export const NotificationBell: React.FC = () => {
     if (t.includes('chat')) return 'text-blue-600 bg-blue-50 border-blue-100';
     if (t.includes('application') || t.includes('new application')) {
       return 'text-rose-600 bg-rose-50 border-rose-100';
+    }
+    if (t.includes('digest') || t.includes('weekly')) {
+      return 'text-indigo-600 bg-indigo-50 border-indigo-100';
     }
     return 'text-slate-500 bg-slate-50 border-slate-100';
   };

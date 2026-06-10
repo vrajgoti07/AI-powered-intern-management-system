@@ -34,6 +34,11 @@ export const notificationQueue = new Queue(
   queueOptions
 );
 
+export const submissionQueue = new Queue(
+  "submissionQueue",
+  queueOptions
+);
+
 export const NOTIFICATION_QUEUE_NAME =
   "notificationQueue";
 
@@ -50,6 +55,7 @@ createBullBoard({
     new BullMQAdapter(emailQueue),
     new BullMQAdapter(reportQueue),
     new BullMQAdapter(notificationQueue),
+    new BullMQAdapter(submissionQueue),
   ],
 
   serverAdapter,

@@ -467,6 +467,13 @@ export class TaskController {
         uploadedBy: req.user!.id,
       });
 
+      // Trigger Plagiarism/AI Detection checks asynchronously
+      const orgId = req.user?.organizationId;
+      if (orgId) {
+        const { default: submissionAnalysisService } = await import('../services/submissionAnalysis.service');
+        await submissionAnalysisService.enqueueAnalysis(file.id, id, orgId);
+      }
+
       res.status(201).json({
         success: true,
         message: 'File uploaded successfully',

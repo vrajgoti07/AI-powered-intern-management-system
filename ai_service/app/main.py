@@ -48,6 +48,8 @@ from app.routes.resume import router as resume_router
 from app.routes.performance import router as performance_router
 from app.routes.ranking import router as ranking_router
 from app.routes.risk import router as risk_router
+from app.routes.mock_interview import router as mock_interview_router
+from app.routes.new_features import router as new_features_router
 
 
 
@@ -199,6 +201,8 @@ app.include_router(resume_router, prefix="/api/ai", tags=["Resume Parsing"])
 app.include_router(performance_router, prefix="/api/ai", tags=["XGBoost Performance"])
 app.include_router(ranking_router, prefix="/api/ai", tags=["Smart Ranking"])
 app.include_router(risk_router, prefix="/api/ai", tags=["Risk Detection"])
+app.include_router(mock_interview_router, prefix="/api/ai", tags=["AI Mock Interview"])
+app.include_router(new_features_router, prefix="/api/ai", tags=["New AI Features"])
 
 
 

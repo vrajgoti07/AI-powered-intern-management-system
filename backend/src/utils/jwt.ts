@@ -62,3 +62,28 @@ export const generateTokenPair = (payload: JwtPayload) => {
     refreshToken: generateRefreshToken(payload),
   };
 };
+
+/**
+ * Generate 2FA Pending Token (expires in 5 minutes)
+ */
+export const generatePending2faToken = (userId: string): string => {
+  return jwt.sign({ userId, type: '2fa_pending' }, config.jwt.accessSecret, {
+    expiresIn: '5m',
+  });
+};
+
+/**
+ * Verify 2FA Pending Token
+ */
+export const verifyPending2faToken = (token: string): { userId: string } => {
+  try {
+    const decoded = jwt.verify(token, config.jwt.accessSecret) as any;
+    if (decoded.type !== '2fa_pending') {
+      throw new Error('Invalid token type');
+    }
+    return { userId: decoded.userId };
+  } catch (error) {
+    throw new Error('Invalid or expired 2FA pending token');
+  }
+};
+

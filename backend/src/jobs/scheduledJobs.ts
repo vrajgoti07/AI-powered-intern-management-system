@@ -52,53 +52,14 @@ export const startScheduledJobs = () => {
     }
   });
 
-  // 2. Monday 8:00 AM - Weekly summary emails to all interns
-  cron.schedule('0 8 * * 1', async () => {
-    logger.info('Running weekly summary emails...');
+  // 2. Monday 9:00 AM - Weekly AI Performance & Overview Digests to all users
+  cron.schedule('0 9 * * 1', async () => {
+    logger.info('Running scheduled weekly performance AI digests job...');
     try {
-      const interns = await prisma.intern.findMany({
-        where: { status: 'ACTIVE' },
-        include: { user: true }
-      });
-
-      // Get last week's start and end date
-      const endOfLastWeek = new Date();
-      endOfLastWeek.setDate(endOfLastWeek.getDate() - endOfLastWeek.getDay());
-      const startOfLastWeek = new Date(endOfLastWeek);
-      startOfLastWeek.setDate(startOfLastWeek.getDate() - 6);
-
-      for (const intern of interns) {
-        if (intern.user.email) {
-          const completedTasksCount = await prisma.task.count({
-            where: {
-              internId: intern.id,
-              status: 'COMPLETED',
-              updatedAt: { gte: startOfLastWeek, lte: endOfLastWeek }
-            }
-          });
-          
-          const attendanceDays = await prisma.attendance.count({
-            where: {
-              internId: intern.id,
-              status: 'PRESENT',
-              date: { gte: startOfLastWeek, lte: endOfLastWeek }
-            }
-          });
-
-          await emailQueue.add('WEEKLY_SUMMARY', {
-            to: intern.user.email,
-            data: {
-              name: intern.user.name,
-              weekNumber: Math.ceil((new Date().getTime() - new Date(intern.startDate || intern.joinedDate).getTime()) / (1000 * 60 * 60 * 24 * 7)),
-              tasksCompleted: completedTasksCount,
-              attendanceDays: attendanceDays,
-              performanceScore: intern.score,
-            }
-          });
-        }
-      }
+      const { default: weeklyDigestService } = await import('../services/weeklyDigest.service');
+      await weeklyDigestService.sendDigestToAllUsers();
     } catch (error) {
-      logger.error('Error in weekly summary job:', error);
+      logger.error('Error in scheduled weekly performance AI digests job:', error);
     }
   });
 
@@ -162,6 +123,61 @@ export const startScheduledJobs = () => {
       logger.info(`Deleted ${result.count} old notifications.`);
     } catch (error) {
       logger.error('Error in cleaning old notifications:', error);
+    }
+  });
+
+  // 6. Weekdays 9:00 AM - Daily Standup Bot Prompt & Record Initialization
+  cron.schedule('0 9 * * 1-5', async () => {
+    logger.info('Initializing weekday standup records...');
+    try {
+      const { createDailyRecords } = await import('../services/standup.service');
+      await createDailyRecords();
+    } catch (error) {
+      logger.error('Error in daily standup initialization job:', error);
+    }
+  });
+
+  // 7. Weekdays 11:30 AM - Daily Standup Overdue check & alert
+  cron.schedule('30 11 * * 1-5', async () => {
+    logger.info('Checking overdue daily standups...');
+    try {
+      const { checkMissedStandups } = await import('../services/standup.service');
+      await checkMissedStandups();
+    } catch (error) {
+      logger.error('Error in daily standup overdue check job:', error);
+    }
+  });
+
+  // 8. Sunday 8:00 PM - Auto-evaluate weekly goals whose end date has passed
+  cron.schedule('0 20 * * 0', async () => {
+    logger.info('Running scheduled weekly goal evaluation...');
+    try {
+      const { default: goalService } = await import('../services/goal.service');
+      await goalService.evaluateWeeklyGoals();
+    } catch (error) {
+      logger.error('Error in scheduled weekly goal evaluation:', error);
+    }
+  });
+
+  // 9. Sunday 9:00 PM - Weekly Skill Gap check
+  cron.schedule('0 21 * * 0', async () => {
+    logger.info('Running weekly skill gap analysis check...');
+    try {
+      const { default: skillGapService } = await import('../services/skillGap.service');
+      await skillGapService.runWeeklyAnalysisForAllInterns();
+    } catch (error) {
+      logger.error('Error in weekly skill gap analysis job:', error);
+    }
+  });
+
+  // 10. Sunday 10:00 PM - Weekly Mentor Effectiveness snapshot
+  cron.schedule('0 22 * * 0', async () => {
+    logger.info('Running weekly mentor effectiveness scoring check...');
+    try {
+      const { default: mentorEffectivenessService } = await import('../services/mentorEffectiveness.service');
+      await mentorEffectivenessService.runWeeklyCalculationsForAllMentors();
+    } catch (error) {
+      logger.error('Error in weekly mentor effectiveness scoring job:', error);
     }
   });
 };

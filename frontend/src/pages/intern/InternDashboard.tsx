@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useInternByUser, useTasks } from '../../hooks/queries';
+import { useInternByUser, useTasks, useGamificationStats } from '../../hooks/queries';
+import { XPWidget } from '../../components/intern/XPWidget';
+import { StandupPrompt } from '../../components/intern/StandupPrompt';
 import { useAuth } from '../../hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { Sidebar } from '../../components/common/Sidebar';
@@ -20,6 +22,7 @@ export const InternDashboard: React.FC = () => {
   const { user } = useAuth();
   const { data: myInternData } = useInternByUser(user?.id || '');
   const { data: tasks = [] } = useTasks();
+  const { data: gamificationStats } = useGamificationStats();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [announcements, setAnnouncements] = useState<any[]>([]);
 
@@ -199,6 +202,16 @@ export const InternDashboard: React.FC = () => {
               </button>
             </div>
           </div>
+
+          {/* Daily Standup Prompt Banner */}
+          <StandupPrompt />
+
+          {/* XP Progress Widget */}
+          <XPWidget
+            totalXP={gamificationStats?.totalXP || 0}
+            level={gamificationStats?.level || 1}
+            currentStreak={gamificationStats?.currentStreak || 0}
+          />
 
           {/* KPIs Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

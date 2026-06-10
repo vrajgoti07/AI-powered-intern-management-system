@@ -55,6 +55,18 @@ export class NotificationService {
         simpleIo.emit('new-notification', notification);
       }
 
+      // Trigger web push notification
+      try {
+        const { sendPushToUser } = await import('./pushNotification.service');
+        await sendPushToUser(userId, {
+          title,
+          body: message,
+          data: data || {},
+        });
+      } catch (pushErr) {
+        logger.error('Failed to send fallback web push notification:', pushErr);
+      }
+
       return notification;
     }
   }
@@ -106,6 +118,22 @@ export class NotificationService {
         if (simpleIo) simpleIo.emit('new-notification', notif);
       });
 
+      // Trigger web push notifications
+      try {
+        const { sendPushToUser } = await import('./pushNotification.service');
+        await Promise.all(
+          userIds.map((userId) =>
+            sendPushToUser(userId, {
+              title,
+              body: message,
+              data: data || {},
+            })
+          )
+        );
+      } catch (pushErr) {
+        logger.error('Failed to send fallback bulk web push notifications:', pushErr);
+      }
+
       return notifications;
     }
   }
@@ -122,6 +150,19 @@ export class NotificationService {
     });
     const io = getSocketIO();
     if (io) io.to(`user:${userId}`).emit(event, { notification, data });
+
+    // Trigger web push notification
+    try {
+      const { sendPushToUser } = await import('./pushNotification.service');
+      await sendPushToUser(userId, {
+        title: data.title || 'Notification',
+        body: data.message || '',
+        data: data || {},
+      });
+    } catch (pushErr) {
+      logger.error('Failed to send web push notification in sendToUser:', pushErr);
+    }
+
     return notification;
   }
 
@@ -137,6 +178,22 @@ export class NotificationService {
           data: data || undefined,
         }))
       });
+
+      // Trigger web push notifications
+      try {
+        const { sendPushToUser } = await import('./pushNotification.service');
+        await Promise.all(
+          users.map(u =>
+            sendPushToUser(u.id, {
+              title: data.title || 'Notification',
+              body: data.message || '',
+              data: data || {},
+            })
+          )
+        );
+      } catch (pushErr) {
+        logger.error('Failed to send web push notifications in sendToDepartment:', pushErr);
+      }
     }
     const io = getSocketIO();
     if (io) io.to(`dept:${deptId}`).emit(event, data);
@@ -154,6 +211,22 @@ export class NotificationService {
           data: data || undefined,
         }))
       });
+
+      // Trigger web push notifications
+      try {
+        const { sendPushToUser } = await import('./pushNotification.service');
+        await Promise.all(
+          users.map(u =>
+            sendPushToUser(u.id, {
+              title: data.title || 'Notification',
+              body: data.message || '',
+              data: data || {},
+            })
+          )
+        );
+      } catch (pushErr) {
+        logger.error('Failed to send web push notifications in sendToRole:', pushErr);
+      }
     }
     const io = getSocketIO();
     if (io) {
@@ -176,6 +249,22 @@ export class NotificationService {
           data: data || undefined,
         }))
       });
+
+      // Trigger web push notifications
+      try {
+        const { sendPushToUser } = await import('./pushNotification.service');
+        await Promise.all(
+          users.map(u =>
+            sendPushToUser(u.id, {
+              title: data.title || 'Notification',
+              body: data.message || '',
+              data: data || {},
+            })
+          )
+        );
+      } catch (pushErr) {
+        logger.error('Failed to send web push notifications in sendToAll:', pushErr);
+      }
     }
     const io = getSocketIO();
     if (io) io.to('global').emit(event, data);

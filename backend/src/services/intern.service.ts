@@ -1,5 +1,6 @@
 import prisma from '../config/database';
 import { AppError } from '../middleware/error.middleware';
+import { tenantLocalStorage } from '../middleware/tenant.middleware';
 import { PaginatedResponse } from '../types';
 import { Intern, InternStatus, Prisma, UserRole } from '@prisma/client';
 import { hashPassword, generateResetToken, hashResetToken } from '../utils/password';
@@ -97,6 +98,16 @@ export const createIntern = async (data: {
   whyJoin?: string;
   resumeUrl?: string;
 }): Promise<InternWithRelations> => {
+  // Check plan limit before creating intern
+  const orgId = tenantLocalStorage.getStore();
+  if (orgId) {
+    const { OrganizationService } = await import('./organization.service');
+    const limits = await OrganizationService.checkPlanLimits(orgId, 'intern');
+    if (!limits.allowed) {
+      throw new AppError(`Plan limit reached. Maximum allowed interns: ${limits.max} (${limits.plan} plan)`, 403);
+    }
+  }
+
   // Check if user exists and is an intern
   const user = await prisma.user.findUnique({
     where: { id: data.userId },
@@ -645,6 +656,16 @@ export const applyIntern = async (data: {
   startDate?: string;
   whyJoin?: string;
 }): Promise<InternWithRelations> => {
+  // Check plan limit before applying
+  const orgId = tenantLocalStorage.getStore();
+  if (orgId) {
+    const { OrganizationService } = await import('./organization.service');
+    const limits = await OrganizationService.checkPlanLimits(orgId, 'intern');
+    if (!limits.allowed) {
+      throw new AppError(`This organization cannot accept more intern applications at this time due to plan limits.`, 403);
+    }
+  }
+
   // Check if user already exists
   const existingUser = await prisma.user.findUnique({
     where: { email: data.email },

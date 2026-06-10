@@ -24,11 +24,13 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
+import { InternGoalsTab } from '../../components/mentor/InternGoalsTab';
 
 export const InternPerformance: React.FC = () => {
   const { state, refreshData } = useApp();
   const { user } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
+  const [activeTab, setActiveTab] = useState<'performance' | 'goals'>('performance');
 
   // Mentor dynamic reference from logged-in user
   const mentorName = user?.name || "Mentor";
@@ -154,10 +156,41 @@ export const InternPerformance: React.FC = () => {
           )}
         </div>
 
+        {/* Tab Selection */}
+        {selectedIntern && (
+          <div className="px-8 pt-4 border-b border-slate-100 bg-white/40 flex gap-6">
+            <button
+              onClick={() => setActiveTab('performance')}
+              className={`pb-3 text-xs font-black uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+                activeTab === 'performance'
+                  ? 'border-indigo-600 text-indigo-600'
+                  : 'border-transparent text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              Competency Scorecard
+            </button>
+            <button
+              onClick={() => setActiveTab('goals')}
+              className={`pb-3 text-xs font-black uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+                activeTab === 'goals'
+                  ? 'border-indigo-600 text-indigo-600'
+                  : 'border-transparent text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              Weekly AI Goals
+            </button>
+          </div>
+        )}
+
         {/* Performance display panels */}
         {selectedIntern ? (
-          <div className="flex-1 p-8 overflow-y-auto space-y-8 bg-slate-50/50">
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          activeTab === 'goals' ? (
+            <div className="flex-1 p-8 overflow-y-auto bg-slate-50/50">
+              <InternGoalsTab internId={selectedIntern.id} internName={selectedIntern.name} />
+            </div>
+          ) : (
+            <div className="flex-1 p-8 overflow-y-auto space-y-8 bg-slate-50/50">
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
               
               {/* Radar Chart & Telemetry Progress */}
               <div className="xl:col-span-2 space-y-8">
@@ -294,7 +327,8 @@ export const InternPerformance: React.FC = () => {
 
             </div>
           </div>
-        ) : (
+        )
+      ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-12 text-slate-400 space-y-3 bg-slate-50/30">
             <div className="p-4 bg-white border border-slate-100 rounded-full shadow-lg shadow-slate-100">
               <ShieldAlert className="w-8 h-8 text-slate-400" />

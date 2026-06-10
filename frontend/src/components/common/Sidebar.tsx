@@ -6,7 +6,7 @@ import { useOnboardingStatus } from '../../hooks/useOnboarding';
 import {
   LayoutDashboard, Users, UserCheck, Building2, BarChart3,
   Megaphone, Settings, LogOut, ClipboardCheck,
-  TrendingUp, Calendar, Brain, MessageSquare, Code, Award,
+  TrendingUp, Calendar, Brain, MessageSquare, Code, Award, Target,
   ShieldCheck, Milestone, ShieldAlert, ThumbsUp, ChevronDown, ChevronRight
 } from 'lucide-react';
 
@@ -70,10 +70,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onClose }) => {
               { icon: Brain, label: "AI Resume Parser", path: "/shared/resume-parser" },
               { icon: Milestone, label: "AI Mentor Matching", path: "/hr/ai-recommendations" },
               { icon: ShieldAlert, label: "AI Risk Assessment", path: "/hr/risk-detection" },
-              { icon: ThumbsUp, label: "AI Feedback Analysis", path: "/shared/ai-feedback" }
+              { icon: ThumbsUp, label: "AI Feedback Analysis", path: "/shared/ai-feedback" },
+              { icon: Target, label: "AI Interview Analytics", path: "/hr/interview-analytics" }
             ]
           },
           { icon: BarChart3, label: "Reports & Analytics", path: "/hr/reports" },
+          { icon: Calendar, label: "Daily Standups Feed", path: "/mentor/standups" },
           { icon: Megaphone, label: "Announcements", path: "/hr/announcements" },
           { icon: Settings, label: "Settings", path: "/hr/settings" }
         ];
@@ -86,10 +88,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onClose }) => {
             icon: Brain,
             label: "AI Co-Pilot Hub",
             children: [
-              { icon: ThumbsUp, label: "AI Feedback Analysis", path: "/shared/ai-feedback" }
+              { icon: ThumbsUp, label: "AI Feedback Analysis", path: "/shared/ai-feedback" },
+              { icon: Target, label: "AI Interview Analytics", path: "/hr/interview-analytics" }
             ]
           },
           { icon: ClipboardCheck, label: "Task Management", path: "/mentor/tasks" },
+          { icon: Calendar, label: "Daily Standups Feed", path: "/mentor/standups" },
           { icon: Award, label: "Grade Deliverables", path: "/mentor/tasks/review" },
           { icon: TrendingUp, label: "Performance Tracker", path: "/mentor/performance" },
           { icon: Settings, label: "Settings", path: "/mentor/settings" }
@@ -106,13 +110,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onClose }) => {
             { icon: LayoutDashboard, label: "Dashboard", path: "/intern/dashboard" },
             { icon: ClipboardCheck, label: "Tasks & Schedule", path: "/intern/tasks" },
             { icon: Calendar, label: "Attendance & Leaves", path: "/shared/attendance-leave" },
+            { icon: Award, label: "Achievements & Leaderboard", path: "/intern/achievements" },
+            { icon: Target, label: "AI Goals", path: "/intern/goals" },
             { icon: Code, label: "Developer Portfolio", path: "/intern/portfolio" },
             {
               icon: Brain,
               label: "AI Co-Pilot Hub",
               children: [
                 { icon: Brain, label: "AI Resume Parser", path: "/shared/resume-parser" },
-                { icon: ThumbsUp, label: "AI Feedback Analysis", path: "/shared/ai-feedback" }
+                { icon: ThumbsUp, label: "AI Feedback Analysis", path: "/shared/ai-feedback" },
+                { icon: Target, label: "AI Mock Interview", path: "/intern/mock-interview" }
               ]
             },
             { icon: MessageSquare, label: "Team & AI Help", path: "/shared/communication" },

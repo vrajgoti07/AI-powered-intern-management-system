@@ -1,5 +1,6 @@
 import prisma from '../config/database';
 import { AppError } from '../middleware/error.middleware';
+import { tenantLocalStorage } from '../middleware/tenant.middleware';
 import { PaginatedResponse } from '../types';
 import { Prisma } from '@prisma/client';
 import { safeAddJob } from '../queues/notification.queue';
@@ -56,6 +57,16 @@ export const createMentor = async (data: {
   expertise: string[];
   bio?: string;
 }): Promise<MentorWithRelations> => {
+  // Check plan limit before creating mentor
+  const orgId = tenantLocalStorage.getStore();
+  if (orgId) {
+    const { OrganizationService } = await import('./organization.service');
+    const limits = await OrganizationService.checkPlanLimits(orgId, 'mentor');
+    if (!limits.allowed) {
+      throw new AppError(`Plan limit reached. Maximum allowed mentors: ${limits.max} (${limits.plan} plan)`, 403);
+    }
+  }
+
   // Check if user exists and is a mentor
   const user = await prisma.user.findUnique({
     where: { id: data.userId },

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { usePushNotifications } from '../../hooks/usePushNotifications';
 import {
   User, Shield, Bell, AppWindow, Upload, Trash2, Check, Loader2, Laptop,
   Clock, Activity, Eye, ShieldCheck, Cpu, Briefcase, Mail, Phone, Calendar,
-  MapPin, CheckCircle, XCircle, LogOut, ArrowRight, Settings as SettingsIcon, BookOpen
+  MapPin, CheckCircle, XCircle, LogOut, ArrowRight, Settings as SettingsIcon, BookOpen, Download
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
@@ -16,10 +17,26 @@ import { ConfirmModal } from '../../components/common/ConfirmModal';
 export const Settings: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  
+  const {
+    isSupported: isPushSupported,
+    isSubscribed: isPushSubscribed,
+    permission: pushPermission,
+    loading: pushLoading,
+    subscribeToPush,
+    unsubscribeFromPush,
+  } = usePushNotifications();
+
   const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
 
   // Settings Sidebar active tab state
-  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'notifications' | 'preferences'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'notifications' | 'preferences' | 'privacy'>('profile');
+
+  // GDPR states
+  const [gdprExports, setGdprExports] = useState<any[]>([]);
+  const [erasureReason, setErasureReason] = useState('');
+  const [requestingExport, setRequestingExport] = useState(false);
+  const [requestingErasure, setRequestingErasure] = useState(false);
 
   // Security Section sub-tabs state
   const [securitySubTab, setSecuritySubTab] = useState<'verification' | 'sessions' | 'activity'>('verification');
@@ -57,7 +74,8 @@ export const Settings: React.FC = () => {
     attendanceAlerts: true,
     leaveAlerts: true,
     taskAlerts: true,
-    announcementAlerts: true
+    announcementAlerts: true,
+    weeklyDigest: true
   });
 
   // Active Sessions & Login Activity Logs States
@@ -79,6 +97,19 @@ export const Settings: React.FC = () => {
     variant?: 'danger' | 'warning' | 'info';
     confirmLabel?: string;
   }>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+
+  // 2FA TOTP States
+  const [totpStatus, setTotpStatus] = useState<{ enabled: boolean; verifiedAt: string | null; remainingBackupCodesCount: number } | null>(null);
+  const [isSettingUp2fa, setIsSettingUp2fa] = useState(false);
+  const [setupStep, setSetupStep] = useState(1);
+  const [setupPassword, setSetupPassword] = useState('');
+  const [setupSecret, setSetupSecret] = useState('');
+  const [setupQrCode, setSetupQrCode] = useState('');
+  const [setupToken, setSetupToken] = useState('');
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [isDisabling2fa, setIsDisabling2fa] = useState(false);
+  const [disablePassword, setDisablePassword] = useState('');
+  const [disableToken, setDisableToken] = useState('');
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const resumeInputRef = useRef<HTMLInputElement>(null);
@@ -174,10 +205,129 @@ export const Settings: React.FC = () => {
     }
   };
 
+  const fetch2FAStatus = async () => {
+    try {
+      const res = await api.get('/auth/2fa/status');
+      if (res.data.success && res.data.data) {
+        setTotpStatus(res.data.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch 2FA status:', err);
+    }
+  };
+
+  const handleInitiate2fa = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const loadingToast = toast.loading('Initiating 2FA setup...');
+    try {
+      const res = await api.post('/auth/2fa/setup', { password: setupPassword });
+      toast.dismiss(loadingToast);
+      if (res.data.success && res.data.data) {
+        setSetupSecret(res.data.data.secret);
+        setSetupQrCode(res.data.data.qrCodeDataUrl);
+        setSetupStep(2);
+      }
+    } catch (err: any) {
+      toast.dismiss(loadingToast);
+      toast.error(err.response?.data?.message || 'Failed to initiate 2FA setup.');
+    }
+  };
+
+  const handleVerifyAndEnable2fa = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (setupToken.length !== 6) {
+      toast.error('Please enter the 6-digit code.');
+      return;
+    }
+    const loadingToast = toast.loading('Enabling 2FA...');
+    try {
+      const res = await api.post('/auth/2fa/enable', { token: setupToken });
+      toast.dismiss(loadingToast);
+      if (res.data.success && res.data.data) {
+        toast.success('2FA enabled successfully!');
+        setBackupCodes(res.data.data.backupCodes);
+        setSetupStep(3);
+        fetch2FAStatus();
+      }
+    } catch (err: any) {
+      toast.dismiss(loadingToast);
+      toast.error(err.response?.data?.message || 'Invalid code. Verification failed.');
+    }
+  };
+
+  const handleDisable2fa = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!disablePassword || !disableToken) {
+      toast.error('Password and verification token are required.');
+      return;
+    }
+    const loadingToast = toast.loading('Disabling 2FA...');
+    try {
+      const res = await api.post('/auth/2fa/disable', {
+        password: disablePassword,
+        token: disableToken,
+      });
+      toast.dismiss(loadingToast);
+      if (res.data.success) {
+        toast.success('2FA disabled successfully.');
+        setIsDisabling2fa(false);
+        setDisablePassword('');
+        setDisableToken('');
+        fetch2FAStatus();
+      }
+    } catch (err: any) {
+      toast.dismiss(loadingToast);
+      toast.error(err.response?.data?.message || 'Verification failed. Cannot disable 2FA.');
+    }
+  };
+
   useEffect(() => {
     fetchProfileData();
     fetchNotifications();
+    fetch2FAStatus();
   }, []);
+
+  const fetchGDPRHistory = async () => {
+    try {
+      const res = await api.get('/gdpr/export/history');
+      if (res.data.success && res.data.data) {
+        setGdprExports(res.data.data);
+      }
+    } catch (err) {
+      console.error('Failed to load GDPR history:', err);
+    }
+  };
+
+  const handleRequestExport = async () => {
+    setRequestingExport(true);
+    try {
+      const res = await api.post('/gdpr/export');
+      if (res.data.success) {
+        toast.success(res.data.message || 'Export request submitted successfully.');
+        fetchGDPRHistory();
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to request data export.');
+    } finally {
+      setRequestingExport(false);
+    }
+  };
+
+  const handleRequestErasure = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRequestingErasure(true);
+    try {
+      const res = await api.post('/gdpr/erasure', { reason: erasureReason });
+      if (res.data.success) {
+        toast.success(res.data.message || 'Erasure request submitted. Check your email to confirm deletion.');
+        setErasureReason('');
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to submit erasure request.');
+    } finally {
+      setRequestingErasure(false);
+    }
+  };
 
   // Fetch security sub-tabs on demand
   useEffect(() => {
@@ -479,7 +629,8 @@ export const Settings: React.FC = () => {
                   { id: 'profile', label: user?.role === 'hr' ? 'HR Profile' : user?.role === 'mentor' ? 'Mentor Profile' : 'My Profile', icon: User },
                   { id: 'security', label: 'Account Security', icon: Shield },
                   { id: 'notifications', label: 'Notifications', icon: Bell },
-                  { id: 'preferences', label: 'Preferences', icon: AppWindow }
+                  { id: 'preferences', label: 'Preferences', icon: AppWindow },
+                  { id: 'privacy', label: 'Privacy & Data', icon: ShieldCheck }
                 ].map((tab) => {
                   const Icon = tab.icon;
                   const isActive = activeTab === tab.id;
@@ -758,6 +909,247 @@ export const Settings: React.FC = () => {
                           </div>
                         </div>
 
+                        {/* Google Authenticator TOTP 2FA Section */}
+                        <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5 flex flex-col gap-4 mt-4">
+                          <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                              <ShieldCheck className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-xs font-black text-slate-800">Google Authenticator Two-Factor Authentication (2FA)</p>
+                              <p className="text-[11px] text-slate-400 font-semibold leading-relaxed mt-1">
+                                Secure your account using standard TOTP authenticator apps (Google Authenticator, Authy, Microsoft Authenticator). When enabled, you will be prompted for a 6-digit time-based code after completing password and email verification.
+                              </p>
+                              
+                              {totpStatus?.enabled ? (
+                                <div className="mt-3.5 flex flex-col gap-2 text-left">
+                                  <div>
+                                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-0.5" /> 2FA ACTIVE
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] text-slate-400 font-bold">
+                                    Enabled on: {totpStatus.verifiedAt ? new Date(totpStatus.verifiedAt).toLocaleString() : 'N/A'} ({totpStatus.remainingBackupCodesCount} backup codes remaining)
+                                  </p>
+                                  <div className="pt-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => setIsDisabling2fa(true)}
+                                      className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
+                                    >
+                                      Disable 2FA
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="mt-3.5">
+                                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200 shadow-sm mr-2">
+                                    NOT ACTIVE
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setIsSettingUp2fa(true);
+                                      setSetupStep(1);
+                                      setSetupPassword('');
+                                      setSetupToken('');
+                                    }}
+                                    className="px-3 py-1.5 bg-[#2563eb] hover:bg-blue-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer shadow-sm shadow-blue-500/10"
+                                  >
+                                    Set up 2FA
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Inline setup wizard container */}
+                          {isSettingUp2fa && (
+                            <div className="border-t border-slate-150 pt-5 mt-2 animate-fade-in text-left">
+                              <div className="flex items-center justify-between mb-4">
+                                <h5 className="text-xs font-black text-slate-800 uppercase tracking-wider">Configure Two-Factor Authenticator (Step {setupStep} of 3)</h5>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setIsSettingUp2fa(false);
+                                    setBackupCodes([]);
+                                  }}
+                                  className="text-[10px] font-bold text-slate-400 hover:text-slate-600 cursor-pointer"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+
+                              {setupStep === 1 && (
+                                <form onSubmit={handleInitiate2fa} className="space-y-4 max-w-sm">
+                                  <p className="text-[11px] text-slate-400 font-semibold leading-relaxed">
+                                    For security reasons, please confirm your current login password to begin 2FA setup.
+                                  </p>
+                                  <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Confirm Password</label>
+                                    <input
+                                      type="password"
+                                      value={setupPassword}
+                                      onChange={(e) => setSetupPassword(e.target.value)}
+                                      placeholder="••••••••"
+                                      className="w-full text-xs font-semibold px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 text-base"
+                                      required
+                                    />
+                                  </div>
+                                  <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-[#2563eb] hover:bg-blue-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
+                                  >
+                                    Continue
+                                  </button>
+                                </form>
+                              )}
+
+                              {setupStep === 2 && (
+                                <form onSubmit={handleVerifyAndEnable2fa} className="space-y-5">
+                                  <p className="text-[11px] text-slate-400 font-semibold leading-relaxed">
+                                    1. Scan the QR code below using your authenticator application (Google Authenticator, Authy, etc.).
+                                  </p>
+                                  <div className="flex flex-col sm:flex-row items-center gap-6 py-2">
+                                    <div className="bg-white p-3 border border-slate-200 rounded-2xl flex-shrink-0 shadow-sm">
+                                      <img src={setupQrCode} alt="2FA QR Code" className="w-40 h-40" />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <p className="text-[11px] text-slate-400 font-semibold">
+                                        Can't scan the code? Use this manually:
+                                      </p>
+                                      <code className="block p-3 bg-white border border-slate-200 rounded-xl text-xs font-mono font-bold select-all break-all text-slate-700">
+                                        {setupSecret}
+                                      </code>
+                                    </div>
+                                  </div>
+                                  <div className="space-y-3 max-w-sm">
+                                    <p className="text-[11px] text-slate-400 font-semibold leading-relaxed">
+                                      2. Enter the 6-digit verification code from your authenticator app below to complete the setup.
+                                    </p>
+                                    <div>
+                                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Verification Code</label>
+                                      <input
+                                        type="text"
+                                        maxLength={6}
+                                        placeholder="000000"
+                                        value={setupToken}
+                                        onChange={(e) => setSetupToken(e.target.value.replace(/\D/g, ''))}
+                                        className="w-full text-center text-sm font-bold tracking-widest px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 text-base"
+                                        required
+                                      />
+                                    </div>
+                                    <button
+                                      type="submit"
+                                      className="px-4 py-2 bg-[#2563eb] hover:bg-blue-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
+                                    >
+                                      Verify & Enable
+                                    </button>
+                                  </div>
+                                </form>
+                              )}
+
+                              {setupStep === 3 && (
+                                <div className="space-y-4">
+                                  <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-start gap-3">
+                                    <Check className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                                    <div>
+                                      <p className="text-xs font-black text-emerald-800">Two-Factor Authentication is active!</p>
+                                      <p className="text-[11px] text-emerald-700/80 font-bold mt-1">
+                                        Your account is now protected with 2FA. Below are your emergency backup codes. If you lose your phone, you can use these to log in. Each code can only be used once.
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  <div className="bg-white border border-slate-200 rounded-2xl p-5">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-3">Backup Recovery Codes (Save these safely!)</p>
+                                    <div className="grid grid-cols-2 gap-2 text-left font-mono font-extrabold text-sm text-slate-800">
+                                      {backupCodes.map((code, idx) => (
+                                        <div key={idx} className="p-2.5 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between">
+                                          <span>{code}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                    <div className="flex gap-2.5 mt-4">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          navigator.clipboard.writeText(backupCodes.join('\n'));
+                                          toast.success('Backup codes copied to clipboard!');
+                                        }}
+                                        className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
+                                      >
+                                        Copy Codes
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setIsSettingUp2fa(false);
+                                          setBackupCodes([]);
+                                        }}
+                                        className="px-3.5 py-2 bg-[#2563eb] hover:bg-blue-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
+                                      >
+                                        Done
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Disable 2FA Form Container */}
+                          {isDisabling2fa && (
+                            <form onSubmit={handleDisable2fa} className="border-t border-slate-150 pt-5 mt-2 animate-fade-in text-left space-y-4 max-w-sm">
+                              <div className="flex items-center justify-between">
+                                <h5 className="text-xs font-black text-rose-700 uppercase tracking-wider">Disable Two-Factor Authentication</h5>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setIsDisabling2fa(false);
+                                    setDisablePassword('');
+                                    setDisableToken('');
+                                  }}
+                                  className="text-[10px] font-bold text-slate-400 hover:text-slate-600 cursor-pointer"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                              <p className="text-[11px] text-slate-400 font-semibold leading-relaxed">
+                                Enter your current login password and the 6-digit Authenticator code (or backup code) to disable 2FA security.
+                              </p>
+                              <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Confirm Password</label>
+                                <input
+                                  type="password"
+                                  value={disablePassword}
+                                  onChange={(e) => setDisablePassword(e.target.value)}
+                                  placeholder="••••••••"
+                                  className="w-full text-xs font-semibold px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 text-base"
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Verification Code / Backup Code</label>
+                                <input
+                                  type="text"
+                                  value={disableToken}
+                                  onChange={(e) => setDisableToken(e.target.value.trim())}
+                                  placeholder="000000 or xxxx-xxxx"
+                                  className="w-full text-xs font-semibold px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 text-base"
+                                  required
+                                />
+                              </div>
+                              <button
+                                type="submit"
+                                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer shadow-md shadow-rose-500/10"
+                              >
+                                Confirm & Disable
+                              </button>
+                            </form>
+                          )}
+                        </div>
+
                         <div className="bg-amber-50/40 border border-amber-100/50 rounded-2xl p-5 flex items-start gap-4">
                           <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center flex-shrink-0">
                             <Shield className="w-5 h-5" />
@@ -925,7 +1317,8 @@ export const Settings: React.FC = () => {
                             { key: 'taskAlerts', title: 'Milestone & Task Alerts', desc: 'Notify instantly when new task deliverables are assigned, reviewed, or comments are posted.' },
                             { key: 'attendanceAlerts', title: 'Attendance Check-in Prompts', desc: 'Trigger reminders when daily attendance mark logs require check-ins or regularizations.' },
                             { key: 'leaveAlerts', title: 'Leaves & Absences Requests', desc: 'Track request approvals, pending states, and feedback status updates for leave request filings.' },
-                            { key: 'announcementAlerts', title: 'Department Broadcast Announcements', desc: 'Notify immediately when department-wide announcements are broadcasted.' }
+                            { key: 'announcementAlerts', title: 'Department Broadcast Announcements', desc: 'Notify immediately when department-wide announcements are broadcasted.' },
+                            { key: 'weeklyDigest', title: 'Weekly AI Performance Digest', desc: 'Receive a personalized AI-written summary of your performance, alerts, and growth tips every Monday morning.' }
                           ].map((item) => {
                             const isChecked = notifications[item.key as keyof typeof notifications];
                             return (
@@ -971,6 +1364,72 @@ export const Settings: React.FC = () => {
                         </div>
                       </form>
                     )}
+
+                    {/* Web Push Notifications Card */}
+                    <div className="mt-6 border-t border-slate-100 pt-6 text-left">
+                      <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Device Notifications</h5>
+                      
+                      {!isPushSupported ? (
+                        <div className="p-4 bg-amber-50/40 border border-amber-100/50 rounded-2xl text-[11px] font-bold text-amber-700">
+                          Web Push Notifications are not supported by your current browser. Try Chrome, Firefox, or Safari.
+                        </div>
+                      ) : (
+                        <div className={`p-5 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4
+                          ${isPushSubscribed 
+                            ? 'bg-indigo-50/10 border-indigo-200/50 shadow-sm' 
+                            : 'bg-white border-slate-100 hover:border-slate-200'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3.5">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0
+                              ${isPushSubscribed ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}
+                            >
+                              <Bell className="w-5.5 h-5.5" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-black text-slate-800">Browser Push Notifications</p>
+                              <p className="text-[10px] text-slate-400 font-semibold mt-1 leading-relaxed">
+                                Receive real-time desktop or mobile push notifications for tasks, announcements, messages, and milestones.
+                              </p>
+                              {pushPermission === 'denied' && (
+                                <p className="text-[10px] text-rose-500 font-bold mt-1.5">
+                                  ⚠️ Notification permission is blocked. Please enable permissions in your browser site settings.
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3 flex-shrink-0">
+                            {pushLoading ? (
+                              <Loader2 className="w-5 h-5 animate-spin text-indigo-650" />
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  if (isPushSubscribed) {
+                                    const success = await unsubscribeFromPush();
+                                    if (success) toast.success('Unsubscribed from push notifications successfully!');
+                                    else toast.error('Failed to unsubscribe from push notifications.');
+                                  } else {
+                                    const success = await subscribeToPush();
+                                    if (success) toast.success('Subscribed to push notifications successfully!');
+                                    else toast.error('Failed to subscribe. Make sure to allow browser notifications.');
+                                  }
+                                }}
+                                disabled={pushPermission === 'denied'}
+                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-sm
+                                  ${isPushSubscribed 
+                                    ? 'bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100' 
+                                    : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/10'
+                                  } ${pushPermission === 'denied' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              >
+                                {isPushSubscribed ? 'Disable Push' : 'Enable Push'}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -1026,6 +1485,114 @@ export const Settings: React.FC = () => {
                         </button>
                       </div>
                     </form>
+                  </div>
+                )}
+
+                {/* 5. Privacy & Data GDPR Section */}
+                {activeTab === 'privacy' && (
+                  <div className="space-y-6 text-left">
+                    <div>
+                      <h4 className="text-lg font-extrabold text-slate-800 tracking-tight">Privacy & Data Compliance (GDPR)</h4>
+                      <p className="text-xs font-semibold text-slate-400 mt-1">Exercise your user rights under GDPR: export personal data archives or initiate right to erasure account deletions.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Personal Data Export */}
+                      <div className="p-5 bg-slate-50/50 border border-slate-100 rounded-2xl space-y-4">
+                        <h5 className="text-sm font-bold text-slate-800">Export Personal Data</h5>
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                          Request a complete copy of all your telemetry records, profile specifications, and task deliverables packaged into a compressed ZIP file structure.
+                        </p>
+                        
+                        <button
+                          onClick={handleRequestExport}
+                          disabled={requestingExport}
+                          className="w-full flex items-center justify-center gap-2 py-3 bg-[#2563eb] text-white hover:bg-blue-750 font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-sm transition-all disabled:opacity-50 cursor-pointer"
+                        >
+                          {requestingExport ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <span>Compiling Data...</span>
+                            </>
+                          ) : (
+                            <span>Request Data Export</span>
+                          )}
+                        </button>
+
+                        {/* Export History */}
+                        <div className="pt-3 border-t border-slate-100/80">
+                          <h6 className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2">Export Logs</h6>
+                          <div className="space-y-2 max-h-40 overflow-y-auto">
+                            {gdprExports.length > 0 ? (
+                              gdprExports.map((exp: any) => {
+                                const isReady = exp.status === 'READY';
+                                const isExpired = exp.expiresAt && new Date(exp.expiresAt) < new Date();
+                                return (
+                                  <div key={exp.id} className="p-2.5 bg-white border border-slate-100 rounded-xl flex items-center justify-between gap-3">
+                                    <div className="min-w-0">
+                                      <p className="text-[10px] font-bold text-slate-700 truncate">Request ID: {exp.id.slice(0, 8)}</p>
+                                      <p className="text-[9px] text-slate-400 font-semibold mt-0.5">
+                                        Status: {exp.status} · Expires: {exp.expiresAt ? new Date(exp.expiresAt).toLocaleDateString() : 'N/A'}
+                                      </p>
+                                    </div>
+                                    {isReady && !isExpired && (
+                                      <a
+                                        href={`${api.defaults.baseURL}/gdpr/export/download/${exp.id}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="p-1 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors"
+                                      >
+                                        <Download className="w-4 h-4" />
+                                      </a>
+                                    )}
+                                  </div>
+                                );
+                              })
+                            ) : (
+                              <p className="text-[10px] text-slate-400 italic">No past export requests.</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right to Erasure */}
+                      <div className="p-5 bg-slate-50/50 border border-slate-100 rounded-2xl space-y-4">
+                        <h5 className="text-sm font-bold text-rose-800">Right to Erasure (Delete Account)</h5>
+                        <p className="text-xs text-slate-550 leading-relaxed">
+                          Request to delete your profile details permanently. Submitting will send a verification token to your email. After confirmation, HR administrators will audit and complete the deletion.
+                        </p>
+
+                        <form onSubmit={handleRequestErasure} className="space-y-3">
+                          <div>
+                            <label className="text-[9px] font-black uppercase text-slate-450 tracking-wider block mb-1">
+                              Reason for Deletion
+                            </label>
+                            <textarea
+                              value={erasureReason}
+                              onChange={(e) => setErasureReason(e.target.value)}
+                              placeholder="Please describe why you wish to delete your account..."
+                              rows={2}
+                              className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:ring-1 focus:ring-rose-500"
+                            />
+                          </div>
+
+                          <button
+                            type="submit"
+                            disabled={requestingErasure}
+                            className="w-full flex items-center justify-center gap-2 py-3 bg-rose-600 hover:bg-rose-750 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-sm transition-all disabled:opacity-50 cursor-pointer"
+                          >
+                            {requestingErasure ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <span>Submitting...</span>
+                              </>
+                            ) : (
+                              <span>Permanently Delete Account</span>
+                            )}
+                          </button>
+                        </form>
+                      </div>
+                    </div>
                   </div>
                 )}
 

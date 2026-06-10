@@ -148,6 +148,28 @@ export class AttendanceService {
     // Recalculate average attendance percentage
     await this.recalculateAttendancePercentage(internId);
 
+    // Award check-in XP and update consecutive streaks
+    try {
+      const { awardXP, updateAttendanceStreak } = await import('./gamification.service');
+      const isLate = status === 'LATE';
+      const xpPoints = isLate ? 10 : 20; // XP_RULES.LATE_CHECKIN : XP_RULES.DAILY_CHECKIN
+      
+      await awardXP(
+        internId,
+        xpPoints,
+        'ATTENDANCE',
+        isLate ? 'Late check-in marked' : 'Daily check-in marked',
+        attendance.id
+      );
+
+      // Only update streak if they checked in on time or late (not absent/weekend/holiday)
+      if (status === 'PRESENT' || status === 'LATE') {
+        await updateAttendanceStreak(internId);
+      }
+    } catch (err) {
+      console.error('Failed to award attendance check-in XP:', err);
+    }
+
     return attendance;
   }
 

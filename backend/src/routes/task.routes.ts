@@ -118,4 +118,25 @@ router.post(
  */
 router.get('/:id/comments', taskController.getTaskComments);
 
+/**
+ * @route   GET /api/tasks/files/:fileId/analysis
+ * @desc    Get plagiarism & AI analysis details for a file
+ * @access  HR, Mentor, Intern
+ */
+router.get('/files/:fileId/analysis', async (req, res, next) => {
+  try {
+    const prisma = (await import('../config/database')).default;
+    const file = await prisma.taskFile.findUnique({
+      where: { id: req.params.fileId },
+    });
+    if (!file) {
+      res.status(404).json({ success: false, message: 'File not found' });
+      return;
+    }
+    res.json({ success: true, data: file });
+  } catch (error: any) {
+    next(error);
+  }
+});
+
 export default router;
